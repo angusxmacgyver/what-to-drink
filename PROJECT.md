@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 12. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 9 of 12
+**Current milestone:** 9 of 12 (Cloudflare Pages deploy). Milestones 10–11 are already implemented. Milestone 12 (D1) follows 9.
 
 **Living copy:** this file.
 
