@@ -1,0 +1,9 @@
+name = "what-to-drink"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-22"
+
+# Bind after: npx wrangler d1 create what-to-drink
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "what-to-drink"
+# database_id = "YOUR_D1_ID"
