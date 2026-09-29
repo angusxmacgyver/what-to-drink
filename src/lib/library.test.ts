@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Bottle } from "../types";
-import { distilleryCounts, groupLibrary, subsForFamilies } from "./library";
+import { distilleryCounts, groupLibrary, matchesStatus, subsForFamilies } from "./library";
 
 let nextId = 0;
 
@@ -61,6 +61,18 @@ describe("distilleryCounts", () => {
       bottle({ distillery: "Lagavulin" }),
     ];
     expect(distilleryCounts(bottles)).toEqual({ Ardbeg: 2, Lagavulin: 1 });
+  });
+});
+
+describe("matchesStatus", () => {
+  it("keeps every bottle when no status is picked", () => {
+    expect(matchesStatus(bottle({ status: "Closed" }), [])).toBe(true);
+  });
+
+  it("keeps only bottles with a picked status", () => {
+    expect(matchesStatus(bottle({ status: "Open" }), ["Open"])).toBe(true);
+    expect(matchesStatus(bottle({ status: "Closed" }), ["Open"])).toBe(false);
+    expect(matchesStatus(bottle({ status: "Closed" }), ["Open", "Closed"])).toBe(true);
   });
 });
 

@@ -77,6 +77,10 @@ function inList(selected: string[], value: string): boolean {
   return selected.length === 0 || selected.includes(value);
 }
 
+export function matchesStatus(bottle: Bottle, statuses: string[]): boolean {
+  return inList(statuses, bottle.status);
+}
+
 function matchesAge(bottle: Bottle, filters: FilterState): boolean {
   if (!filters.ageMin && !filters.ageMax) return true;
   if (bottle.age === "NAS") return filters.ageMin === "NAS";

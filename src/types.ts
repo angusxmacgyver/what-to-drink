@@ -46,6 +46,7 @@ export type FilterState = {
   search: string;
   distilleries: string[];
   themes: string[];
+  statuses: string[];
   ageMin: string;
   ageMax: string;
   abvMin: string;
@@ -60,6 +61,7 @@ export const emptyFilters = (): FilterState => ({
   search: "",
   distilleries: [],
   themes: [],
+  statuses: [],
   ageMin: "",
   ageMax: "",
   abvMin: "",

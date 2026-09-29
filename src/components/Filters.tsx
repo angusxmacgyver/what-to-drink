@@ -10,6 +10,7 @@ type Props = {
   onChange: (next: FilterState) => void;
   showGeo?: boolean;
   showSearch?: boolean;
+  showStatus?: boolean;
 };
 
 function uniq(values: string[]): string[] {
@@ -22,8 +23,10 @@ export function Filters({
   onChange,
   showGeo = false,
   showSearch = true,
+  showStatus = false,
 }: Props) {
   const distilleries = uniq(bottles.map((b) => b.distillery));
+  const statuses = uniq(bottles.map((b) => b.status));
   const distilleryTally = distilleryCounts(bottles);
   const themes = uniq(bottles.map((b) => b.theme));
   const families = uniq(bottles.flatMap((b) => b.flavorFamilies));
@@ -76,6 +79,14 @@ export function Filters({
         value={filters.distilleries}
         onChange={(distilleries) => set({ distilleries })}
       />
+      {showStatus ? (
+        <ChipSelect
+          label="Status"
+          options={statuses}
+          value={filters.statuses}
+          onChange={(statuses) => set({ statuses })}
+        />
+      ) : null}
       <ChipSelect
         label="Theme"
         options={themes}

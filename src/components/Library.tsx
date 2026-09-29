@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Bottle, FilterState } from "../types";
-import { groupLibrary, matchesFilters } from "../lib/library";
+import { groupLibrary, matchesFilters, matchesStatus } from "../lib/library";
 import { BottleFields } from "./BottleFields";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
@@ -17,7 +17,7 @@ type Props = {
 
 export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const filtered = bottles.filter((b) => matchesFilters(b, filters));
+  const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
   const rows = groupLibrary(filtered);
 
   return (
@@ -30,7 +30,7 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
           {rows.length} expressions · {filtered.length} bottles
         </p>
       </header>
-      <Filters bottles={bottles} filters={filters} onChange={onFilters} />
+      <Filters bottles={bottles} filters={filters} onChange={onFilters} showStatus />
       <div className="list">
         {rows.map((row) => {
           const expanded = openKey === row.bottleKey;

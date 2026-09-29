@@ -20,6 +20,8 @@ The Library and Pick a Dram share the same filter bar.
 
 You can search distillery, expression, or Society code. Distillery, theme, country, region, flavor families, and sub-characteristics are multi-select. Distillery is a type-to-search box that shows how many bottles each producer has. Sub-characteristics appear once you pick a flavor family, and only list the ones found on bottles with every family you picked. Age and ABV are range sliders. NAS sits at the left of the age slider: leave the min thumb there to include NAS bottles, or park both thumbs on NAS for NAS only. A filter only applies once you set it. Untagged bottles still appear when that filter is idle.
 
+The Library also has a Status filter (Open, Closed). It applies only to The Library; Pick a Dram keeps its own include-closed switch.
+
 Pick a Dram also has the place question, include-closed, and country/region.
 
 ## Data
