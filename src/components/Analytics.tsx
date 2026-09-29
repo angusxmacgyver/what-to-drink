@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Catalog } from "../types";
 import { cellarSummary, pct } from "../lib/analytics";
+import { BarList } from "./BarList";
 
 type Props = {
   catalog: Catalog;
@@ -50,6 +51,13 @@ export function Analytics({ catalog }: Props) {
         </div>
         <p className="takeaway">{s.takeaways.shelf}</p>
       </article>
+
+      <div className="chart-grid">
+        <BarList title="Where it's from" entries={s.regions} takeaway={s.takeaways.regions} />
+        <BarList title="Top producers" entries={s.producers} takeaway={s.takeaways.producers} />
+        <BarList title="Age" entries={s.ages} takeaway={s.takeaways.ages} layout="columns" />
+        <BarList title="ABV" entries={s.abvs} takeaway={s.takeaways.abv} layout="columns" />
+      </div>
     </section>
   );
 }
