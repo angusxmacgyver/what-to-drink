@@ -1069,6 +1069,90 @@ nav button.on,
   max-width: 100%;
 }
 
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.donut {
+  width: 180px;
+  height: 180px;
+  flex: none;
+}
+
+.donut-hole {
+  fill: none;
+}
+
+.donut-seg {
+  fill: none;
+  stroke-width: 6;
+}
+
+.donut-seg.smoke,
+.swatch.smoke {
+  stroke: var(--gold);
+  background: var(--gold);
+}
+
+.donut-seg.no-smoke,
+.swatch.no-smoke {
+  stroke: var(--amber);
+  background: var(--amber);
+}
+
+.donut-seg.untagged,
+.swatch.untagged {
+  stroke: var(--line);
+  background: var(--line);
+}
+
+.donut-value {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 8px;
+  font-weight: 900;
+  fill: var(--ink);
+  text-anchor: middle;
+}
+
+.donut-caption {
+  font-size: 3.2px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend em {
+  font-style: normal;
+  color: var(--muted);
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
 @media (max-width: 760px) {
   .chart-grid {
     grid-template-columns: 1fr;
