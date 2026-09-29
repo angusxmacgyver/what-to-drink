@@ -1,8 +1,8 @@
 # What To Drink — project brief
 
-**How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 12. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
+**How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 9 of 12 (Cloudflare Pages deploy). Milestones 10–11 are already implemented. Milestone 12 (D1) follows 9.
+**Current milestone:** 2 of 6 (Test setup). The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
 
 **Living copy:** this file.
 
@@ -19,7 +19,7 @@ Two jobs:
 
 A third surface, **Graveyard**, holds killed bottles. It is browse-only. Those bottles are not in The Library and not in the randomizer.
 
-Guests get The Library and Pick a Dram (and Graveyard). Owner-only surfaces (from Milestone 10) are ingest and, later, add/edit.
+Guests get The Library and Pick a Dram (and Graveyard). Owner-only surfaces are ingest and add/edit.
 
 The workbook tab named SMWS is only how Society bottles are captured in Excel. After ingest they are ordinary Library bottles and ordinary randomizer tickets. There is no SMWS-only screen or chip.
 
@@ -33,9 +33,9 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 4. Finish only the stated milestone unless the user expands scope.
 5. When Done when is met, mark the todo complete and set **Current milestone** to N+1.
 
-**Stack:** React 19 + TypeScript + Vite. Static SPA until Milestone 12.
+**Stack:** React 19 + TypeScript + Vite. Static SPA until Milestone 6.
 
-**Hosting (from Milestone 9):** Cloudflare Pages, git-connected. Data until Milestone 12 is JSON in the repo.
+**Hosting (from Milestone 3):** Cloudflare Pages, git-connected. Data until Milestone 6 is JSON in the repo.
 
 **Owner PIN:** `VITE_OWNER_PIN` (see `.env.example`; local default `cellar`).
 
@@ -158,11 +158,13 @@ Pick a Dram also has:
 
 A filter applies only when the user sets it. Bottles missing a tag still appear when that filter is unset.
 
+Sub-characteristics depend on Flavor Families: the chips appear only after a family is picked, and list the sub-characteristics found on bottles that have every picked family.
+
 ---
 
 ## Architecture
 
-Until Milestone 12 the git repo is the host for data. Guests see whatever was last imported and deployed. Owner edits persist to `localStorage` and, when bound, to Cloudflare D1 via `PUT /api/catalog`.
+Until Milestone 6 the git repo is the host for data. Guests see whatever was last imported and deployed. Owner edits persist to `localStorage` and, when bound, to Cloudflare D1 via `PUT /api/catalog`.
 
 **Layout:**
 
@@ -176,59 +178,39 @@ Until Milestone 12 the git repo is the host for data. Guests see whatever was la
 
 ---
 
-## Milestones (12)
+## Done
 
-### Milestone 1 — Scaffold
+The first version of the app, built before the roadmap was renumbered:
 
-Vite + React + TypeScript, `PROJECT.md`, git at `~/Projects/what-to-drink`.
+- **Scaffold.** Vite + React + TypeScript, `PROJECT.md`, git at `~/Projects/what-to-drink`.
+- **Ingest.** xlsx → canonical bottles from Open, Closed, and SMWS. Fallen soldiers → `graveyard`. Draft Participants skipped. Ardbeg Cask Strength 10 `bottleKey` count is 5; graveyard length is 5.
+- **The Library.** Grouped list with stock badge, shared filter bar, text search, expanding row with the 12 fields (SMWS extras on Society rows).
+- **Graveyard.** Separate view for `graveyard`. Lagavulin 16 appears only here.
+- **Pick a Dram.** Place question, Open default, include-Closed, shared filters plus derived Country. Never rolls a graveyard bottle; empty apartment has an explicit empty state.
+- **Replace import and backup.** Replace JSON after writing `bottles.backup.json`. Shows `importedAt`.
+- **Import UI.** In-app upload of xlsx/csv. Open/Closed headers are the default map; SMWS mapping is built in.
+- **Owner edit.** PIN-gated add (sparse fields allowed), edit, mark Open, kill → Graveyard.
+- **Filter redesign and theme.** Chip filters, a distillery typeahead with counts, sub-characteristics scoped to the picked flavor families, and a light/dark toggle.
 
-**Done when:** `npm run dev` shows a blank shell and the git repo has `PROJECT.md`.
+---
 
-### Milestone 2 — Ingest
+## Milestones (6)
 
-Read the xlsx. Map Open, Closed, and SMWS into canonical bottles. Fallen soldiers → `graveyard`. Skip Draft Participants.
+### Milestone 1 — Land the filter and theme work
 
-**Done when:** `data/bottles.json` has 157+174+176 live bottles, Ardbeg Cask Strength 10 `bottleKey` count is 5, `smws::1.246` (or equivalent) is present, graveyard length is 5.
+Commit the docs, the filter redesign, and the light/dark theme as separate commits.
 
-### Milestone 3 — The Library list
+**Done when:** the working tree is clean and this file uses the new numbering.
 
-Grouped list, compact fields, stock badge.
+### Milestone 2 — Test setup
 
-**Done when:** CS10 is one row `×5`, Society bottles appear in the same list, killed bottles do not.
+`vitest` with a `npm test` script. Tests for `src/lib/library.ts`: `subsForFamilies`, `distilleryCounts`, and grouping by `bottleKey`.
 
-### Milestone 4 — The Library search, filters, detail
+**Done when:** `npm test` runs and passes.
 
-Shared filter bar, text search, expanding row with the 12 fields (SMWS extras on Society rows).
+### Milestone 3 — Deploy
 
-**Done when:** you can filter to a distillery, search a Full Code, and expand a row without leaving the list.
-
-### Milestone 5 — Graveyard
-
-Separate view for `graveyard`.
-
-**Done when:** Lagavulin 16 appears only here.
-
-### Milestone 6 — Pick a Dram roll
-
-Place question, Open default, roll a result card with Location.
-
-**Done when:** a house roll can return a Society bottle; it never returns a graveyard bottle; apartment with no tags shows empty state.
-
-### Milestone 7 — Pick a Dram filters
-
-Wire shared filters plus include-Closed and derived Country.
-
-**Done when:** a Theme + Open house roll stays inside that set.
-
-### Milestone 8 — Replace import and backup
-
-Owner-triggered ingest. Replace JSON after writing `bottles.backup.json`. Show `importedAt`.
-
-**Done when:** a second import makes `bottles.backup.json` equal the previous payload.
-
-### Milestone 9 — Deploy
-
-Cloudflare Pages from git. Public URL is The Library + Pick a Dram + Graveyard.
+Cloudflare Pages. Public URL is The Library + Pick a Dram + Graveyard. First decide whether bottle locations in `data/bottles.json` can be public. Connecting the GitHub repo to Pages so pushes deploy themselves is the longer hosting shape.
 
 **Done when:** the URL works without the laptop running `npm run dev`.
 
@@ -237,23 +219,23 @@ npm run build
 npx wrangler pages deploy dist --project-name=what-to-drink
 ```
 
-### Milestone 10 — Import UI
+### Milestone 4 — Analytics
 
-In-app upload of xlsx/csv. Default mapping is Open/Closed headers; SMWS mapping stays built-in.
+A dedicated screen of statistics and views over the ingested cellar (live bottles plus Graveyard as it applies): open vs closed vs killed, where it is from, how it is flavored, age and ABV shape, Society vs the rest. Counts come from the catalog, not a separate analytics product. Guests can browse it; it does not change bottles. Calculations live in tested helpers in `src/lib/analytics.ts`.
 
-**Done when:** uploading a new export refreshes The Library without a CLI step.
+**Done when:** an Analytics nav item shows totals and at least a few sliced views that match the current catalog, including after an import.
 
-### Milestone 11 — Owner edit
+### Milestone 5 — Color-coded flavor families
 
-Login-gated add (sparse fields allowed), edit, mark Open, kill → Graveyard.
+Give each flavor family its own accent color, and have each sub-characteristic take the color of the family it most often co-occurs with (`subsForFamilies` in `src/lib/library.ts` already derives that relationship). Apply on the filter chips and on the tag chips shown per bottle.
 
-**Done when:** an owner can add a closed purchase in the UI and see it in The Library.
+**Done when:** it is obvious at a glance which sub-characteristics belong to which family, in both themes.
 
-### Milestone 12 — App as source of truth
+### Milestone 6 — Remote editing (deferred)
 
-Migrate `bottles.json` into Cloudflare D1 (Pages Functions). Guest refresh sees writes without a commit.
+Migrate `bottles.json` into Cloudflare D1 (Pages Functions). Guest refresh sees writes without a commit. Not started until these are decided: who edits and from which device; owner login (Cloudflare Access or a server-checked token, since `VITE_OWNER_PIN` ships in the bundle); one JSON snapshot vs one row per bottle; whether Excel stays the main capture tool.
 
-**Done when:** an owner edit appears for a guest on the deployed URL with no git push.
+**Done when:** an owner edit appears for a guest on the deployed URL with no git push, and `PUT /api/catalog` rejects unauthenticated writes.
 
 ```bash
 npx wrangler d1 create what-to-drink
@@ -263,10 +245,18 @@ npx wrangler d1 execute what-to-drink --file=./schema.sql
 
 ---
 
+## Future features
+
+Not scheduled yet.
+
+- **Apartment inventory.** The Apartment sheet mapper exists but the sheet is empty. Once bottles are tagged, Pick a Dram at the apartment should have a real pool.
+- **Sheet hygiene.** Theme spelling, SMWS location, status case. Cleanup in Excel; the next import picks it up.
+---
+
 ## Conventions for later chats
 
 - Phrase status as which milestone is in progress, not as a recap of old debates.
 - Prefer editing `PROJECT.md` Current milestone over scattering status in chat.
-- Sheet cleanup (Theme spelling, SMWS Location, status case) can happen in Excel in parallel; the next import picks it up. It does not block Milestones 1–7.
+- Sheet cleanup (Theme spelling, SMWS Location, status case) can happen in Excel in parallel; the next import picks it up. It does not block any milestone.
 - Theme aliases may be normalized at ingest so filters match.
 - First-screen choice: **The Library** or **Pick a Dram**.
