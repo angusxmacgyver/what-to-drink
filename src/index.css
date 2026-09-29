@@ -1153,7 +1153,66 @@ nav button.on,
   flex: none;
 }
 
+.chart-grid.flavor {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+}
+
+.radar {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.radar-ring {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.radar-spoke {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.radar-label {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+.radar-cellar {
+  fill: var(--gold);
+  fill-opacity: 0.28;
+  stroke: var(--gold);
+  stroke-width: 2;
+}
+
+.radar-open {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+}
+
+.legend.inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.swatch.cellar {
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+.swatch.open-line {
+  height: 0;
+  border-top: 3px dashed var(--amber);
+  border-radius: 0;
+}
+
 @media (max-width: 760px) {
+  .chart-grid.flavor,
   .chart-grid {
     grid-template-columns: 1fr;
   }

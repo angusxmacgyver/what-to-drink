@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Catalog } from "../types";
 import { cellarSummary, pct } from "../lib/analytics";
 import { BarList } from "./BarList";
+import { FlavorRadar } from "./FlavorRadar";
 import { SmokeDonut } from "./SmokeDonut";
 
 type Props = {
@@ -60,8 +61,9 @@ export function Analytics({ catalog }: Props) {
         <BarList title="ABV" entries={s.abvs} takeaway={s.takeaways.abv} layout="columns" />
       </div>
 
-      <div className="chart-grid">
+      <div className="chart-grid flavor">
         <SmokeDonut {...s.smoke} takeaway={s.takeaways.smoke} />
+        <FlavorRadar {...s.fingerprint} takeaway={s.takeaways.fingerprint} />
       </div>
     </section>
   );
