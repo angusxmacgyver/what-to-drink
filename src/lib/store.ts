@@ -2,6 +2,21 @@ import type { Bottle, Catalog } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
+const THEME_KEY = "what-to-drink-theme";
+
+export type Theme = "dark" | "light";
+
+export function loadTheme(): Theme {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored === "light" || stored === "dark") return stored;
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: light)").matches
+    ? "light"
+    : "dark";
+}
+
+export function saveTheme(theme: Theme): void {
+  localStorage.setItem(THEME_KEY, theme);
+}
 
 export function loadStoredCatalog(): Catalog | null {
   try {

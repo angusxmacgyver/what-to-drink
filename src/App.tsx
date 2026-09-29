@@ -13,12 +13,15 @@ import {
   isOwner,
   killBottle,
   loadStoredCatalog,
+  loadTheme,
   ownerPin,
   pushRemoteCatalog,
   saveCatalog,
+  saveTheme,
   setOwner,
   upsertBottle,
 } from "./lib/store";
+import type { Theme } from "./lib/store";
 
 type View = "home" | "library" | "dram" | "graveyard" | "owner";
 
@@ -32,6 +35,12 @@ export default function App() {
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [pin, setPin] = useState("");
   const [notice, setNotice] = useState("");
+  const [theme, setTheme] = useState<Theme>(() => loadTheme());
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    saveTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     setOwnerState(isOwner());
@@ -62,30 +71,50 @@ export default function App() {
         <button type="button" className="brand" onClick={() => setView("home")}>
           What To Drink
         </button>
-        <nav>
-          <button type="button" className={view === "library" ? "on" : ""} onClick={() => setView("library")}>
-            The Library
-          </button>
-          <button type="button" className={view === "dram" ? "on" : ""} onClick={() => setView("dram")}>
-            Pick a Dram
-          </button>
+        <div className="top-right">
+          <nav>
+            <button type="button" className={view === "library" ? "on" : ""} onClick={() => setView("library")}>
+              The Library
+            </button>
+            <button type="button" className={view === "dram" ? "on" : ""} onClick={() => setView("dram")}>
+              Pick a Dram
+            </button>
+            <button
+              type="button"
+              className={view === "graveyard" ? "on" : ""}
+              onClick={() => setView("graveyard")}
+            >
+              Graveyard
+            </button>
+            {owner ? (
+              <button type="button" className={view === "owner" ? "on" : ""} onClick={() => setView("owner")}>
+                Owner
+              </button>
+            ) : (
+              <button type="button" onClick={() => setView("owner")}>
+                Owner login
+              </button>
+            )}
+          </nav>
           <button
             type="button"
-            className={view === "graveyard" ? "on" : ""}
-            onClick={() => setView("graveyard")}
+            className="theme-toggle"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
           >
-            Graveyard
+            {theme === "dark" ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
+              </svg>
+            )}
           </button>
-          {owner ? (
-            <button type="button" className={view === "owner" ? "on" : ""} onClick={() => setView("owner")}>
-              Owner
-            </button>
-          ) : (
-            <button type="button" onClick={() => setView("owner")}>
-              Owner login
-            </button>
-          )}
-        </nav>
+        </div>
       </header>
 
       {notice ? <p className="notice">{notice}</p> : null}
