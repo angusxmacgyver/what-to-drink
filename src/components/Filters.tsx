@@ -1,6 +1,8 @@
 import type { Bottle, FilterState } from "../types";
-import { MultiSelect } from "./MultiSelect";
+import { ChipSelect } from "./ChipSelect";
+import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeSlider } from "./RangeSlider";
+import { distilleryCounts, subsForFamilies } from "../lib/library";
 
 type Props = {
   bottles: Bottle[];
@@ -22,9 +24,10 @@ export function Filters({
   showSearch = true,
 }: Props) {
   const distilleries = uniq(bottles.map((b) => b.distillery));
+  const distilleryTally = distilleryCounts(bottles);
   const themes = uniq(bottles.map((b) => b.theme));
   const families = uniq(bottles.flatMap((b) => b.flavorFamilies));
-  const subs = uniq(bottles.flatMap((b) => b.subCharacteristics));
+  const subs = subsForFamilies(bottles, filters.families);
   const countries = uniq(bottles.map((b) => b.country));
   const regions = uniq(bottles.map((b) => b.region));
 
@@ -67,13 +70,13 @@ export function Filters({
           />
         </label>
       ) : null}
-      <MultiSelect
-        label="Distillery / Producer"
+      <DistilleryCombobox
         options={distilleries}
+        counts={distilleryTally}
         value={filters.distilleries}
         onChange={(distilleries) => set({ distilleries })}
       />
-      <MultiSelect
+      <ChipSelect
         label="Theme"
         options={themes}
         value={filters.themes}
@@ -105,13 +108,13 @@ export function Filters({
       ) : null}
       {showGeo ? (
         <>
-          <MultiSelect
+          <ChipSelect
             label="Country"
             options={countries}
             value={filters.countries}
             onChange={(countries) => set({ countries })}
           />
-          <MultiSelect
+          <ChipSelect
             label="Region"
             options={regions}
             value={filters.regions}
@@ -119,17 +122,21 @@ export function Filters({
           />
         </>
       ) : null}
-      <MultiSelect
+      <ChipSelect
         label="Flavor families"
         options={families}
         value={filters.families}
-        onChange={(families) => set({ families })}
+        onChange={(nextFamilies) => {
+          const keptSubs = filters.subs.filter((s) => subsForFamilies(bottles, nextFamilies).includes(s));
+          set({ families: nextFamilies, subs: keptSubs });
+        }}
       />
-      <MultiSelect
+      <ChipSelect
         label="Sub-characteristics"
         options={subs}
         value={filters.subs}
         onChange={(subs) => set({ subs })}
+        emptyHint="Pick a flavor family to narrow by sub-characteristic."
       />
     </div>
   );

@@ -19,8 +19,22 @@ function ageLabel(bottles: Bottle[]): string {
   return "mixed";
 }
 
-function uniqueTags(values: string[]): string[] {
+export function uniqueTags(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
+}
+
+export function distilleryCounts(bottles: Bottle[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const bottle of bottles) {
+    counts[bottle.distillery] = (counts[bottle.distillery] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function subsForFamilies(bottles: Bottle[], families: string[]): string[] {
+  if (families.length === 0) return [];
+  const pool = bottles.filter((b) => families.every((f) => b.flavorFamilies.includes(f)));
+  return uniqueTags(pool.flatMap((b) => b.subCharacteristics)).sort((a, b) => a.localeCompare(b));
 }
 
 function abvLabel(bottles: Bottle[]): string {
