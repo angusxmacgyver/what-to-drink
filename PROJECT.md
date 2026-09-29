@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 3 of 6 (Deploy). The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
+**Current milestone:** 3 of 6 (Deploy). Milestone 4 (Analytics) was built first and is done. The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
 
 **Living copy:** this file.
 
@@ -19,7 +19,7 @@ Two jobs:
 
 A third surface, **Graveyard**, holds killed bottles. It is browse-only. Those bottles are not in The Library and not in the randomizer.
 
-Guests get The Library and Pick a Dram (and Graveyard). Owner-only surfaces are ingest and add/edit.
+Guests get The Library and Pick a Dram (and Graveyard and Analytics). Owner-only surfaces are ingest and add/edit.
 
 The workbook tab named SMWS is only how Society bottles are captured in Excel. After ingest they are ordinary Library bottles and ordinary randomizer tickets. There is no SMWS-only screen or chip.
 
@@ -221,9 +221,16 @@ npx wrangler pages deploy dist --project-name=what-to-drink
 
 ### Milestone 4 — Analytics
 
-A dedicated screen of statistics and views over the ingested cellar (live bottles plus Graveyard as it applies): open vs closed vs killed, where it is from, how it is flavored, age and ABV shape, Society vs the rest. Counts come from the catalog, not a separate analytics product. Guests can browse it; it does not change bottles. Calculations live in tested helpers in `src/lib/analytics.ts`.
+**Done.** One scrolling Analytics screen, computed from the in-app catalog so it follows imports and owner edits. Counts are per physical bottle, and Society bottles are counted like any other (no Society-only panels). Hand-built SVG/CSS graphics, no chart library, and plain one-line takeaways generated from the numbers.
 
-**Done when:** an Analytics nav item shows totals and at least a few sliced views that match the current catalog, including after an import.
+- Headline numbers: bottles, producers, expressions, top region share, share with Smoke, median ABV.
+- The shelf: Open vs Closed stacked bar, plus the Graveyard count.
+- Where it's from (sub-regions such as "Speyside, Lossie" roll up to their parent), top producers, age buckets, ABV buckets.
+- Peat donut: Smoke, no Smoke, untagged.
+- Flavor fingerprint radar: share of tagged bottles per family, open bottles drawn over the whole cellar.
+- Palate: sub-characteristics sized by count, grouped under the family they appear with most (`subFamily`, reused by Milestone 5).
+
+Calculations live in tested helpers in `src/lib/analytics.ts`. Deferred: flavor-by-region heatmap, click-through from a bar to a filtered Library, Graveyard trends.
 
 ### Milestone 5 — Color-coded flavor families
 

@@ -4,13 +4,15 @@ A laptop-first web app for a personal whisky cellar. Guests can browse what is s
 
 Scotch Malt Whisky Society bottles live in the same cellar as everything else. The SMWS tab in Excel is only a capture format. After import they show up in The Library and in Pick a Dram like any other bottle.
 
-## The three screens
+## The screens
 
 **The Library** is the book of every bottle that is still available. Search and filters apply here. Bottles of the same expression are grouped, with a stock count (five Ardbeg Cask Strength 10s appear as one row, ×5). Open a row to see the full record: notes, tasting notes, flavor families, sub-characteristics, location, and Society extras when they exist.
 
 **Pick a Dram** is a randomizer, not a second list. You say whether you are at the house or the apartment, optionally narrow the pool, then pour one. The default pool is open bottles at that place. You can include closed bottles. Chance is per physical bottle, so a stock of five is five tickets. The result names the bottle and where it sits. Graveyard bottles never come up. If nothing is tagged for the apartment, the app says so instead of rolling the house by accident.
 
 **Graveyard** is killed bottles only. Browse-only. They are not in The Library and not in the randomizer.
+
+**Analytics** is a picture of the cellar, counted by physical bottle: headline numbers, open vs closed, where it's from, top producers, age and ABV, how much of it is smoky, a flavor fingerprint that lays the open bottles over the whole cellar, and a palate cloud of sub-characteristics grouped by flavor family. Each graphic has a one-line takeaway worked out from the numbers. It updates with every import or edit and never changes bottles.
 
 Owner tools (PIN-gated) cover workbook import, adding a bottle, editing, marking a bottle open, and killing it into the Graveyard.
 
@@ -86,9 +88,9 @@ React 19, TypeScript, and Vite. Static app for now.
 Roadmap:
 
 1. Land the filter and theme work. Done.
-2. Test setup with `vitest` for the library helpers.
+2. Test setup with `vitest` for the library helpers. Done.
 3. Host on Cloudflare Pages so the cellar has a public URL and does not depend on `npm run dev`.
-4. Analytics screen: statistics and views over the ingested cellar.
+4. Analytics screen: statistics and views over the ingested cellar. Done.
 5. Color-coded flavor families, with sub-characteristics taking their family's color.
 6. Remote editing (deferred): move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with real owner login.
 
