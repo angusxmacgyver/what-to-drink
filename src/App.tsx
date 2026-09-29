@@ -5,6 +5,7 @@ import seeded from "../data/bottles.json";
 import { Library } from "./components/Library";
 import { PickADram } from "./components/PickADram";
 import { Graveyard } from "./components/Graveyard";
+import { Analytics } from "./components/Analytics";
 import { ImportPanel } from "./components/ImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
 import {
@@ -23,7 +24,7 @@ import {
 } from "./lib/store";
 import type { Theme } from "./lib/store";
 
-type View = "home" | "library" | "dram" | "graveyard" | "owner";
+type View = "home" | "library" | "dram" | "graveyard" | "analytics" | "owner";
 
 const seed = seeded as Catalog;
 
@@ -85,6 +86,13 @@ export default function App() {
               onClick={() => setView("graveyard")}
             >
               Graveyard
+            </button>
+            <button
+              type="button"
+              className={view === "analytics" ? "on" : ""}
+              onClick={() => setView("analytics")}
+            >
+              Analytics
             </button>
             {owner ? (
               <button type="button" className={view === "owner" ? "on" : ""} onClick={() => setView("owner")}>
@@ -163,6 +171,8 @@ export default function App() {
       ) : null}
 
       {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} /> : null}
+
+      {view === "analytics" ? <Analytics catalog={catalog} /> : null}
 
       {view === "owner" ? (
         <section className="panel">
