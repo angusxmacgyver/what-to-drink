@@ -3,6 +3,7 @@ import type { Catalog } from "../types";
 import { cellarSummary, pct } from "../lib/analytics";
 import { BarList } from "./BarList";
 import { FlavorRadar } from "./FlavorRadar";
+import { PalateCloud } from "./PalateCloud";
 import { SmokeDonut } from "./SmokeDonut";
 
 type Props = {
@@ -65,6 +66,8 @@ export function Analytics({ catalog }: Props) {
         <SmokeDonut {...s.smoke} takeaway={s.takeaways.smoke} />
         <FlavorRadar {...s.fingerprint} takeaway={s.takeaways.fingerprint} />
       </div>
+
+      <PalateCloud groups={s.palate} />
     </section>
   );
 }
