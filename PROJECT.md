@@ -264,3 +264,4 @@ Not scheduled yet.
 - Sheet cleanup (Theme spelling, SMWS Location, status case) can happen in Excel in parallel; the next import picks it up. It does not block any milestone.
 - Theme aliases may be normalized at ingest so filters match.
 - First-screen choice: **The Library** or **Pick a Dram**.
+- Sub-characteristic colors are a curated lookup (`SUB_FAMILY` in `src/lib/colors.ts`), not computed: bottles typically carry 5+ flavor families at once, so co-occurrence has no real signal (every sub-characteristic touches every family at a near-uniform rate). If ingest introduces a new sub-characteristic, add it to that map so it gets color-coded; until then it falls back to a neutral look.

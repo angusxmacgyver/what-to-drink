@@ -1,4 +1,4 @@
-import { familyClass } from "../lib/colors";
+import { familyClass, subFamilyClass } from "../lib/colors";
 
 export function FlavorTags({
   families,
@@ -22,7 +22,7 @@ export function FlavorTags({
       {subs.length ? (
         <div className="flavor-row">
           {subs.map((sub) => (
-            <span key={`s:${sub}`} className="tag sub">
+            <span key={`s:${sub}`} className={`tag sub ${subFamilyClass(sub)}`}>
               {sub}
             </span>
           ))}

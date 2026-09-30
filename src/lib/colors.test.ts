@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { familyClass } from "./colors";
+import { familyClass, subFamilyClass } from "./colors";
 
 describe("familyClass", () => {
   it("maps every known flavor family to its own class", () => {
@@ -19,5 +19,19 @@ describe("familyClass", () => {
   it("falls back to a neutral class for an unrecognized family", () => {
     expect(familyClass("Apartment")).toBe("family-other");
     expect(familyClass("")).toBe("family-other");
+  });
+});
+
+describe("subFamilyClass", () => {
+  it("maps a curated sub-characteristic to its family's class", () => {
+    expect(subFamilyClass("Woodsmoke & Campfire")).toBe("family-smoke");
+    expect(subFamilyClass("Honey")).toBe("family-sweet");
+    expect(subFamilyClass("Citrus")).toBe("family-fruit-fresh");
+    expect(subFamilyClass("Anise & Herbal Spice")).toBe("family-herbal");
+  });
+
+  it("falls back to a neutral class for an uncurated sub-characteristic", () => {
+    expect(subFamilyClass("Not Yet Catalogued")).toBe("family-other");
+    expect(subFamilyClass("")).toBe("family-other");
   });
 });

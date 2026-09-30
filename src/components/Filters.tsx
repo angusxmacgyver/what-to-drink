@@ -3,7 +3,7 @@ import { ChipSelect } from "./ChipSelect";
 import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeSlider } from "./RangeSlider";
 import { distilleryCounts, subsForFamilies } from "../lib/library";
-import { familyClass } from "../lib/colors";
+import { familyClass, subFamilyClass } from "../lib/colors";
 
 type Props = {
   bottles: Bottle[];
@@ -150,6 +150,7 @@ export function Filters({
         value={filters.subs}
         onChange={(subs) => set({ subs })}
         emptyHint="Pick a flavor family to narrow by sub-characteristic."
+        colorFor={subFamilyClass}
       />
     </div>
   );

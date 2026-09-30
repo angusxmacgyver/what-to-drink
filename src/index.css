@@ -596,6 +596,11 @@ nav button.on,
   color: var(--ink);
 }
 
+.tag.sub[class*="family-"] {
+  background: color-mix(in srgb, var(--family-color) 14%, var(--bg-2));
+  border-color: var(--family-color);
+}
+
 .chip[class*="family-"] {
   background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
   border-color: var(--family-color);
