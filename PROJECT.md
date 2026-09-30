@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 5 of 6 (Color-coded flavor families). Milestones 3 (Deploy) and 4 (Analytics) are done. The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
+**Current milestone:** 6 of 6 (Remote editing). Scoped and decided, not yet implemented — see Milestone 6 for the full plan (storage, owner access, merge-import, backups). Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
 **Living copy:** this file.
 
@@ -37,7 +37,7 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 
 **Hosting (from Milestone 3):** Cloudflare Workers static assets, git-connected (Workers Builds). Pushes to `main` deploy to https://what-to-drink.max-krueger.workers.dev/. Data until Milestone 6 is JSON in the repo.
 
-**Owner PIN:** `VITE_OWNER_PIN` (see `.env.example`; local default `cellar`).
+**Owner PIN:** `VITE_OWNER_PIN` (see `.env.example`; local default `cellar`). Milestone 6 moves the check server-side and replaces the top-nav "Owner login" with a lock-glyph toggle next to the theme switch.
 
 ---
 
@@ -164,7 +164,7 @@ Sub-characteristics depend on Flavor Families: the chips appear only after a fam
 
 ## Architecture
 
-Until Milestone 6 the git repo is the host for data. Guests see whatever was last imported and deployed. Owner edits persist to `localStorage` and, when bound, to Cloudflare D1 via `PUT /api/catalog`.
+Until Milestone 6 the git repo is the host for data. Guests see whatever was last imported and deployed. Owner edits persist to `localStorage` today; Milestone 6 replaces the remote side with Cloudflare D1, one row per bottle, rather than the single-blob `PUT /api/catalog` sketched here originally.
 
 **Layout:**
 
@@ -173,8 +173,8 @@ Until Milestone 6 the git repo is the host for data. Guests see whatever was las
 - `data/bottles.backup.json`
 - `scripts/ingest.ts` — workbook → JSON
 - `src/` — React app
-- `functions/api/catalog.ts` — Pages Function for D1 (not served on Workers; rework in Milestone 6)
-- `schema.sql` — D1 snapshot table
+- `functions/api/catalog.ts` — Pages Function for D1 (not served on Workers; replaced by a Worker script in Milestone 6)
+- `schema.sql` — D1 schema; currently a single-blob snapshot table, to be replaced with one row per bottle for Milestone 6
 
 ---
 
@@ -221,21 +221,46 @@ Commit the docs, the filter redesign, and the light/dark theme as separate commi
 - Where it's from (sub-regions such as "Speyside, Lossie" roll up to their parent), top producers, age buckets, ABV buckets.
 - Peat donut: Smoke, no Smoke, untagged.
 - Flavor fingerprint radar: share of tagged bottles per family, open bottles drawn over the whole cellar.
-- Palate: sub-characteristics sized by count, grouped under the family they appear with most (`subFamily`, reused by Milestone 5).
+- Palate: sub-characteristics sized by count, grouped under the family they appear with most (`subFamily`). Milestone 5 tried reusing this for sub-characteristic colors and found it had no real signal (bottles average 5.9 of 11 families tagged, so co-occurrence is near-uniform); it ended up with a curated map instead (`subOwnerFamily` in `src/lib/library.ts`). The palate cloud still uses the original statistical `subFamily` for its own grouping, unchanged.
 
 Calculations live in tested helpers in `src/lib/analytics.ts`. Deferred: flavor-by-region heatmap, click-through from a bar to a filtered Library, Graveyard trends.
 
 ### Milestone 5 — Color-coded flavor families
 
-Give each flavor family its own accent color, and have each sub-characteristic take the color of the family it most often co-occurs with (`subsForFamilies` in `src/lib/library.ts` already derives that relationship). Apply on the filter chips and on the tag chips shown per bottle.
+**Done.** Each of the 11 flavor families has its own accent color, tuned separately for light and dark themes (`familyClass` in `src/lib/colors.ts`). Applied to the Flavor Families filter chips (tinted when available, solid-filled with `--on-gold` text when selected) and to family tag chips on Library rows and the Pick a Dram result.
 
-**Done when:** it is obvious at a glance which sub-characteristics belong to which family, in both themes.
+Sub-characteristics were meant to take the color of the family they most often co-occur with, but that statistic turned out to carry no real signal (bottles average 5.9 of 11 families tagged at once, so every sub touches every family at a near-uniform rate). Replaced with a curated lookup instead (`SUB_FAMILY` / `subOwnerFamily` in `src/lib/library.ts`), assigned by what each sub-characteristic actually means. A sub with no curated owner yet falls back to a neutral look rather than breaking.
 
-### Milestone 6 — Remote editing (deferred)
+That same curation exposed a related filtering gap: picking a flavor family used to list every sub-characteristic merely co-occurring with it, not the ones it actually owns. `subsForFamilies` now also requires a sub's curated owner to be one of the picked families (OR across families when several are picked), so the chips shown match the colors shown.
 
-Migrate `bottles.json` into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Not started until these are decided: who edits and from which device; owner login (Cloudflare Access or a server-checked token, since `VITE_OWNER_PIN` ships in the bundle); one JSON snapshot vs one row per bottle; whether Excel stays the main capture tool.
+### Milestone 6 — Remote editing
 
-**Done when:** an owner edit appears for a guest on the deployed URL with no git push, and `PUT /api/catalog` rejects unauthenticated writes.
+Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Scoped and decided below; not yet implemented.
+
+**Storage.** One D1 row per bottle, not a single JSON blob. Enables partial writes — a single edit, or a merge-import, touches only the rows it needs, instead of read-modify-write-the-whole-blob.
+
+**Owner access.** The threat model is accidental guest interference, not a hardened security boundary — a PIN is proportionate. `VITE_OWNER_PIN` moves from a client-bundled constant to a server-checked secret the Worker validates on every owner request (kill, edit, merge-import, export). No separate login page, no Cloudflare Access, no sessions or rate-limiting — those solve a problem this app doesn't have.
+
+**Owner-mode UI.** "Owner login" is renamed **Bottle Management** and comes off the persistent top nav. In its place: a lock glyph next to the dark-mode toggle in the header. Open padlock = guest view (default); clicking a locked padlock prompts for the PIN, and a correct PIN unlocks owner actions for the rest of the session. This is the general mechanism for any future owner-only action, not just this milestone's — see Pour tracking under Future features.
+
+**Confirmation.** Any destructive or irreversible owner action (kill, committing a merge-import, overwriting a bottle's metadata) requires an explicit confirm step — no single-click accidents.
+
+**Editor scope.** Just the owner, from multiple places (laptop, phone, Excel workbook, in-app) — not multiple people, no per-user accounts. Excel and in-app editing are both first-class, indefinitely; neither replaces the other.
+
+**New feature: merge-import.** A second, additive import path (distinct from today's full-replace `ImportPanel`) for dropping in a workbook of new bottles without touching the existing database:
+
+- Lives in Bottle Management, owner-gated.
+- Upload always opens a preview screen first; nothing writes to D1 until confirmed.
+- Rows matching an existing `bottleKey` are flagged in that preview; the owner chooses per row whether to insert as new stock or skip.
+
+**New feature: database export.**
+
+- A manual "Export database" action (same idea as today's Download JSON, now reading from D1).
+- Plus an automatic backup: a weekly Cloudflare Worker Cron Trigger, and also triggered by a manual export, writing a timestamped snapshot to Cloudflare R2 — picked over committing back to git, since every push to `main` deploys, and a scheduled commit would trigger a weekly production redeploy for no code change. Keep the last 10 backups; prune the oldest on write.
+
+**Still open (small, resolve during implementation):** exact placement/interaction of the PIN prompt under the lock glyph (e.g. a popover vs. an inline field).
+
+**Done when:** an owner edit appears for a guest on the deployed URL with no git push, and every owner-gated request is rejected without the correct PIN.
 
 ```bash
 npx wrangler d1 create what-to-drink
@@ -251,7 +276,7 @@ Not scheduled yet.
 
 - **Apartment inventory.** The Apartment sheet mapper exists but the sheet is empty. Once bottles are tagged, Pick a Dram at the apartment should have a real pool.
 - **Sheet hygiene.** Theme spelling, SMWS location, status case. Cleanup in Excel; the next import picks it up.
-- **Pour tracking.** After Milestone 6 (remote editing), so pours are shared across devices rather than stuck in one browser.
+- **Pour tracking.** After Milestone 6 (remote editing), so pours are shared across devices rather than stuck in one browser. Its owner-only actions (see below) gate behind the same lock-glyph toggle Milestone 6 introduces, not a separate mechanism.
   - **Last third.** A field or flag for a bottle in its last third, marking it a prime target for consumption.
   - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
   - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
