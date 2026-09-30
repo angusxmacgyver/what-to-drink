@@ -251,6 +251,10 @@ Not scheduled yet.
 
 - **Apartment inventory.** The Apartment sheet mapper exists but the sheet is empty. Once bottles are tagged, Pick a Dram at the apartment should have a real pool.
 - **Sheet hygiene.** Theme spelling, SMWS location, status case. Cleanup in Excel; the next import picks it up.
+- **Pour tracking.** After Milestone 6 (remote editing), so pours are shared across devices rather than stuck in one browser.
+  - **Last third.** A field or flag for a bottle in its last third, marking it a prime target for consumption.
+  - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
+  - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
 ---
 
 ## Conventions for later chats
