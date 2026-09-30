@@ -7,7 +7,9 @@ import { PickADram } from "./components/PickADram";
 import { Graveyard } from "./components/Graveyard";
 import { Analytics } from "./components/Analytics";
 import { ImportPanel } from "./components/ImportPanel";
+import { MergeImportPanel } from "./components/MergeImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
+import { applyMerge } from "./lib/merge";
 import {
   downloadCatalog,
   fetchRemoteCatalog,
@@ -226,6 +228,13 @@ export default function App() {
                   downloadCatalog(next);
                   setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
                   setView("library");
+                }}
+              />
+              <MergeImportPanel
+                catalog={catalog}
+                onConfirm={(bottles) => {
+                  void persist(applyMerge(catalog, bottles));
+                  setNotice(`Added ${bottles.length} bottle${bottles.length === 1 ? "" : "s"} from the workbook.`);
                 }}
               />
               <div className="owner-actions">
