@@ -5,6 +5,8 @@ compatibility_date = "2026-09-22"
 directory = "./dist"
 not_found_handling = "single-page-application"
 
+[previews]
+
 # Bind after: npx wrangler d1 create what-to-drink
 # [[d1_databases]]
 # binding = "DB"
