@@ -158,7 +158,7 @@ Pick a Dram also has:
 
 A filter applies only when the user sets it. Bottles missing a tag still appear when that filter is unset.
 
-Sub-characteristics depend on Flavor Families: the chips appear only after a family is picked, and list the sub-characteristics found on bottles that have every picked family.
+Sub-characteristics depend on Flavor Families: the chips appear only after a family is picked, and list only the sub-characteristics owned by one of the picked families (`subOwnerFamily` in `src/lib/library.ts`), scoped to bottles that have every picked family. A sub with no curated owner yet stays visible regardless of the picked family, so a new ingest never silently hides it.
 
 ---
 
@@ -264,4 +264,4 @@ Not scheduled yet.
 - Sheet cleanup (Theme spelling, SMWS Location, status case) can happen in Excel in parallel; the next import picks it up. It does not block any milestone.
 - Theme aliases may be normalized at ingest so filters match.
 - First-screen choice: **The Library** or **Pick a Dram**.
-- Sub-characteristic colors are a curated lookup (`SUB_FAMILY` in `src/lib/colors.ts`), not computed: bottles typically carry 5+ flavor families at once, so co-occurrence has no real signal (every sub-characteristic touches every family at a near-uniform rate). If ingest introduces a new sub-characteristic, add it to that map so it gets color-coded; until then it falls back to a neutral look.
+- Sub-characteristic family ownership is a curated lookup (`SUB_FAMILY` / `subOwnerFamily` in `src/lib/library.ts`), not computed: bottles typically carry 5+ flavor families at once, so co-occurrence has no real signal (every sub-characteristic touches every family at a near-uniform rate). It drives both the sub-characteristic color (`subFamilyClass` in `src/lib/colors.ts`) and which subs show under a picked family (`subsForFamilies`). If ingest introduces a new sub-characteristic, add it to `SUB_FAMILY` so it gets color-coded and scoped correctly; until then it's treated as unowned (neutral color, always visible).

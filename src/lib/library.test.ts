@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Bottle } from "../types";
-import { distilleryCounts, groupLibrary, matchesStatus, subsForFamilies } from "./library";
+import { distilleryCounts, groupLibrary, matchesStatus, subOwnerFamily, subsForFamilies } from "./library";
 
 let nextId = 0;
 
@@ -50,6 +50,42 @@ describe("subsForFamilies", () => {
 
   it("drops blank subs", () => {
     expect(subsForFamilies(bottles, ["Fruity"])).toEqual(["Apple", "Pear", "Smoke"]);
+  });
+
+  it("narrows to subs owned by the picked family, even if the bottle has other tagged subs", () => {
+    const owned = [
+      bottle({
+        flavorFamilies: ["Wood", "Sweet"],
+        subCharacteristics: ["Toasted & Charred Oak", "Honey"],
+      }),
+    ];
+    expect(subsForFamilies(owned, ["Wood"])).toEqual(["Toasted & Charred Oak"]);
+  });
+
+  it("includes subs owned by any of several picked families", () => {
+    const owned = [
+      bottle({
+        flavorFamilies: ["Wood", "Smoke", "Sweet"],
+        subCharacteristics: ["Toasted & Charred Oak", "Woodsmoke & Campfire", "Honey"],
+      }),
+    ];
+    expect(subsForFamilies(owned, ["Wood", "Smoke"])).toEqual(["Toasted & Charred Oak", "Woodsmoke & Campfire"]);
+  });
+
+  it("keeps a sub with no curated owner visible regardless of which family is picked", () => {
+    const uncurated = [bottle({ flavorFamilies: ["Wood"], subCharacteristics: ["Brand New Tag"] })];
+    expect(subsForFamilies(uncurated, ["Wood"])).toEqual(["Brand New Tag"]);
+  });
+});
+
+describe("subOwnerFamily", () => {
+  it("returns the curated family for a known sub-characteristic", () => {
+    expect(subOwnerFamily("Woodsmoke & Campfire")).toBe("Smoke");
+    expect(subOwnerFamily("Honey")).toBe("Sweet");
+  });
+
+  it("returns undefined for an uncurated sub-characteristic", () => {
+    expect(subOwnerFamily("Brand New Tag")).toBeUndefined();
   });
 });
 
