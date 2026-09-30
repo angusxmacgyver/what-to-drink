@@ -1,3 +1,5 @@
+import { familyClass } from "../lib/colors";
+
 export function FlavorTags({
   families,
   subs,
@@ -11,7 +13,7 @@ export function FlavorTags({
       {families.length ? (
         <div className="flavor-row">
           {families.map((family) => (
-            <span key={`f:${family}`} className="tag family">
+            <span key={`f:${family}`} className={`tag family ${familyClass(family)}`}>
               {family}
             </span>
           ))}

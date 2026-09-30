@@ -3,6 +3,7 @@ import { ChipSelect } from "./ChipSelect";
 import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeSlider } from "./RangeSlider";
 import { distilleryCounts, subsForFamilies } from "../lib/library";
+import { familyClass } from "../lib/colors";
 
 type Props = {
   bottles: Bottle[];
@@ -141,6 +142,7 @@ export function Filters({
           const keptSubs = filters.subs.filter((s) => subsForFamilies(bottles, nextFamilies).includes(s));
           set({ families: nextFamilies, subs: keptSubs });
         }}
+        colorFor={familyClass}
       />
       <ChipSelect
         label="Sub-characteristics"

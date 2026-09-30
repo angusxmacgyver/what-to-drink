@@ -4,9 +4,10 @@ type Props = {
   value: string[];
   onChange: (next: string[]) => void;
   emptyHint?: string;
+  colorFor?: (option: string) => string;
 };
 
-export function ChipSelect({ label, options, value, onChange, emptyHint }: Props) {
+export function ChipSelect({ label, options, value, onChange, emptyHint, colorFor }: Props) {
   const toggle = (option: string) => {
     onChange(value.includes(option) ? value.filter((item) => item !== option) : [...value, option]);
   };
@@ -27,11 +28,12 @@ export function ChipSelect({ label, options, value, onChange, emptyHint }: Props
         <div className="chipset-row">
           {options.map((option) => {
             const on = value.includes(option);
+            const classes = ["chip", on ? "on" : "", colorFor?.(option) ?? ""].filter(Boolean).join(" ");
             return (
               <button
                 key={option}
                 type="button"
-                className={on ? "chip on" : "chip"}
+                className={classes}
                 aria-pressed={on}
                 onClick={() => toggle(option)}
               >

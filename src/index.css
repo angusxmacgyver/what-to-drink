@@ -18,6 +18,17 @@
   --card-bg: #33200f;
   --danger-ink: #ffd8cc;
   --notice-bg: #4a3111;
+  --family-coastal: #299b82;
+  --family-fruit-dried: #886bee;
+  --family-fruit-fresh: #bc70ee;
+  --family-herbal: #539422;
+  --family-nutty: #b16e32;
+  --family-roasted: #3596ef;
+  --family-savoury: #369da2;
+  --family-smoke: #768a94;
+  --family-spice: #df4e92;
+  --family-sweet: #af9735;
+  --family-wood: #5d9db1;
 }
 
 [data-theme="light"] {
@@ -39,6 +50,17 @@
   --card-bg: #fff8ec;
   --danger-ink: #6b1f0f;
   --notice-bg: #f0dfb8;
+  --family-coastal: #186655;
+  --family-fruit-dried: #5229aa;
+  --family-fruit-fresh: #8a3db8;
+  --family-herbal: #386615;
+  --family-nutty: #8a5525;
+  --family-roasted: #1d5b93;
+  --family-savoury: #247073;
+  --family-smoke: #57666e;
+  --family-spice: #ac1f68;
+  --family-sweet: #796822;
+  --family-wood: #3a6572;
 }
 
 * {
@@ -553,6 +575,36 @@ nav button.on,
   background: transparent;
   border: 1px solid var(--line);
   color: var(--muted);
+}
+
+.family-coastal { --family-color: var(--family-coastal); }
+.family-fruit-dried { --family-color: var(--family-fruit-dried); }
+.family-fruit-fresh { --family-color: var(--family-fruit-fresh); }
+.family-herbal { --family-color: var(--family-herbal); }
+.family-nutty { --family-color: var(--family-nutty); }
+.family-roasted { --family-color: var(--family-roasted); }
+.family-savoury { --family-color: var(--family-savoury); }
+.family-smoke { --family-color: var(--family-smoke); }
+.family-spice { --family-color: var(--family-spice); }
+.family-sweet { --family-color: var(--family-sweet); }
+.family-wood { --family-color: var(--family-wood); }
+.family-other { --family-color: var(--line-strong); }
+
+.tag.family[class*="family-"] {
+  background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
+  border-color: var(--family-color);
+  color: var(--ink);
+}
+
+.chip[class*="family-"] {
+  background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
+  border-color: var(--family-color);
+}
+
+.chip[class*="family-"].on {
+  background: var(--family-color);
+  border-color: var(--family-color);
+  color: var(--on-gold);
 }
 
 .result .flavors {
