@@ -79,7 +79,7 @@ The first version of the app. The roadmap below starts again at 1.
 
 **Filter redesign and theme.** Chips replace dropdowns for theme, country, region, and flavor. Distillery is a typeahead with bottle counts. Sub-characteristics are scoped to the picked flavor families. A light/dark toggle in the header remembers your choice.
 
-Decisions that cut across milestones: guests get Library, Dram, and Graveyard; owner gets ingest and edit. Until a database is bound, git JSON is the durable catalog and laptop edits can sit only in that browser. Hosting and data stay on Cloudflare: Pages now, D1 later.
+Decisions that cut across milestones: guests get Library, Dram, and Graveyard; owner gets ingest and edit. Until a database is bound, git JSON is the durable catalog and laptop edits can sit only in that browser. Hosting and data stay on Cloudflare: Workers static assets now, D1 later.
 
 ## Stack and what’s next
 
@@ -89,15 +89,10 @@ Roadmap:
 
 1. Land the filter and theme work. Done.
 2. Test setup with `vitest` for the library helpers. Done.
-3. Host on Cloudflare Pages so the cellar has a public URL and does not depend on `npm run dev`.
+3. Host on Cloudflare so the cellar has a public URL and does not depend on `npm run dev`. Done: https://what-to-drink.max-krueger.workers.dev/, redeployed on every push to `main`.
 4. Analytics screen: statistics and views over the ingested cellar. Done.
 5. Color-coded flavor families, with sub-characteristics taking their family's color.
 6. Remote editing (deferred): move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with real owner login.
-
-```bash
-npm run build
-npx wrangler pages deploy dist --project-name=what-to-drink
-```
 
 When the app should be the source of truth:
 

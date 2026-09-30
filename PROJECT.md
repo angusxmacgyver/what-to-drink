@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 3 of 6 (Deploy). Milestone 4 (Analytics) was built first and is done. The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
+**Current milestone:** 5 of 6 (Color-coded flavor families). Milestones 3 (Deploy) and 4 (Analytics) are done. The first version of the app is listed under **Done**. The roadmap was renumbered from 1; Milestone 6 (remote editing) is deferred.
 
 **Living copy:** this file.
 
@@ -35,7 +35,7 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 
 **Stack:** React 19 + TypeScript + Vite. Static SPA until Milestone 6.
 
-**Hosting (from Milestone 3):** Cloudflare Pages, git-connected. Data until Milestone 6 is JSON in the repo.
+**Hosting (from Milestone 3):** Cloudflare Workers static assets, git-connected (Workers Builds). Pushes to `main` deploy to https://what-to-drink.max-krueger.workers.dev/. Data until Milestone 6 is JSON in the repo.
 
 **Owner PIN:** `VITE_OWNER_PIN` (see `.env.example`; local default `cellar`).
 
@@ -173,7 +173,7 @@ Until Milestone 6 the git repo is the host for data. Guests see whatever was las
 - `data/bottles.backup.json`
 - `scripts/ingest.ts` — workbook → JSON
 - `src/` — React app
-- `functions/api/catalog.ts` — Pages Function for D1
+- `functions/api/catalog.ts` — Pages Function for D1 (not served on Workers; rework in Milestone 6)
 - `schema.sql` — D1 snapshot table
 
 ---
@@ -210,14 +210,7 @@ Commit the docs, the filter redesign, and the light/dark theme as separate commi
 
 ### Milestone 3 — Deploy
 
-Cloudflare Pages. Public URL is The Library + Pick a Dram + Graveyard. First decide whether bottle locations in `data/bottles.json` can be public. Connecting the GitHub repo to Pages so pushes deploy themselves is the longer hosting shape.
-
-**Done when:** the URL works without the laptop running `npm run dev`.
-
-```bash
-npm run build
-npx wrangler pages deploy dist --project-name=what-to-drink
-```
+**Done.** Live at https://what-to-drink.max-krueger.workers.dev/, confirmed on a phone with the laptop off. Cloudflare's new-project flow only offers Workers, so `wrangler.toml` serves `dist` as static assets with single-page-app fallback instead of Pages. The GitHub repo is connected with Workers Builds (build `npm run build`, deploy `npx wrangler deploy`), so every push to `main` deploys and other branches get preview builds. Bottle locations are public.
 
 ### Milestone 4 — Analytics
 
@@ -240,7 +233,7 @@ Give each flavor family its own accent color, and have each sub-characteristic t
 
 ### Milestone 6 — Remote editing (deferred)
 
-Migrate `bottles.json` into Cloudflare D1 (Pages Functions). Guest refresh sees writes without a commit. Not started until these are decided: who edits and from which device; owner login (Cloudflare Access or a server-checked token, since `VITE_OWNER_PIN` ships in the bundle); one JSON snapshot vs one row per bottle; whether Excel stays the main capture tool.
+Migrate `bottles.json` into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Not started until these are decided: who edits and from which device; owner login (Cloudflare Access or a server-checked token, since `VITE_OWNER_PIN` ships in the bundle); one JSON snapshot vs one row per bottle; whether Excel stays the main capture tool.
 
 **Done when:** an owner edit appears for a guest on the deployed URL with no git push, and `PUT /api/catalog` rejects unauthenticated writes.
 
