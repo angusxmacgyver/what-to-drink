@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "what-to-drink-dev",
+      "runtimeExecutable": "/Users/max.krueger/Projects/what-to-drink/.claude/dev-with-node.sh",
+      "runtimeArgs": [],
+      "port": 5173
+    }
+  ]
+}
