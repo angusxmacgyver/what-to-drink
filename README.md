@@ -91,7 +91,7 @@ Roadmap:
 2. Test setup with `vitest` for the library helpers. Done.
 3. Host on Cloudflare so the cellar has a public URL and does not depend on `npm run dev`. Done: https://what-to-drink.max-krueger.workers.dev/, redeployed on every push to `main`.
 4. Analytics screen: statistics and views over the ingested cellar. Done.
-5. Color-coded flavor families, with sub-characteristics taking their family's color.
+5. Color-coded flavor families, with sub-characteristics taking their family's color. Done.
 6. Remote editing (deferred): move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with real owner login.
 
 When the app should be the source of truth:
