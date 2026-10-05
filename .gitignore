@@ -4,6 +4,7 @@ dist/
 .npm-cache/
 .wrangler/
 scripts/.ingest.mjs
+data/seed.sql
 .DS_Store
 .env
 .env.local
