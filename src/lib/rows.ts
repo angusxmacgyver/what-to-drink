@@ -18,14 +18,12 @@ export function toRow(bottle: Bottle, updatedAt: string): BottleRow {
   };
 }
 
-export function rowsToCatalog(rows: Pick<BottleRow, "status" | "data">[], importedAt: string): Catalog {
-  const bottles: Bottle[] = [];
-  const graveyard: Bottle[] = [];
-  for (const row of rows) {
-    const bottle = JSON.parse(row.data) as Bottle;
-    (row.status === "Killed" ? graveyard : bottles).push(bottle);
-  }
-  return { schemaVersion: 1, importedAt, bottles, graveyard };
+// Joins the stored JSON as strings so the Worker never parses bottles on a read.
+export function catalogJson(rows: Pick<BottleRow, "status" | "data">[], importedAt: string): string {
+  const bottles: string[] = [];
+  const graveyard: string[] = [];
+  for (const row of rows) (row.status === "Killed" ? graveyard : bottles).push(row.data);
+  return `{"schemaVersion":1,"importedAt":${JSON.stringify(importedAt)},"bottles":[${bottles.join(",")}],"graveyard":[${graveyard.join(",")}]}`;
 }
 
 export function chunk<T>(items: T[], size: number): T[][] {

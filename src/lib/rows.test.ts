@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Bottle, Catalog } from "../types";
-import { chunk, rowsToCatalog, seedSql, toRow } from "./rows";
+import { catalogJson, chunk, seedSql, toRow } from "./rows";
 
 let nextId = 0;
 
@@ -43,12 +43,12 @@ describe("toRow", () => {
   });
 });
 
-describe("rowsToCatalog", () => {
+describe("catalogJson", () => {
   it("splits Killed rows into the graveyard and round-trips every field", () => {
     const live = bottle({ flavorFamilies: ["Smoke"], smws: null });
     const dead = bottle({ status: "Killed", dateEmptied: "2026-09-01" });
     const rows = [toRow(live, "t"), toRow(dead, "t")];
-    const catalog = rowsToCatalog(rows, "2026-10-02T18:00:10.484Z");
+    const catalog = JSON.parse(catalogJson(rows, "2026-10-02T18:00:10.484Z"));
     expect(catalog).toEqual({
       schemaVersion: 1,
       importedAt: "2026-10-02T18:00:10.484Z",
