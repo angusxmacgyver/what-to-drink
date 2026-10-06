@@ -61,24 +61,33 @@ export async function fetchRemoteCatalog(): Promise<Catalog | null> {
   try {
     const res = await fetch("/api/catalog");
     if (!res.ok) return null;
-    return (await res.json()) as Catalog;
+    const catalog = (await res.json()) as Catalog;
+    if (!catalog.bottles?.length) return null;
+    saveCatalog(catalog);
+    return catalog;
   } catch {
     return null;
   }
 }
 
-export async function pushRemoteCatalog(catalog: Catalog): Promise<boolean> {
+async function send(method: string, path: string, body: unknown): Promise<boolean> {
   try {
-    const res = await fetch("/api/catalog", {
-      method: "PUT",
+    const res = await fetch(path, {
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(catalog),
+      body: JSON.stringify(body),
     });
     return res.ok;
   } catch {
     return false;
   }
 }
+
+export const saveBottle = (bottle: Bottle) => send("PUT", `/api/bottles/${encodeURIComponent(bottle.id)}`, bottle);
+
+export const addBottles = (bottles: Bottle[]) => send("POST", "/api/bottles", bottles);
+
+export const replaceCatalog = (catalog: Catalog) => send("PUT", "/api/catalog", catalog);
 
 export function killBottle(catalog: Catalog, id: string): Catalog {
   const bottle = catalog.bottles.find((b) => b.id === id);
