@@ -94,7 +94,7 @@ Roadmap:
 3. Host on Cloudflare so the cellar has a public URL and does not depend on `npm run dev`. Done: https://what-to-drink.max-krueger.workers.dev/, redeployed on every push to `main`.
 4. Analytics screen: statistics and views over the ingested cellar. Done.
 5. Color-coded flavor families, with sub-characteristics taking their family's color. Done.
-6. Remote editing: move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with a server-checked owner PIN. In progress: storage, merge-import, and the server PIN check are done.
+6. Remote editing: move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with a server-checked owner PIN. In progress: storage, merge-import, the server PIN check, and the header lock glyph are done.
 
 To load `data/bottles.json` into D1 (this replaces every bottle in the database):
 

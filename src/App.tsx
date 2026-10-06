@@ -9,6 +9,7 @@ import { Analytics } from "./components/Analytics";
 import { ImportPanel } from "./components/ImportPanel";
 import { MergeImportPanel } from "./components/MergeImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
+import { OwnerLock } from "./components/OwnerLock";
 import { applyMerge } from "./lib/merge";
 import {
   addBottles,
@@ -38,7 +39,6 @@ export default function App() {
   const [filters, setFilters] = useState(emptyFilters);
   const [owner, setOwnerState] = useState(false);
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
-  const [pin, setPin] = useState("");
   const [notice, setNotice] = useState("");
   const [theme, setTheme] = useState<Theme>(() => loadTheme());
 
@@ -60,6 +60,13 @@ export default function App() {
     setCatalog(next);
     saveCatalog(next);
     if (!(await write)) setNotice("Saved on this device only. The cellar server did not accept the change.");
+  };
+
+  const lockOwner = () => {
+    setOwner(false);
+    setOwnerState(false);
+    setEditing(null);
+    if (view === "owner") setView("home");
   };
 
   const importedLabel = useMemo(() => {
@@ -95,16 +102,17 @@ export default function App() {
             >
               Analytics
             </button>
-            {owner ? (
-              <button type="button" className={view === "owner" ? "on" : ""} onClick={() => setView("owner")}>
-                Owner
-              </button>
-            ) : (
-              <button type="button" onClick={() => setView("owner")}>
-                Owner login
-              </button>
-            )}
           </nav>
+          <OwnerLock
+            owner={owner}
+            onUnlock={async (pin) => {
+              const ok = await unlockOwner(pin);
+              if (ok) setOwnerState(true);
+              return ok;
+            }}
+            onLock={lockOwner}
+            onManage={() => setView("owner")}
+          />
           <button
             type="button"
             className="theme-toggle"
@@ -180,90 +188,56 @@ export default function App() {
 
       {view === "analytics" ? <Analytics catalog={catalog} /> : null}
 
-      {view === "owner" ? (
+      {view === "owner" && owner ? (
         <section className="panel">
           <header className="panel-head">
             <div>
-              <p className="eyebrow">Gated</p>
-              <h1>Owner</h1>
+              <p className="eyebrow">Owner</p>
+              <h1>Bottle Management</h1>
             </div>
-            {owner ? (
-              <button
-                type="button"
-                className="textish"
-                onClick={() => {
-                  setOwner(false);
-                  setOwnerState(false);
-                }}
-              >
-                Log out
-              </button>
-            ) : null}
+            <button type="button" className="textish" onClick={lockOwner}>
+              Lock
+            </button>
           </header>
-          {!owner ? (
-            <form
-              className="owner-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void unlockOwner(pin).then((ok) => {
-                  if (ok) {
-                    setOwnerState(true);
-                    setNotice("");
-                  } else {
-                    setNotice("PIN did not match.");
-                  }
-                });
+          <p className="meta">{importedLabel}</p>
+          <ImportPanel
+            onCatalog={(next, filename) => {
+              const previous = catalog;
+              saveCatalog(previous);
+              localStorage.setItem("what-to-drink-catalog-backup", JSON.stringify(previous));
+              void persist(next, replaceCatalog(next));
+              downloadCatalog(next);
+              setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
+              setView("library");
+            }}
+          />
+          <MergeImportPanel
+            catalog={catalog}
+            onConfirm={(bottles) => {
+              void persist(applyMerge(catalog, bottles), addBottles(bottles));
+              setNotice(`Added ${bottles.length} bottle${bottles.length === 1 ? "" : "s"} from the workbook.`);
+            }}
+          />
+          <div className="owner-actions">
+            <button type="button" onClick={() => setEditing("new")}>
+              Add bottle
+            </button>
+            <button type="button" onClick={() => downloadCatalog(catalog)}>
+              Download bottles.json
+            </button>
+          </div>
+          {editing ? (
+            <OwnerForm
+              initial={editing === "new" ? undefined : editing}
+              onSave={(bottle) => {
+                void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
+                setEditing(null);
+                setView("library");
+                setNotice("Saved to The Library.");
               }}
-            >
-              <label>
-                Owner PIN
-                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} />
-              </label>
-              <button type="submit">Enter</button>
-            </form>
-          ) : (
-            <>
-              <p className="meta">{importedLabel}</p>
-              <ImportPanel
-                onCatalog={(next, filename) => {
-                  const previous = catalog;
-                  saveCatalog(previous);
-                  localStorage.setItem("what-to-drink-catalog-backup", JSON.stringify(previous));
-                  void persist(next, replaceCatalog(next));
-                  downloadCatalog(next);
-                  setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
-                  setView("library");
-                }}
-              />
-              <MergeImportPanel
-                catalog={catalog}
-                onConfirm={(bottles) => {
-                  void persist(applyMerge(catalog, bottles), addBottles(bottles));
-                  setNotice(`Added ${bottles.length} bottle${bottles.length === 1 ? "" : "s"} from the workbook.`);
-                }}
-              />
-              <div className="owner-actions">
-                <button type="button" onClick={() => setEditing("new")}>
-                  Add bottle
-                </button>
-                <button type="button" onClick={() => downloadCatalog(catalog)}>
-                  Download bottles.json
-                </button>
-              </div>
-              {editing ? (
-                <OwnerForm
-                  initial={editing === "new" ? undefined : editing}
-                  onSave={(bottle) => {
-                    void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
-                    setEditing(null);
-                    setView("library");
-                    setNotice("Saved to The Library.");
-                  }}
-                  onCancel={() => setEditing(null)}
-                />
-              ) : null}
-            </>
-          )}
+              onCancel={() => setEditing(null)}
+            />
+          ) : null}
         </section>
       ) : null}
     </div>

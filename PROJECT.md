@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 6 of 6 (Remote editing), in progress. Merge-import, D1 storage, and the server-checked PIN are done. The lock-glyph toggle, confirm steps, and export/backups remain — see Milestone 6. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
+**Current milestone:** 6 of 6 (Remote editing), in progress. Merge-import, D1 storage, the server-checked PIN, and the lock glyph are done. Confirm steps and export/backups remain — see Milestone 6. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
 **Living copy:** this file.
 
@@ -37,7 +37,7 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 
 **Hosting (from Milestone 3):** Cloudflare Workers static assets, git-connected (Workers Builds). Pushes to `main` deploy to https://what-to-drink.max-krueger.workers.dev/. The catalog lives in D1 (from Milestone 6); `data/bottles.json` is the bundled offline fallback and the seed source.
 
-**Owner PIN:** Worker secret `OWNER_PIN` (see `.dev.vars.example`; local default `cellar`). The browser sends it on each owner request and does not bundle it. Milestone 6 still replaces the top-nav "Owner login" with a lock-glyph toggle next to the theme switch.
+**Owner PIN:** Worker secret `OWNER_PIN` (see `.dev.vars.example`; local default `cellar`). The browser sends it on each owner request and does not bundle it. The header lock glyph, next to the theme switch, asks for it.
 
 ---
 
@@ -248,13 +248,13 @@ That same curation exposed a related filtering gap: picking a flavor family used
 
 ### Milestone 6 — Remote editing
 
-Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Scoped and decided below. **Storage**, **merge-import**, and **owner access** are done; the lock-glyph toggle, confirm steps, and export/backups are not yet implemented.
+Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Scoped and decided below. **Storage**, **merge-import**, **owner access**, and the **lock glyph** are done; confirm steps and export/backups are not yet implemented.
 
 **Storage.** Done. One D1 row per bottle, not a single JSON blob. Enables partial writes — a single edit, or a merge-import, touches only the rows it needs, instead of read-modify-write-the-whole-blob. See Architecture for the schema and routes.
 
 **Owner access.** Done. The threat model is accidental guest interference, not a hardened security boundary — a PIN is proportionate. The PIN is the Worker secret `OWNER_PIN`, checked on every owner request (kill, edit, merge-import, and later export). The browser keeps an accepted PIN in `sessionStorage` for the tab and sends it as `X-Owner-Pin`. No separate login page, no Cloudflare Access, no server sessions or rate-limiting — those solve a problem this app doesn't have. Local `wrangler dev` reads `.dev.vars`; production needs `npx wrangler secret put OWNER_PIN` (and the same secret on preview builds) or every owner request is rejected.
 
-**Owner-mode UI.** "Owner login" is renamed **Bottle Management** and comes off the persistent top nav. In its place: a lock glyph next to the dark-mode toggle in the header. Open padlock = guest view (default); clicking a locked padlock prompts for the PIN, and a correct PIN unlocks owner actions for the rest of the session. This is the general mechanism for any future owner-only action, not just this milestone's — see Pour tracking under Future features.
+**Owner-mode UI.** Done. "Owner login" is renamed **Bottle Management** and comes off the persistent top nav. In its place: a lock glyph next to the dark-mode toggle in the header. A closed padlock is the guest default; clicking it opens a popover for the PIN. A correct PIN switches the glyph to an open padlock for the rest of the session. That open padlock offers Bottle Management and Lock. This is the general mechanism for any future owner-only action, not just this milestone's — see Pour tracking under Future features.
 
 **Confirmation.** Any destructive or irreversible owner action (kill, committing a merge-import, overwriting a bottle's metadata) requires an explicit confirm step — no single-click accidents.
 
@@ -270,8 +270,6 @@ Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wr
 
 - A manual "Export database" action (same idea as today's Download JSON, now reading from D1).
 - Plus an automatic backup: a weekly Cloudflare Worker Cron Trigger, and also triggered by a manual export, writing a timestamped snapshot to Cloudflare R2 — picked over committing back to git, since every push to `main` deploys, and a scheduled commit would trigger a weekly production redeploy for no code change. Keep the last 10 backups; prune the oldest on write.
-
-**Still open (small, resolve during implementation):** exact placement/interaction of the PIN prompt under the lock glyph (e.g. a popover vs. an inline field).
 
 **Done when:** an owner edit appears for a guest on the deployed URL with no git push, and every owner-gated request is rejected without the correct PIN.
 

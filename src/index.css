@@ -142,7 +142,8 @@ nav button,
 .place button,
 .roll,
 .owner-actions button,
-.owner-form button {
+.owner-form button,
+.lock-popover button {
   background: var(--chip);
   border: 1px solid var(--line);
   color: var(--ink);
@@ -631,7 +632,8 @@ nav button.on,
   font-size: 13px;
 }
 
-.theme-toggle {
+.theme-toggle,
+.lock-toggle {
   background: var(--chip);
   border: 1px solid var(--line);
   color: var(--ink);
@@ -646,9 +648,43 @@ nav button.on,
   justify-content: center;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.lock-toggle:hover {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.lock-wrap {
+  position: relative;
+}
+
+.lock-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.lock-popover .owner-form {
+  gap: 8px;
+}
+
+.lock-popover button {
+  width: 100%;
+}
+
+.lock-error {
+  margin: 0;
+  color: var(--danger-ink);
+  font-size: 13px;
 }
 
 .detail {
@@ -1339,5 +1375,9 @@ nav button.on,
   .top {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .lock-popover {
+    right: auto;
+    left: 0;
   }
 }
