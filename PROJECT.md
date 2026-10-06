@@ -289,7 +289,7 @@ Not scheduled yet.
 - **Filter design cleanup.** Focused on filter management. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis).
 - **Pick a Dram refactor.** Filters move into a drawer, options become grids with live counts, and results become a card grid with a picked state. Comes after the range histogram filters, which it consumes (full requirement below).
 - **Quick Pours.** Curated starting points (e.g. Heavily Peated, Sweet & Mellow, Spicy & Dry) applied as presets the user can then refine. The Pick a Dram prototype showed these replacing Themes; that is a taxonomy change, so it is not part of the refactor, where Theme stays a normal facet.
-- **Whisky Draft.** Placeholder; scope not yet defined. If it uses the workbook's Draft Participants sheet, decide how participant contact data is handled first: today that sheet is skipped and must stay out of the app and git.
+- **Whisky Draft.** To be scoped later. Data does not need to be in D1: either read it from the sheet import or keep it as a static JSON file. If it uses the workbook's Draft Participants sheet, decide how participant contact data is handled first: today that sheet is skipped and must stay out of the app and git.
 
 ### Requirement: Range histogram filters (ABV and Age)
 
