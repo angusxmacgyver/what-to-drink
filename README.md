@@ -28,9 +28,9 @@ Pick a Dram also has the place question, include-closed, and country/region.
 
 ## Data
 
-The catalog is JSON in this repo (`data/bottles.json`). Each physical bottle has its own id. Expressions group by a `bottleKey` (distillery plus bottling, or Society full code plus US name). Country is derived from region for filters. Apartment vs house comes from an apartment flag or location; with an empty apartment sheet, the live cellar is the house.
+The catalog lives in Cloudflare D1, one row per bottle, served by a small Worker API. `data/bottles.json` in this repo is the seed and the offline fallback. Each physical bottle has its own id. Expressions group by a `bottleKey` (distillery plus bottling, or Society full code plus US name). Country is derived from region for filters. Apartment vs house comes from an apartment flag or location; with an empty apartment sheet, the live cellar is the house.
 
-Importing a workbook replaces the catalog and keeps one backup (`data/bottles.backup.json`). Git history is the longer record. Owner edits in the browser also save to local storage. They try to write a remote catalog API when a database is bound; that is not live yet.
+Owner edits, merge-imports, and replace-imports write to D1, so a guest sees them on the next load with no git push. Each edit writes only the bottle it changes. The CLI ingest still writes `data/bottles.json` and keeps one backup (`data/bottles.backup.json`); loading that file into D1 is a separate seed step (see below).
 
 The Excel sheets that ingest are Open Bottles, Closed Bottles, SMWS, Fallen soldiers (Graveyard), and Apartment (mapper ready, currently empty). Draft Participants is contacts and is skipped.
 
@@ -42,6 +42,8 @@ Flavor families and sub-characteristics in the sheet are pipe-delimited (` | `).
 npm install
 npm run dev
 ```
+
+`npm run dev` has no API, so it shows the bundled catalog and owner edits fail. To run with the API, use `npm run build && npx wrangler dev` (a local D1 copy) or add `--remote` to work against the real database.
 
 The owner PIN is `VITE_OWNER_PIN` (see `.env.example`). The local default is `cellar`. That value is compiled into the client, so it is a speed bump rather than real authentication.
 
@@ -79,11 +81,11 @@ The first version of the app. The roadmap below starts again at 1.
 
 **Filter redesign and theme.** Chips replace dropdowns for theme, country, region, and flavor. Distillery is a typeahead with bottle counts. Sub-characteristics are scoped to the picked flavor families. A light/dark toggle in the header remembers your choice.
 
-Decisions that cut across milestones: guests get Library, Dram, and Graveyard; owner gets ingest and edit. Until a database is bound, git JSON is the durable catalog and laptop edits can sit only in that browser. Hosting and data stay on Cloudflare: Workers static assets now, D1 later.
+Decisions that cut across milestones: guests get Library, Dram, and Graveyard; owner gets ingest and edit. Hosting and data stay on Cloudflare: Workers static assets for the app, D1 for the catalog.
 
 ## Stack and what’s next
 
-React 19, TypeScript, and Vite. Static app for now.
+React 19, TypeScript, and Vite, plus a Cloudflare Worker (`worker/index.ts`) over D1.
 
 Roadmap:
 
@@ -92,15 +94,13 @@ Roadmap:
 3. Host on Cloudflare so the cellar has a public URL and does not depend on `npm run dev`. Done: https://what-to-drink.max-krueger.workers.dev/, redeployed on every push to `main`.
 4. Analytics screen: statistics and views over the ingested cellar. Done.
 5. Color-coded flavor families, with sub-characteristics taking their family's color. Done.
-6. Remote editing (deferred): move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with real owner login.
+6. Remote editing: move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with a server-checked owner PIN. In progress: storage and merge-import are done.
 
-When the app should be the source of truth:
+To load `data/bottles.json` into D1 (this replaces every bottle in the database):
 
 ```bash
-npx wrangler d1 create what-to-drink
-npx wrangler d1 execute what-to-drink --file=./schema.sql
+npm run seed:sql
+npx wrangler d1 execute what-to-drink --remote --file=./data/seed.sql
 ```
-
-Then bind `database_id` in `wrangler.toml` and redeploy.
 
 The agent-facing brief, including schema mapping and milestone “done when” checks, is in [PROJECT.md](PROJECT.md).
