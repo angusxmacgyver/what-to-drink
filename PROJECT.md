@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 6 of 6 (Remote editing). Scoped and decided, not yet implemented — see Milestone 6 for the full plan (storage, owner access, merge-import, backups). Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
+**Current milestone:** 6 of 6 (Remote editing), in progress. Merge-import and D1 storage are done; the server-checked PIN, lock-glyph toggle, confirm steps, and export/backups remain — see Milestone 6. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
 **Living copy:** this file.
 
@@ -33,9 +33,9 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 4. Finish only the stated milestone unless the user expands scope.
 5. When Done when is met, mark the todo complete and set **Current milestone** to N+1.
 
-**Stack:** React 19 + TypeScript + Vite. Static SPA until Milestone 6.
+**Stack:** React 19 + TypeScript + Vite SPA, plus a small Worker API (`worker/index.ts`) over Cloudflare D1.
 
-**Hosting (from Milestone 3):** Cloudflare Workers static assets, git-connected (Workers Builds). Pushes to `main` deploy to https://what-to-drink.max-krueger.workers.dev/. Data until Milestone 6 is JSON in the repo.
+**Hosting (from Milestone 3):** Cloudflare Workers static assets, git-connected (Workers Builds). Pushes to `main` deploy to https://what-to-drink.max-krueger.workers.dev/. The catalog lives in D1 (from Milestone 6); `data/bottles.json` is the bundled offline fallback and the seed source.
 
 **Owner PIN:** `VITE_OWNER_PIN` (see `.env.example`; local default `cellar`). Milestone 6 moves the check server-side and replaces the top-nav "Owner login" with a lock-glyph toggle next to the theme switch.
 
@@ -56,7 +56,7 @@ Workbook sheets to read:
 
 Flavor Families and Sub-Characteristics in the sheet use ` | ` as the delimiter.
 
-CLI ingest: `npm run ingest` (optional path argument). Writes `data/bottles.json` after copying any previous file to `data/bottles.backup.json`.
+CLI ingest: `npm run ingest` (optional path argument). Writes `data/bottles.json` after copying any previous file to `data/bottles.backup.json`. That file no longer reaches guests on its own; to load it into D1, run `npm run seed:sql && npx wrangler d1 execute what-to-drink --remote --file=./data/seed.sql` (this replaces every row). The in-app replace-import writes to D1 directly.
 
 ---
 
@@ -164,17 +164,27 @@ Sub-characteristics depend on Flavor Families: the chips appear only after a fam
 
 ## Architecture
 
-Until Milestone 6 the git repo is the host for data. Guests see whatever was last imported and deployed. Owner edits persist to `localStorage` today; Milestone 6 replaces the remote side with Cloudflare D1, one row per bottle, rather than the single-blob `PUT /api/catalog` sketched here originally.
+The catalog lives in Cloudflare D1, one row per bottle: `id`, `bottle_key`, `status` (`Killed` rows are the Graveyard), the full bottle as JSON in `data`, and `updated_at`. A `meta` table holds `importedAt`. The Worker answers `/api/*` ahead of the static assets (`run_worker_first` in `wrangler.toml`):
+
+- `GET /api/catalog` — the whole catalog, in the same envelope as `bottles.json`
+- `PUT /api/bottles/:id` — save one bottle (edit, add, mark Open, kill)
+- `POST /api/bottles` — add bottles (merge-import)
+- `PUT /api/catalog` — replace everything (replace-import)
+
+Written for the Workers free plan: bulk writes insert 500 bottles per statement via `json_each` (D1 allows 50 queries per request), and reads join the stored JSON instead of parsing it (10 ms CPU per request). On load the app shows its `localStorage` copy (or the bundled `bottles.json`), then swaps in the D1 catalog and caches it. A write the server rejects stays on that device and shows a notice.
+
+`npm run dev` (Vite alone) has no API, so the app falls back to the bundled catalog and owner writes fail. To work against the API, run `npm run build && npx wrangler dev` (local D1 under `.wrangler/`) or add `--remote` to use the production database.
 
 **Layout:**
 
 - `PROJECT.md` — this brief
-- `data/bottles.json`
+- `data/bottles.json` — bundled fallback and seed source
 - `data/bottles.backup.json`
 - `scripts/ingest.ts` — workbook → JSON
-- `src/` — React app
-- `functions/api/catalog.ts` — Pages Function for D1 (not served on Workers; replaced by a Worker script in Milestone 6)
-- `schema.sql` — D1 schema; currently a single-blob snapshot table, to be replaced with one row per bottle for Milestone 6
+- `scripts/seed-sql.ts` — `bottles.json` → `data/seed.sql` (gitignored) for `wrangler d1 execute`
+- `src/` — React app; `src/lib/rows.ts` converts bottles to and from D1 rows
+- `worker/index.ts` — the Worker API
+- `schema.sql` — D1 schema
 
 ---
 
@@ -235,9 +245,9 @@ That same curation exposed a related filtering gap: picking a flavor family used
 
 ### Milestone 6 — Remote editing
 
-Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Scoped and decided below; not yet implemented.
+Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wrangler.toml`) since Pages Functions don't run on Workers. Guest refresh sees writes without a commit. Scoped and decided below. **Storage** and **merge-import** are done; the rest is not yet implemented.
 
-**Storage.** One D1 row per bottle, not a single JSON blob. Enables partial writes — a single edit, or a merge-import, touches only the rows it needs, instead of read-modify-write-the-whole-blob.
+**Storage.** Done. One D1 row per bottle, not a single JSON blob. Enables partial writes — a single edit, or a merge-import, touches only the rows it needs, instead of read-modify-write-the-whole-blob. See Architecture for the schema and routes.
 
 **Owner access.** The threat model is accidental guest interference, not a hardened security boundary — a PIN is proportionate. `VITE_OWNER_PIN` moves from a client-bundled constant to a server-checked secret the Worker validates on every owner request (kill, edit, merge-import, export). No separate login page, no Cloudflare Access, no sessions or rate-limiting — those solve a problem this app doesn't have.
 
@@ -247,7 +257,7 @@ Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wr
 
 **Editor scope.** Just the owner, from multiple places (laptop, phone, Excel workbook, in-app) — not multiple people, no per-user accounts. Excel and in-app editing are both first-class, indefinitely; neither replaces the other.
 
-**New feature: merge-import.** A second, additive import path (distinct from today's full-replace `ImportPanel`) for dropping in a workbook of new bottles without touching the existing database:
+**New feature: merge-import.** Done. A second, additive import path (distinct from today's full-replace `ImportPanel`) for dropping in a workbook of new bottles without touching the existing database:
 
 - Lives in Bottle Management, owner-gated.
 - Upload always opens a preview screen first; nothing writes to D1 until confirmed.
@@ -262,11 +272,7 @@ Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wr
 
 **Done when:** an owner edit appears for a guest on the deployed URL with no git push, and every owner-gated request is rejected without the correct PIN.
 
-```bash
-npx wrangler d1 create what-to-drink
-npx wrangler d1 execute what-to-drink --file=./schema.sql
-# bind database_id in wrangler.toml, redeploy
-```
+The D1 database `what-to-drink` exists, is bound as `DB` in `wrangler.toml`, and was seeded from the 2 Oct 2026 catalog (540 live, 7 Graveyard).
 
 ---
 

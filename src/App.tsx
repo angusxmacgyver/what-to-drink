@@ -11,6 +11,7 @@ import { MergeImportPanel } from "./components/MergeImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
 import { applyMerge } from "./lib/merge";
 import {
+  addBottles,
   downloadCatalog,
   fetchRemoteCatalog,
   isOwner,
@@ -18,7 +19,8 @@ import {
   loadStoredCatalog,
   loadTheme,
   ownerPin,
-  pushRemoteCatalog,
+  replaceCatalog,
+  saveBottle,
   saveCatalog,
   saveTheme,
   setOwner,
@@ -48,19 +50,16 @@ export default function App() {
   useEffect(() => {
     setOwnerState(isOwner());
     const local = loadStoredCatalog();
-    if (local?.bottles?.length) {
-      setCatalog(local);
-      return;
-    }
+    if (local?.bottles?.length) setCatalog(local);
     void fetchRemoteCatalog().then((remote) => {
-      if (remote?.bottles?.length) setCatalog(remote);
+      if (remote) setCatalog(remote);
     });
   }, []);
 
-  const persist = async (next: Catalog) => {
+  const persist = async (next: Catalog, write: Promise<boolean>) => {
     setCatalog(next);
     saveCatalog(next);
-    await pushRemoteCatalog(next);
+    if (!(await write)) setNotice("Saved on this device only. The cellar server did not accept the change.");
   };
 
   const importedLabel = useMemo(() => {
@@ -159,11 +158,16 @@ export default function App() {
             setEditing(b);
             setView("owner");
           }}
-          onKill={(id) => void persist(killBottle(catalog, id))}
+          onKill={(id) => {
+            const next = killBottle(catalog, id);
+            const killed = next.graveyard.find((b) => b.id === id);
+            if (killed) void persist(next, saveBottle(killed));
+          }}
           onOpen={(id) => {
             const bottle = catalog.bottles.find((b) => b.id === id);
             if (!bottle) return;
-            void persist(upsertBottle(catalog, { ...bottle, status: "Open" }));
+            const opened = { ...bottle, status: "Open" as const };
+            void persist(upsertBottle(catalog, opened), saveBottle(opened));
           }}
         />
       ) : null}
@@ -224,7 +228,7 @@ export default function App() {
                   const previous = catalog;
                   saveCatalog(previous);
                   localStorage.setItem("what-to-drink-catalog-backup", JSON.stringify(previous));
-                  void persist(next);
+                  void persist(next, replaceCatalog(next));
                   downloadCatalog(next);
                   setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
                   setView("library");
@@ -233,7 +237,7 @@ export default function App() {
               <MergeImportPanel
                 catalog={catalog}
                 onConfirm={(bottles) => {
-                  void persist(applyMerge(catalog, bottles));
+                  void persist(applyMerge(catalog, bottles), addBottles(bottles));
                   setNotice(`Added ${bottles.length} bottle${bottles.length === 1 ? "" : "s"} from the workbook.`);
                 }}
               />
@@ -249,7 +253,7 @@ export default function App() {
                 <OwnerForm
                   initial={editing === "new" ? undefined : editing}
                   onSave={(bottle) => {
-                    void persist(upsertBottle(catalog, bottle));
+                    void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
                     setEditing(null);
                     setView("library");
                     setNotice("Saved to The Library.");

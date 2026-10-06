@@ -1,14 +1,15 @@
 name = "what-to-drink"
+main = "worker/index.ts"
 compatibility_date = "2026-09-22"
 
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
 
 [previews]
 
-# Bind after: npx wrangler d1 create what-to-drink
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "what-to-drink"
-# database_id = "YOUR_D1_ID"
+[[d1_databases]]
+binding = "DB"
+database_name = "what-to-drink"
+database_id = "05a44ef2-1e91-4d5d-8051-40e6bd2d4b92"
