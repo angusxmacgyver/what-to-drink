@@ -287,6 +287,9 @@ Not scheduled yet.
   - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
   - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
 - **Filter design cleanup.** Focused on filter management. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis).
+- **Pick a Dram refactor.** Filters move into a drawer, options become grids with live counts, and results become a card grid with a picked state. Comes after the range histogram filters, which it consumes (full requirement below).
+- **Quick Pours.** Curated starting points (e.g. Heavily Peated, Sweet & Mellow, Spicy & Dry) applied as presets the user can then refine. The Pick a Dram prototype showed these replacing Themes; that is a taxonomy change, so it is not part of the refactor, where Theme stays a normal facet.
+- **Whisky Draft.** Placeholder; scope not yet defined. If it uses the workbook's Draft Participants sheet, decide how participant contact data is handled first: today that sheet is skipped and must stay out of the app and git.
 
 ### Requirement: Range histogram filters (ABV and Age)
 
@@ -362,6 +365,94 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
 - The NAS toggle renders at the far left of the age range row, full-justified against the From/To inputs.
 - Handles cannot cross; the selection cannot shrink below one bin.
 - Works with both mouse and touch.
+
+### Requirement: Pick a Dram refactor
+
+**Depends on:** the range histogram filters above. Build those first; this refactor places them in the drawer and does not redefine them.
+
+**Problem.** Pick a Dram shows every facet expanded as long vertical lists (Region alone is 30+ values). Combining facets often ends at "Nothing matches these filters", options show no counts, and applied filters are not summarized anywhere.
+
+**Goals.** Let the user express intent freely and always see how many bottles remain. Replace long lists with dense option grids. Keep the current selection visible and individually removable. Make zero results a recoverable state. Keep `Pour one` fast, and never offer a bottle that can't be poured.
+
+**Principles (non-negotiable).**
+
+- Inform, never prevent. Every option stays selectable; counts, including zero, are advisory. Never disable, hide, or lock an option because of its count.
+- Every option shows a live count of the bottles that would remain if it were added to the current selection.
+- The current selection is always visible as removable chips, in the drawer and on the results view.
+- Zero is a normal state with a way back.
+- Empty bottles are never pourable.
+
+**Decisions.**
+
+- Within a facet, picks combine with OR; across facets, with AND.
+- Exception: Flavor Families and Sub-characteristics are OR by default, with an any/all toggle on those sections. Today they are AND only (`every()` in `matchesFilters`, `src/lib/library.ts`).
+- Facets stay as they are today: Search, Distillery / Producer, Theme, Flavor Families → Sub-characteristics, Age, ABV, Country → Region, and the availability toggle. The place scope (house or apartment) applies before all facets.
+- Results are a grid of cards, one per expression. Selecting a card opens its full details in place, under its row (not in a modal). A card picked by the randomizer has its own picked state, separate from the one being viewed.
+
+**Prototype note.** A quick prototype exists (screenshot shared 6 Oct 2026). It is a clarifying artifact, not a design target; where it conflicts with this spec, the spec wins.
+
+- Don't follow: it disables zero-count options, and its "Include closed / emptied bottles" label is the conflation this refactor removes. Its Age and ABV bucket chips are placeholders for the range histograms.
+- Keep: per-section "Clear" links, chips that pair a swatch with a count, the sticky `Pour one · N` button, and its copy ("Nothing applied yet — everything's on the table." for the empty tray; "Pick a flavor family to narrow by sub-characteristic"; "Select a country to narrow by region").
+
+**Build steps.** One commit each, aiming for under 200 lines.
+
+1. **Facet counts and candidate set.** Pure logic with tests.
+   - A faceted count helper in `src/lib/library.ts`: bottles matching every active facet except the option's own, combined with that option.
+   - Add the flavor any/all mode to `FilterState` (`src/types.ts`).
+   - Candidate set: place scope first, never Empty/Killed, and the availability toggle adds only Closed bottles.
+   - Target: recompute in under 100 ms for low thousands of bottles.
+2. **Option grid component.** A reusable wrapping grid of tiles. Each tile is a real button with pressed state, a label, its count, and a swatch for flavor families (`familyClass`, `src/lib/colors.ts`). Zero counts are de-emphasized but selectable. Sections collapse and remember that for the session; a section with picks shows its own "Clear" link. Built so The Library can use it later.
+3. **Applied tray.** A helper that turns the current filters into removable chips, plus "Clear all". One component serves the drawer ("In your glass") and the results summary row.
+4. **Drawer shell.** A `Filters` header button with an active-count badge. The drawer slides in over the results with a scrim; `Esc` closes it. Focus stays inside while open and returns to `Filters` on close. Sticky footer with `Pour one` and the live count.
+5. **Facets in the drawer.**
+   - Move every facet out of the inline `Filters` in `src/components/PickADram.tsx` into the drawer; Age and ABV use the range histogram controls.
+   - Sub-characteristics appear only once a family is picked, grouped under each picked family.
+   - Region is grouped by picked country. With no country picked, show a prompt instead of the flat list. Single-region countries get no sub-list.
+   - Rename "Include closed bottles" so it clearly means unopened, never empty.
+6. **Results grid with in-place detail.**
+   - Matching pourable bottles render as a wrapping grid of cards, one per expression (`bottleKey`), like The Library's grouping.
+   - Each card: distillery name on top, expression below. No SMWS or distillery code (codes leave the data in a later cleanup). Then region and country (once, when they're the same), flavor-family swatches, age, ABV, and a ×N count of matching pourable bottles.
+   - Long names: distillery gets one line, ending in "…" if it runs over (longest today is 27 characters). Expression wraps to at most two lines, then "…" (in the 6 Oct 2026 catalog, 57 expressions exceed 30 characters; the longest is 65). The full name stays in the card's hover text and accessible label, and in the detail panel.
+   - Selecting a card opens a full-width detail panel under its row; later cards move down. One panel open at a time; selecting the card again or pressing `Esc` closes it.
+   - The panel shows `BottleFields` and `FlavorTags`, plus status and location. If the matching bottles differ in location or status, list the split, as the Library row does.
+   - Cards are real buttons with an expanded state, built so The Library can use the card and panel later as a grid view.
+7. **Picked state (randomizer).**
+   - `Pour one` picks one physical bottle (`id`), so stock of 5 is five chances. That expression's card gets a picked state separate from viewing: an accent ring, a "Your dram" label, and the picked bottle's location shown prominently. Viewing other cards doesn't clear it.
+   - After a pick, scroll to the card and open its detail. Announce the pick through a live region.
+   - A short roll animation (the highlight skips across cards before landing), skipped when the system is set to reduce motion.
+   - "Pour another" never repeats the last pick unless it's the only pourable bottle left.
+   - Clear the picked state if a filter change removes that bottle.
+   - Leave a spot in the picked detail panel for the Pour tracking "Just poured" button; don't build the button.
+8. **Results summary and zero state.** A summary row with `N available`, the tray chips, and "Clear all". With no matches, replace the grid with "No bottles match this combination." `Pour one` is disabled only at zero pourable bottles.
+9. **Zero recovery.** In the drawer footer: "Undo last", backed by a session history of selection states, and the applied filters with the most constraining one flagged (the single removal that brings back the most bottles).
+10. **Local persistence.** Selection state saved per device in `localStorage`; no server call. Whether it carries across sessions depends on open question 2.
+
+**Acceptance criteria.**
+
+- No option is ever disabled or hidden because of a zero count; the user can always build a query that returns nothing.
+- Every option shows an accurate count that updates on each change.
+- Facet options render as a wrapping grid, not a single column.
+- Active selections appear as removable chips in both the drawer tray and the results summary; each is removable on its own, and "Clear all" resets.
+- A zero-match selection shows the recovery block with a working "Undo last" and a flag on the most constraining filter.
+- Empty bottles never appear in results and `Pour one` can never return one; the availability toggle affects only Closed (sealed) bottles.
+- Age and ABV use the range histogram controls.
+- Region is country-scoped; sub-characteristics are family-scoped.
+- Components are reusable, so the grid can become a toggle on The Library in a later milestone.
+- Selecting a result card opens its full details in place, one at a time.
+- Cards show the distillery above the expression, with no code; long names cut to one line (distillery) and two lines (expression), with the full name still available.
+- After `Pour one`, the picked card is highlighted, scrolled into view, and opened. The highlight survives viewing other cards and clears if filters remove the bottle.
+- "Pour another" never returns the same bottle twice in a row while two or more are pourable.
+- The roll animation is skipped when the system is set to reduce motion.
+- Drawer is keyboard-navigable; option counts are announced with their labels; flavor color is never the only identifier.
+
+**Open questions (resolve before build).**
+
+1. Is a "search within filters" box needed, to reach a value behind progressive disclosure (e.g. a sub-characteristic) without picking its parent first?
+2. Does the applied tray carry across sessions, or reset each visit? This decides step 10.
+3. Does `Change place` move into the drawer as a scope selector, or stay in the header? Today it resets the screen to the House/Apartment chooser.
+4. Status vocabulary. In code, `BottleStatus` is `"Open" | "Closed" | "empty" | "Killed"` (`src/types.ts`). The Graveyard is `Killed`, so this spec's "Empty" maps to `Killed`. A separate `empty` status exists in ingest and would sit among live Library bottles; it is already excluded from `dramPool`, and no current bottle has it. Still to decide: should ingest turn `empty` into `Killed`, and do sealed and unopened need to be distinct?
+
+**Out of scope.** Changes to facet taxonomy or the data model; the range histogram spec itself; Graveyard, Analytics, Owner, and bottle-detail content beyond what this spec references.
 
 ---
 
