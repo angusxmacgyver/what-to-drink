@@ -2,6 +2,7 @@ import type { Bottle, Catalog } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
+const PIN_KEY = "what-to-drink-owner-pin";
 const THEME_KEY = "what-to-drink-theme";
 
 export type Theme = "dark" | "light";
@@ -45,16 +46,24 @@ export function downloadCatalog(catalog: Catalog): void {
 }
 
 export function isOwner(): boolean {
-  return localStorage.getItem(OWNER_KEY) === "1";
+  return Boolean(sessionStorage.getItem(PIN_KEY));
 }
 
 export function setOwner(on: boolean): void {
-  if (on) localStorage.setItem(OWNER_KEY, "1");
-  else localStorage.removeItem(OWNER_KEY);
+  localStorage.removeItem(OWNER_KEY);
+  if (!on) sessionStorage.removeItem(PIN_KEY);
 }
 
-export function ownerPin(): string {
-  return import.meta.env.VITE_OWNER_PIN || "cellar";
+export async function unlockOwner(pin: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/owner", { method: "POST", headers: { "X-Owner-Pin": pin } });
+    if (!res.ok) return false;
+    sessionStorage.setItem(PIN_KEY, pin);
+    localStorage.removeItem(OWNER_KEY);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchRemoteCatalog(): Promise<Catalog | null> {
@@ -71,10 +80,14 @@ export async function fetchRemoteCatalog(): Promise<Catalog | null> {
 }
 
 async function send(method: string, path: string, body: unknown): Promise<boolean> {
+  const pin = sessionStorage.getItem(PIN_KEY);
   try {
     const res = await fetch(path, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(pin ? { "X-Owner-Pin": pin } : {}),
+      },
       body: JSON.stringify(body),
     });
     return res.ok;

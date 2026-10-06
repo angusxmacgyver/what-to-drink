@@ -18,12 +18,12 @@ import {
   killBottle,
   loadStoredCatalog,
   loadTheme,
-  ownerPin,
   replaceCatalog,
   saveBottle,
   saveCatalog,
   saveTheme,
   setOwner,
+  unlockOwner,
   upsertBottle,
 } from "./lib/store";
 import type { Theme } from "./lib/store";
@@ -205,13 +205,14 @@ export default function App() {
               className="owner-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (pin === ownerPin()) {
-                  setOwner(true);
-                  setOwnerState(true);
-                  setNotice("");
-                } else {
-                  setNotice("PIN did not match.");
-                }
+                void unlockOwner(pin).then((ok) => {
+                  if (ok) {
+                    setOwnerState(true);
+                    setNotice("");
+                  } else {
+                    setNotice("PIN did not match.");
+                  }
+                });
               }}
             >
               <label>

@@ -58,12 +58,15 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
   };
 }
 
-let env: { DB: Db };
+const PIN = "cellar";
 
-const call = (method: string, path: string, body?: unknown) =>
+let env: { DB: Db; OWNER_PIN?: string };
+
+const call = (method: string, path: string, body?: unknown, pin: string | null = PIN) =>
   worker.fetch(
     new Request(`https://example.test${path}`, {
       method,
+      headers: pin === null ? undefined : { "X-Owner-Pin": pin },
       body: body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body),
     }),
     env,
@@ -74,7 +77,7 @@ const getCatalog = async () => (await (await call("GET", "/api/catalog")).json()
 beforeEach(() => {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(fs.readFileSync("schema.sql", "utf8"));
-  env = { DB: fakeD1(sqlite) };
+  env = { DB: fakeD1(sqlite), OWNER_PIN: PIN };
 });
 
 describe("GET /api/catalog", () => {
@@ -154,4 +157,37 @@ describe("POST /api/bottles", () => {
 it("returns 404 for unknown API routes", async () => {
   expect((await call("GET", "/api/nope")).status).toBe(404);
   expect((await call("DELETE", "/api/catalog")).status).toBe(404);
+});
+
+describe("owner PIN", () => {
+  it("checks the PIN without writing", async () => {
+    expect((await call("POST", "/api/owner")).status).toBe(204);
+    expect((await call("POST", "/api/owner", undefined, null)).status).toBe(401);
+    expect((await call("POST", "/api/owner", undefined, "wrong")).status).toBe(401);
+    expect(await getCatalog()).toEqual({ schemaVersion: 1, importedAt: "", bottles: [], graveyard: [] });
+  });
+
+  it("rejects owner writes that omit or miss the PIN and leaves the catalog unchanged", async () => {
+    const kept = bottle();
+    await call("PUT", `/api/bottles/${kept.id}`, kept);
+    const edited = { ...kept, location: "nope" };
+    expect((await call("PUT", `/api/bottles/${kept.id}`, edited, null)).status).toBe(401);
+    expect((await call("PUT", `/api/bottles/${kept.id}`, edited, "wrong")).status).toBe(401);
+    expect((await call("POST", "/api/bottles", [bottle()], null)).status).toBe(401);
+    expect(
+      (await call("PUT", "/api/catalog", { schemaVersion: 1, importedAt: "x", bottles: [], graveyard: [] }, null))
+        .status,
+    ).toBe(401);
+    expect((await getCatalog()).bottles).toEqual([kept]);
+  });
+
+  it("rejects owner requests when the server has no PIN configured", async () => {
+    env = { ...env, OWNER_PIN: undefined };
+    expect((await call("POST", "/api/owner")).status).toBe(401);
+    expect((await call("POST", "/api/bottles", [bottle()])).status).toBe(401);
+  });
+
+  it("still serves the catalog to guests who send no PIN", async () => {
+    expect((await call("GET", "/api/catalog", undefined, null)).status).toBe(200);
+  });
 });

@@ -45,7 +45,7 @@ npm run dev
 
 `npm run dev` has no API, so it shows the bundled catalog and owner edits fail. To run with the API, use `npm run build && npx wrangler dev` (a local D1 copy) or add `--remote` to work against the real database.
 
-The owner PIN is `VITE_OWNER_PIN` (see `.env.example`). The local default is `cellar`. That value is compiled into the client, so it is a speed bump rather than real authentication.
+The owner PIN is the Worker secret `OWNER_PIN` (see `.dev.vars.example`). The local default is `cellar`. It is not compiled into the client. Copy that file to `.dev.vars` for `wrangler dev`. Production needs `npx wrangler secret put OWNER_PIN`, or owner requests are rejected.
 
 To rebuild the JSON from an Excel export:
 
@@ -77,7 +77,7 @@ The first version of the app. The roadmap below starts again at 1.
 
 **Import UI.** Owner can upload xlsx or csv in the app. Open/Closed headers are the default map; SMWS mapping is built into ingest. No CLI required for a refresh on that machine.
 
-**Owner edit.** PIN-gated add (sparse fields allowed), edit, mark open, kill to Graveyard. The PIN is `VITE_OWNER_PIN` (local default `cellar`) and is compiled into the client. Edits save to the browser and try a remote catalog API when a database exists.
+**Owner edit.** PIN-gated add (sparse fields allowed), edit, mark open, kill to Graveyard. The Worker checks `OWNER_PIN` (local default `cellar`) on each owner request. Edits save to the browser and try the catalog API when it is running.
 
 **Filter redesign and theme.** Chips replace dropdowns for theme, country, region, and flavor. Distillery is a typeahead with bottle counts. Sub-characteristics are scoped to the picked flavor families. A light/dark toggle in the header remembers your choice.
 
@@ -94,7 +94,7 @@ Roadmap:
 3. Host on Cloudflare so the cellar has a public URL and does not depend on `npm run dev`. Done: https://what-to-drink.max-krueger.workers.dev/, redeployed on every push to `main`.
 4. Analytics screen: statistics and views over the ingested cellar. Done.
 5. Color-coded flavor families, with sub-characteristics taking their family's color. Done.
-6. Remote editing: move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with a server-checked owner PIN. In progress: storage and merge-import are done.
+6. Remote editing: move the catalog into Cloudflare D1 so an owner edit is visible to a guest without a git push, with a server-checked owner PIN. In progress: storage, merge-import, and the server PIN check are done.
 
 To load `data/bottles.json` into D1 (this replaces every bottle in the database):
 

@@ -13,7 +13,7 @@ export type Db = {
   batch(statements: Statement[]): Promise<unknown>;
 };
 
-type Env = { DB: Db };
+type Env = { DB: Db; OWNER_PIN?: string };
 
 const UPSERT = `INSERT INTO bottles (id, bottle_key, status, data, updated_at) VALUES (?, ?, ?, ?, ?)
   ON CONFLICT (id) DO UPDATE SET bottle_key = excluded.bottle_key, status = excluded.status,
@@ -32,6 +32,12 @@ const SET_IMPORTED_AT = `INSERT INTO meta (key, value) VALUES ('importedAt', ?)
 const respond = (body: string | null, status: number) =>
   new Response(body, { status, headers: body === null ? {} : { "Content-Type": "application/json" } });
 const fail = (status: number, error: string) => respond(JSON.stringify({ error }), status);
+
+// Fail closed: a missing secret rejects every owner request, including a blank PIN.
+const ownerAuthed = (request: Request, env: Env) => {
+  const expected = env.OWNER_PIN;
+  return Boolean(expected) && request.headers.get("X-Owner-Pin") === expected;
+};
 
 const isBottle = (value: unknown): value is Bottle => {
   const b = value as Bottle | null;
@@ -92,10 +98,19 @@ export default {
     const { pathname } = new URL(request.url);
     const { method } = request;
     if (pathname === "/api/catalog" && method === "GET") return getCatalog(env.DB);
-    if (pathname === "/api/catalog" && method === "PUT") return replaceCatalog(env.DB, request);
-    if (pathname === "/api/bottles" && method === "POST") return addBottles(env.DB, request);
+
     const match = pathname.match(/^\/api\/bottles\/([^/]+)$/);
-    if (match && method === "PUT") return saveBottle(env.DB, request, decodeURIComponent(match[1]));
+    const ownerRoute =
+      (pathname === "/api/owner" && method === "POST") ||
+      (pathname === "/api/catalog" && method === "PUT") ||
+      (pathname === "/api/bottles" && method === "POST") ||
+      Boolean(match && method === "PUT");
+    if (!ownerRoute) return fail(404, "not found");
+    if (!ownerAuthed(request, env)) return fail(401, "owner PIN required");
+    if (pathname === "/api/owner") return respond(null, 204);
+    if (pathname === "/api/catalog") return replaceCatalog(env.DB, request);
+    if (pathname === "/api/bottles") return addBottles(env.DB, request);
+    if (match) return saveBottle(env.DB, request, decodeURIComponent(match[1]));
     return fail(404, "not found");
   },
 };

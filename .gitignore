@@ -8,4 +8,5 @@ data/seed.sql
 .DS_Store
 .env
 .env.local
+.dev.vars
 *.tgz

@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Bottle, Catalog } from "../types";
-import { addBottles, fetchRemoteCatalog, loadStoredCatalog, replaceCatalog, saveBottle } from "./store";
+import {
+  addBottles,
+  fetchRemoteCatalog,
+  isOwner,
+  loadStoredCatalog,
+  replaceCatalog,
+  saveBottle,
+  setOwner,
+  unlockOwner,
+} from "./store";
 
 const bottle = (id: string): Bottle => ({
   id,
@@ -35,10 +44,16 @@ const lastRequest = () => {
 
 beforeEach(() => {
   const store = new Map<string, string>();
+  const session = new Map<string, string>();
   vi.stubGlobal("localStorage", {
     getItem: (k: string) => store.get(k) ?? null,
     setItem: (k: string, v: string) => store.set(k, v),
     removeItem: (k: string) => store.delete(k),
+  });
+  vi.stubGlobal("sessionStorage", {
+    getItem: (k: string) => session.get(k) ?? null,
+    setItem: (k: string, v: string) => session.set(k, v),
+    removeItem: (k: string) => session.delete(k),
   });
   fetchMock = vi.fn();
   vi.stubGlobal("fetch", fetchMock);
@@ -95,5 +110,33 @@ describe("writes", () => {
     expect(await saveBottle(bottle("a"))).toBe(false);
     fetchMock.mockRejectedValue(new TypeError("offline"));
     expect(await addBottles([bottle("a")])).toBe(false);
+  });
+
+  it("sends the PIN on later writes after the server accepts it", async () => {
+    respondWith(204);
+    expect(await unlockOwner("cellar")).toBe(true);
+    expect(isOwner()).toBe(true);
+    respondWith(204);
+    expect(await saveBottle(bottle("a"))).toBe(true);
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(new Headers(init.headers).get("X-Owner-Pin")).toBe("cellar");
+  });
+});
+
+describe("unlockOwner", () => {
+  it("forgets the PIN on logout", async () => {
+    respondWith(204);
+    expect(await unlockOwner("cellar")).toBe(true);
+    setOwner(false);
+    expect(isOwner()).toBe(false);
+  });
+
+  it("stays locked when the server rejects the PIN or cannot be reached", async () => {
+    respondWith(401);
+    expect(await unlockOwner("nope")).toBe(false);
+    expect(isOwner()).toBe(false);
+    fetchMock.mockRejectedValue(new TypeError("offline"));
+    expect(await unlockOwner("cellar")).toBe(false);
+    expect(isOwner()).toBe(false);
   });
 });
