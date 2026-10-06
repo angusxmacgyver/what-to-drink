@@ -286,6 +286,83 @@ Not scheduled yet.
   - **Last third.** A field or flag for a bottle in its last third, marking it a prime target for consumption.
   - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
   - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
+- **Filter design cleanup.** Focused on filter management. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis).
+
+### Requirement: Range histogram filters (ABV and Age)
+
+**Summary.** Replace the two continuous range sliders (ABV and Age) with "range histogram" filter controls. Each control combines (a) a distribution histogram, (b) a draggable brush selection over that histogram, and (c) two numeric "endstop" input fields (From / To) that stay in sync with the brush. All selection values snap to whole integers. Results update live.
+
+Rationale: whisky ABV and age statements are effectively quantized (they land on a small set of real values), so free-floating sliders produce meaningless precision (e.g. "57.2 yr", "67.9%") and are hard to land on a round number. Snapping + typed endstops fixes this. Separately, "No Age Statement" (NAS) is not a number and must not live on the age axis.
+
+**Build two instances of the same component.**
+
+1. ABV filter — unit `%`.
+2. Age filter — unit `yr`, plus the NAS toggle described below.
+
+**Data model.**
+
+- The collection is a list of bottles. Each bottle has:
+  - `abv`: number (percent).
+  - `age`: either a positive number (years) OR the sentinel value `NAS` (no age statement).
+- Derive each histogram's numeric domain from the data at runtime, do not hardcode it:
+  - ABV domain = [min ABV, max ABV] across all bottles (floor/ceil to the bin width).
+  - Age domain = [min numeric age, max numeric age] across bottles whose `age` is numeric. (NAS bottles are excluded from this domain.)
+- Blanks (the canonical schema allows both until the sheet cleanup lands):
+  - Blank Age is treated as `NAS`: counted on the NAS button and governed by the NAS toggle.
+  - Blank ABV is excluded from ABV filtering: not binned, not part of the ABV domain, and never filtered out by the ABV range.
+
+**Histogram.**
+
+- Bin the data into fixed-width bins across the numeric domain. Default bin width: ABV = 2%, Age = 2 yr (make it a prop).
+- Each bin is a vertical bar; height is proportional to the count of bottles in that bin, scaled to the tallest bin.
+- Bars whose bin falls fully inside the current selection are painted in the accent color; bars outside the selection are muted/greyed.
+- Show a baseline axis with a few sparse tick labels (e.g. domain min, a few midpoints, domain max). Do not label every bin.
+
+**Brush selection (drag).**
+
+- An overlaid selection region spans the current [from, to].
+- Three drag affordances:
+  1. Left edge handle: changes `from`.
+  2. Right edge handle: changes `to`.
+  3. Middle of the region: pans the whole window, preserving its width.
+- All drags snap the value to the nearest whole integer.
+- Constraints: `from` and `to` stay within the domain; enforce a minimum gap of one bin width so the handles can't cross or collapse.
+- Use pointer events so it works with mouse and touch.
+
+**Typed endstops (From / To number inputs).**
+
+- Below each histogram, two numeric inputs labeled `From` and `To`, each showing the unit suffix.
+- Two-way binding with the brush: dragging the brush updates the input values; editing an input moves the brush.
+- On commit (change/blur), clamp the typed value to the domain and to the min-gap rule relative to the other end; snap to a whole integer. If invalid (e.g. From > To), coerce to the nearest valid value rather than erroring.
+
+**NAS handling (Age filter only).**
+
+- NAS is a separate boolean toggle button, independent of the numeric age range. It is NOT a position on the age axis.
+- Default state: ON (NAS bottles included).
+- The button shows its label ("NAS") and the count of NAS bottles.
+- Layout requirement: the NAS toggle sits on the SAME row as the Age From/To endstop inputs, at the LEFT end of that row. The row is full-justified (space-between): NAS button flush-left, the From/To inputs occupying the right side. On narrow widths the row may wrap, NAS first.
+
+**Match logic (applies to the live count and the filtered result set).** A bottle matches when BOTH are true:
+
+1. `abv` is blank, or within [abvFrom, abvTo] (inclusive).
+2. If `age` is `NAS` or blank: the NAS toggle is ON. Otherwise: `age` is within [ageFrom, ageTo] (inclusive).
+
+**Live count.** Display "{N} of {total} bottles match" and recompute on every change to either histogram, either endstop, or the NAS toggle.
+
+**Defaults (seed values).**
+
+- ABV: full domain selected.
+- Age: full numeric domain selected, NAS toggle ON.
+
+**Acceptance criteria.**
+
+- No selection value is ever shown with a decimal; everything snaps to whole integers.
+- Editing a number field moves the brush, and vice versa, with no drift.
+- Turning NAS off removes exactly the NAS bottles from the count, with the numeric age range unchanged.
+- The NAS toggle renders at the far left of the age range row, full-justified against the From/To inputs.
+- Handles cannot cross; the selection cannot shrink below one bin.
+- Works with both mouse and touch.
+
 ---
 
 ## Conventions for later chats
