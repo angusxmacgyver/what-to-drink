@@ -101,6 +101,14 @@ export function detailBottle(bottles: Bottle[]): Bottle {
   return bottles.find((bottle) => bottle.status === "Open") ?? bottles[0];
 }
 
+/** Region and country, shown once when they are the same. */
+export function originLabel(region: string, country: string): string {
+  const place = region.trim();
+  const land = country.trim();
+  if (place && land && place !== land) return `${place} · ${land}`;
+  return place || land;
+}
+
 export function groupLibrary(bottles: Bottle[]): LibraryRow[] {
   const map = new Map<string, Bottle[]>();
   for (const bottle of bottles) {

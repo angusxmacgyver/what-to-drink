@@ -6,6 +6,7 @@ import {
   groupLibrary,
   matchesFilters,
   matchesStatus,
+  originLabel,
   subOwnerFamily,
   subsForFamilies,
 } from "./library";
@@ -183,6 +184,21 @@ describe("groupLibrary", () => {
     const [row] = groupLibrary([bottle({ age: 10, abv: 46 }), bottle({ age: 12, abv: 57.1 })]);
     expect(row.ageLabel).toBe("mixed");
     expect(row.abvLabel).toBe("mixed");
+  });
+});
+
+describe("originLabel", () => {
+  it("shows region and country once when they are the same", () => {
+    expect(originLabel("Japan", "Japan")).toBe("Japan");
+  });
+
+  it("shows both when they differ", () => {
+    expect(originLabel("Islay", "Scotland")).toBe("Islay · Scotland");
+  });
+
+  it("shows whichever side is present", () => {
+    expect(originLabel("Islay", " ")).toBe("Islay");
+    expect(originLabel("", "USA")).toBe("USA");
   });
 });
 

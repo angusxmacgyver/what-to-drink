@@ -213,6 +213,34 @@ nav button.on,
   margin-bottom: 22px;
 }
 
+.panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.view-toggle button[aria-pressed="true"] {
+  background: var(--chip);
+  color: var(--ink);
+}
+
 .filters {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -675,6 +703,99 @@ nav button.on,
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 13px;
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.library-card:hover,
+.library-card.open {
+  border-color: var(--gold);
+}
+
+.library-card.open {
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+.card-distillery,
+.card-expression,
+.card-origin {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.card-distillery {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-expression {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.card-origin {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.family-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--family-color);
+  flex: none;
+}
+
+.card-facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: auto;
+  font-size: 14px;
+}
+
+.card-facts .stock {
+  margin-left: auto;
+}
+
+.library-grid > .detail {
+  grid-column: 1 / -1;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
 }
 
 .theme-toggle,
