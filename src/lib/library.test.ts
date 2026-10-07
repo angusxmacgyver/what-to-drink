@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Bottle } from "../types";
-import { distilleryCounts, groupLibrary, matchesStatus, subOwnerFamily, subsForFamilies } from "./library";
+import { emptyFilters, type Bottle } from "../types";
+import { distilleryCounts, groupLibrary, matchesFilters, matchesStatus, subOwnerFamily, subsForFamilies } from "./library";
 
 let nextId = 0;
 
@@ -109,6 +109,17 @@ describe("matchesStatus", () => {
     expect(matchesStatus(bottle({ status: "Open" }), ["Open"])).toBe(true);
     expect(matchesStatus(bottle({ status: "Closed" }), ["Open"])).toBe(false);
     expect(matchesStatus(bottle({ status: "Closed" }), ["Open", "Closed"])).toBe(true);
+  });
+});
+
+describe("matchesFilters ABV", () => {
+  const filters = { ...emptyFilters(), abvMin: "40", abvMax: "50" };
+
+  it("keeps a blank ABV and the bottles on the ends of the range", () => {
+    expect(matchesFilters(bottle({ abv: null }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ abv: 40 }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ abv: 50 }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ abv: 55.3 }), filters)).toBe(false);
   });
 });
 

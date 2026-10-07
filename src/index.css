@@ -352,6 +352,134 @@ nav button.on,
   cursor: pointer;
 }
 
+.hist {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 8px 10px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.hist.on {
+  border-color: var(--line-strong);
+}
+
+.hist-head,
+.hist-axis,
+.hist-ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hist-head {
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hist-values,
+.hist-axis,
+.hist-ends {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.hist-plot {
+  position: relative;
+  height: 72px;
+  touch-action: none;
+  user-select: none;
+}
+
+.hist-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+}
+
+.hist-col {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.hist-bar {
+  width: 100%;
+  background: var(--line);
+  border-radius: 2px 2px 0 0;
+}
+
+.hist-bar.on {
+  background: var(--gold);
+}
+
+.hist-brush {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  cursor: grab;
+}
+
+.hist-handle {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.hist-handle.left {
+  left: -7px;
+}
+
+.hist-handle.right {
+  right: -7px;
+}
+
+.hist-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  width: 2px;
+  background: var(--ink);
+}
+
+.hist-axis {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hist-ends {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.filters .hist-ends label {
+  flex-direction: row;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.hist-ends input {
+  width: 4.5rem;
+}
+
 .multi {
   position: relative;
   display: flex;

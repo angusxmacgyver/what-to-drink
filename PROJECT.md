@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 6 of 6 (Remote editing), in progress. Merge-import, D1 storage, the server-checked PIN, the lock glyph, and confirm steps are done. Export and backups remain — see Milestone 6. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
+**Current milestone:** 6 of 6 (Remote editing) is paused. Export and backups remain — see Milestone 6. Current work, taken ahead of that: filter design cleanup (range histogram filters for Age and ABV). The ABV histogram is in the filter bar. Age is still the slider; its histogram and the NAS toggle are next. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
 **Living copy:** this file.
 
@@ -287,9 +287,11 @@ Not scheduled yet.
   - **Last third.** A field or flag for a bottle in its last third, marking it a prime target for consumption.
   - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
   - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
-- **Filter design cleanup.** Focused on filter management. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis).
+- **Filter design cleanup.** In progress, ahead of the rest of Milestone 6. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis). The histogram model lives in `src/lib/histogram.ts`. The ABV control is in the filter bar (bars, drag handles, and From/To). Age is still the slider.
 - **Pick a Dram refactor.** Filters move into a drawer, options become grids with live counts, and results become a card grid with a picked state. Comes after the range histogram filters, which it consumes (full requirement below).
 - **Quick Pours.** Curated starting points (e.g. Heavily Peated, Sweet & Mellow, Spicy & Dry) applied as presets the user can then refine. The Pick a Dram prototype showed these replacing Themes; that is a taxonomy change, so it is not part of the refactor, where Theme stays a normal facet.
+- **Origin imagery.** A visual mapping for each bottle, showing its region of Scotland or its country of origin.
+- **Analytics improvements.** More robust and interesting facts about the collection.
 - **Whisky Draft.** To be scoped later. Data does not need to be in D1: either read it from the sheet import or keep it as a static JSON file. If it uses the workbook's Draft Participants sheet, decide how participant contact data is handled first: today that sheet is skipped and must stay out of the app and git.
 
 ### Requirement: Range histogram filters (ABV and Age)

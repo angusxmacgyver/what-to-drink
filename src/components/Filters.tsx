@@ -2,7 +2,9 @@ import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeSlider } from "./RangeSlider";
+import { RangeHistogram } from "./RangeHistogram";
 import { distilleryCounts, subsForFamilies } from "../lib/library";
+import { buildHistogram } from "../lib/histogram";
 import { familyClass, subFamilyClass } from "../lib/colors";
 
 type Props = {
@@ -43,8 +45,7 @@ export function Filters({
   const ageMinBound = ages.length ? Math.min(...ages) : 0;
   const ageMaxBound = ages.length ? Math.max(...ages) : 1;
   const ageSliderMin = hasNas && ages.length ? ageMinBound - 1 : ageMinBound;
-  const abvMinBound = abvs.length ? Math.floor(Math.min(...abvs) * 10) / 10 : 0;
-  const abvMaxBound = abvs.length ? Math.ceil(Math.max(...abvs) * 10) / 10 : 1;
+  const abvHistogram = buildHistogram(abvs, 2);
 
   const encodeAge = (n: number) => (hasNas && n <= ageSliderMin ? "NAS" : String(n));
   const decodeAge = (s: string, fallback: number) => {
@@ -58,7 +59,7 @@ export function Filters({
     else set({ ageMin: encodeAge(low), ageMax: encodeAge(high) });
   };
   const setAbv = (low: number, high: number) => {
-    if (low <= abvMinBound && high >= abvMaxBound) set({ abvMin: "", abvMax: "" });
+    if (!abvHistogram || (low <= abvHistogram.min && high >= abvHistogram.max)) set({ abvMin: "", abvMax: "" });
     else set({ abvMin: String(low), abvMax: String(high) });
   };
 
@@ -106,15 +107,13 @@ export function Filters({
           onChange={setAge}
         />
       ) : null}
-      {abvs.length ? (
-        <RangeSlider
+      {abvHistogram ? (
+        <RangeHistogram
           label="ABV"
-          min={abvMinBound}
-          max={abvMaxBound}
-          step={0.1}
-          low={filters.abvMin === "" ? abvMinBound : Number(filters.abvMin)}
-          high={filters.abvMax === "" ? abvMaxBound : Number(filters.abvMax)}
-          format={(n) => `${n.toFixed(1)}%`}
+          histogram={abvHistogram}
+          unit="%"
+          from={filters.abvMin === "" ? abvHistogram.min : Number(filters.abvMin)}
+          to={filters.abvMax === "" ? abvHistogram.max : Number(filters.abvMax)}
           onChange={setAbv}
         />
       ) : null}
