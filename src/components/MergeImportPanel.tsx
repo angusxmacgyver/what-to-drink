@@ -8,7 +8,7 @@ export function MergeImportPanel({
   onConfirm,
 }: {
   catalog: Catalog;
-  onConfirm: (bottles: Bottle[]) => void;
+  onConfirm: (bottles: Bottle[]) => boolean | Promise<boolean>;
 }) {
   const [rows, setRows] = useState<MergeRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -77,8 +77,10 @@ export function MergeImportPanel({
               type="button"
               disabled={selected.size === 0}
               onClick={() => {
-                onConfirm(rows.filter((r) => selected.has(r.bottle.id)).map((r) => r.bottle));
-                reset();
+                const bottles = rows.filter((r) => selected.has(r.bottle.id)).map((r) => r.bottle);
+                void Promise.resolve(onConfirm(bottles)).then((ok) => {
+                  if (ok) reset();
+                });
               }}
             >
               Add {selected.size} bottle{selected.size === 1 ? "" : "s"}

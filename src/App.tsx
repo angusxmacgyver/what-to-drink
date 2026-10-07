@@ -10,6 +10,7 @@ import { ImportPanel } from "./components/ImportPanel";
 import { MergeImportPanel } from "./components/MergeImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
 import { OwnerLock } from "./components/OwnerLock";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 import { applyMerge } from "./lib/merge";
 import {
   addBottles,
@@ -41,6 +42,21 @@ export default function App() {
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [notice, setNotice] = useState("");
   const [theme, setTheme] = useState<Theme>(() => loadTheme());
+  const [pending, setPending] = useState<{
+    message: string;
+    confirmLabel: string;
+    resolve: (ok: boolean) => void;
+  } | null>(null);
+
+  const ask = (message: string, confirmLabel: string) =>
+    new Promise<boolean>((resolve) => {
+      setPending({ message, confirmLabel, resolve });
+    });
+
+  const settle = (ok: boolean) => {
+    pending?.resolve(ok);
+    setPending(null);
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -167,9 +183,15 @@ export default function App() {
             setView("owner");
           }}
           onKill={(id) => {
-            const next = killBottle(catalog, id);
-            const killed = next.graveyard.find((b) => b.id === id);
-            if (killed) void persist(next, saveBottle(killed));
+            const bottle = catalog.bottles.find((b) => b.id === id);
+            if (!bottle) return;
+            const name = [bottle.distillery, bottle.bottling].filter(Boolean).join(" ") || "this bottle";
+            void ask(`Kill ${name}? It moves to the Graveyard.`, "Kill").then((ok) => {
+              if (!ok) return;
+              const next = killBottle(catalog, id);
+              const killed = next.graveyard.find((b) => b.id === id);
+              if (killed) void persist(next, saveBottle(killed));
+            });
           }}
           onOpen={(id) => {
             const bottle = catalog.bottles.find((b) => b.id === id);
@@ -202,20 +224,31 @@ export default function App() {
           <p className="meta">{importedLabel}</p>
           <ImportPanel
             onCatalog={(next, filename) => {
-              const previous = catalog;
-              saveCatalog(previous);
-              localStorage.setItem("what-to-drink-catalog-backup", JSON.stringify(previous));
-              void persist(next, replaceCatalog(next));
-              downloadCatalog(next);
-              setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
-              setView("library");
+              void ask(`Replace the whole cellar from ${filename}?`, "Replace").then((ok) => {
+                if (!ok) return;
+                const previous = catalog;
+                saveCatalog(previous);
+                localStorage.setItem("what-to-drink-catalog-backup", JSON.stringify(previous));
+                void persist(next, replaceCatalog(next));
+                downloadCatalog(next);
+                setNotice(`Replaced cellar from ${filename}. Backup kept in the browser; JSON downloaded.`);
+                setView("library");
+              });
             }}
           />
           <MergeImportPanel
             catalog={catalog}
             onConfirm={(bottles) => {
-              void persist(applyMerge(catalog, bottles), addBottles(bottles));
-              setNotice(`Added ${bottles.length} bottle${bottles.length === 1 ? "" : "s"} from the workbook.`);
+              const count = bottles.length;
+              return ask(
+                `Add ${count} bottle${count === 1 ? "" : "s"}? Existing bottles stay as they are.`,
+                "Add",
+              ).then((ok) => {
+                if (!ok) return false;
+                void persist(applyMerge(catalog, bottles), addBottles(bottles));
+                setNotice(`Added ${count} bottle${count === 1 ? "" : "s"} from the workbook.`);
+                return true;
+              });
             }}
           />
           <div className="owner-actions">
@@ -230,15 +263,32 @@ export default function App() {
             <OwnerForm
               initial={editing === "new" ? undefined : editing}
               onSave={(bottle) => {
-                void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
-                setEditing(null);
-                setView("library");
-                setNotice("Saved to The Library.");
+                const save = () => {
+                  void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
+                  setEditing(null);
+                  setView("library");
+                  setNotice("Saved to The Library.");
+                };
+                if (editing === "new") {
+                  save();
+                  return;
+                }
+                void ask("Overwrite this bottle's details?", "Overwrite").then((ok) => {
+                  if (ok) save();
+                });
               }}
               onCancel={() => setEditing(null)}
             />
           ) : null}
         </section>
+      ) : null}
+      {pending ? (
+        <ConfirmDialog
+          message={pending.message}
+          confirmLabel={pending.confirmLabel}
+          onConfirm={() => settle(true)}
+          onCancel={() => settle(false)}
+        />
       ) : null}
     </div>
   );

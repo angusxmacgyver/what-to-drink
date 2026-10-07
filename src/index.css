@@ -843,6 +843,29 @@ nav button.on,
   color: var(--danger-ink) !important;
 }
 
+.confirm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.confirm-dialog {
+  width: min(420px, 100%);
+  padding: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.confirm-dialog p {
+  margin: 0;
+}
+
 .notice {
   background: var(--notice-bg);
   border: 1px solid var(--gold);
