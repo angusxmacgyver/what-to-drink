@@ -4,8 +4,18 @@ const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
 const PIN_KEY = "what-to-drink-owner-pin";
 const THEME_KEY = "what-to-drink-theme";
+const LIBRARY_LAYOUT_KEY = "what-to-drink-library-layout";
 
 export type Theme = "dark" | "light";
+export type LibraryLayout = "list" | "grid";
+
+export function loadLibraryLayout(): LibraryLayout {
+  return localStorage.getItem(LIBRARY_LAYOUT_KEY) === "grid" ? "grid" : "list";
+}
+
+export function saveLibraryLayout(layout: LibraryLayout): void {
+  localStorage.setItem(LIBRARY_LAYOUT_KEY, layout);
+}
 
 export function loadTheme(): Theme {
   const stored = localStorage.getItem(THEME_KEY);

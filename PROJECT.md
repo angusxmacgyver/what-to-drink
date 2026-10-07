@@ -116,11 +116,11 @@ Laptop-first, responsive web. Bottle detail stays in place (no new page). Expand
 
 ### The Library
 
-List of all live bottles, grouped by `bottleKey`. Compact row: distillery, expression, age, ABV, theme, **stock count**. Five Ardbeg Cask Strength 10s render as one row `×5`.
+Live bottles, grouped by `bottleKey`, in distillery then expression order. The panel header toggles a list and a grid. The list is the default, and the choice is remembered on this device the same way the theme is. Search and filters apply to both, and both use the same grouping.
 
-Selecting a row expands one field block for the expression (the 12 canonical fields, plus SMWS extras when present): the first bottle whose status is Open, or the first bottle if none are Open. That block is shown once, even when the other bottles differ. When there is more than one physical bottle, each is listed as status and location only, with Mark open, Edit, and Kill on that line. Selecting the row again, or Escape, closes the detail.
+The list row is distillery, expression, age, ABV, theme, and stock count. Five Ardbeg Cask Strength 10s render as one row `×5`. A card shows the distillery on one line and the expression on at most two, then an ellipsis. It also shows region and country (once, when they are the same), flavor-family swatches, age, ABV, and `×N` when stock is more than one. No Society or distillery code on the card. The full name stays in the hover text, the accessible name, and the detail.
 
-Search and filters apply to this list.
+Selecting a row or a card opens one detail under that row. Later cards move down. Selecting it again, or Escape, closes it. The detail shows one field block for the expression (the 12 canonical fields, plus SMWS extras when present): the first bottle whose status is Open, or the first bottle if none are Open, even when the others differ. When there is more than one physical bottle, each is listed as status and location only, with Mark open, Edit, and Kill on that line.
 
 ### Pick a Dram
 

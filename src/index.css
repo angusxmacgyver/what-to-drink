@@ -213,6 +213,10 @@ nav button.on,
   margin-bottom: 22px;
 }
 
+.library-head {
+  flex-wrap: wrap;
+}
+
 .panel-tools {
   display: flex;
   align-items: center;

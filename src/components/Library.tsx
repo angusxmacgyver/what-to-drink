@@ -9,6 +9,7 @@ import {
   originLabel,
   type LibraryRow,
 } from "../lib/library";
+import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { BottleFields } from "./BottleFields";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
@@ -48,7 +49,7 @@ function BottleActions({ bottle, owner, onEdit, onKill, onOpen }: Actions & { bo
   );
 }
 
-function LibraryCard({
+export function LibraryCard({
   row,
   expanded,
   onToggle,
@@ -88,7 +89,7 @@ function LibraryCard({
   );
 }
 
-function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: Bottle[] }) {
+export function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: Bottle[] }) {
   const shown = detailBottle(bottles);
   return (
     <div className="detail">
@@ -114,10 +115,14 @@ function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: Bottle[]
 
 export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const [layout, setLayout] = useState<"list" | "grid">("list");
+  const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
   const rows = groupLibrary(filtered);
   const actions = { owner, onEdit, onKill, onOpen };
+
+  useEffect(() => {
+    saveLibraryLayout(layout);
+  }, [layout]);
 
   useEffect(() => {
     if (!openKey) return;
@@ -130,7 +135,7 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
 
   return (
     <section className="panel">
-      <header className="panel-head">
+      <header className="panel-head library-head">
         <div>
           <h1>The Library</h1>
         </div>

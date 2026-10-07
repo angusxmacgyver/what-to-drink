@@ -4,9 +4,11 @@ import {
   addBottles,
   fetchRemoteCatalog,
   isOwner,
+  loadLibraryLayout,
   loadStoredCatalog,
   replaceCatalog,
   saveBottle,
+  saveLibraryLayout,
   setOwner,
   unlockOwner,
 } from "./store";
@@ -60,6 +62,19 @@ beforeEach(() => {
 });
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe("library layout", () => {
+  it("defaults to the list", () => {
+    expect(loadLibraryLayout()).toBe("list");
+  });
+
+  it("remembers a grid choice and ignores anything else", () => {
+    saveLibraryLayout("grid");
+    expect(loadLibraryLayout()).toBe("grid");
+    localStorage.setItem("what-to-drink-library-layout", "cards");
+    expect(loadLibraryLayout()).toBe("list");
+  });
+});
 
 describe("fetchRemoteCatalog", () => {
   it("returns the server catalog and caches it on this device", async () => {
