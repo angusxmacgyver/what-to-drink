@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  abvHistogramValues,
   binFullyInside,
   buildHistogram,
   clampSelection,
@@ -54,6 +55,12 @@ describe("clampSelection", () => {
 
   it("uncrosses ends that were entered backwards", () => {
     expect(clampSelection(50, 40, 40, 64, 2)).toEqual({ from: 40, to: 50 });
+  });
+});
+
+describe("abvHistogramValues", () => {
+  it("drops blanks and anything under 40%", () => {
+    expect(abvHistogramValues([2, 39.9, null, 40, 46.3])).toEqual([40, 46.3]);
   });
 });
 

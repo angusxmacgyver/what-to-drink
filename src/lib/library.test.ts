@@ -123,6 +123,37 @@ describe("matchesFilters ABV", () => {
   });
 });
 
+describe("matchesFilters age", () => {
+  it("keeps every age when the range is unset and NAS is on", () => {
+    const filters = emptyFilters();
+    expect(matchesFilters(bottle({ age: "NAS" }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: null }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: 12 }), filters)).toBe(true);
+  });
+
+  it("keeps NAS and blank ages inside a narrowed range while NAS stays on", () => {
+    const filters = { ...emptyFilters(), ageMin: "12", ageMax: "18" };
+    expect(matchesFilters(bottle({ age: "NAS" }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: null }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: 12 }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: 18 }), filters)).toBe(true);
+    expect(matchesFilters(bottle({ age: 10 }), filters)).toBe(false);
+  });
+
+  it("drops NAS and blank ages when the toggle is off, and still keeps numeric ages in range", () => {
+    const narrowed = { ...emptyFilters(), ageMin: "12", ageMax: "18", includeNas: false };
+    expect(matchesFilters(bottle({ age: "NAS" }), narrowed)).toBe(false);
+    expect(matchesFilters(bottle({ age: null }), narrowed)).toBe(false);
+    expect(matchesFilters(bottle({ age: 12 }), narrowed)).toBe(true);
+    expect(matchesFilters(bottle({ age: 21 }), narrowed)).toBe(false);
+
+    const nasOff = { ...emptyFilters(), includeNas: false };
+    expect(matchesFilters(bottle({ age: "NAS" }), nasOff)).toBe(false);
+    expect(matchesFilters(bottle({ age: null }), nasOff)).toBe(false);
+    expect(matchesFilters(bottle({ age: 12 }), nasOff)).toBe(true);
+  });
+});
+
 describe("groupLibrary", () => {
   it("groups bottles sharing a bottleKey into one row with stock", () => {
     const bottles = Array.from({ length: 5 }, () => bottle({ bottleKey: "ardbeg::cask-strength-10" }));

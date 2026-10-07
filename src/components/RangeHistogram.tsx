@@ -3,6 +3,12 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Histogram } from "../lib/histogram";
 import { binFullyInside, clampSelection } from "../lib/histogram";
 
+type NasToggle = {
+  included: boolean;
+  count: number;
+  onToggle: () => void;
+};
+
 type Props = {
   label: string;
   histogram: Histogram;
@@ -10,6 +16,7 @@ type Props = {
   to: number;
   unit: string;
   onChange: (from: number, to: number) => void;
+  nas?: NasToggle;
 };
 
 function ticks(min: number, max: number): number[] {
@@ -17,13 +24,13 @@ function ticks(min: number, max: number): number[] {
   return [...new Set([min, Math.round(min + step), Math.round(min + step * 2), max])];
 }
 
-export function RangeHistogram({ label, histogram, from, to, unit, onChange }: Props) {
+export function RangeHistogram({ label, histogram, from, to, unit, onChange, nas }: Props) {
   const plotRef = useRef<HTMLDivElement>(null);
   const { min, max, binWidth, bins } = histogram;
   const selection = clampSelection(from, to, min, max, binWidth);
   const peak = Math.max(...bins.map((bin) => bin.count), 1);
   const span = max - min || 1;
-  const active = selection.from > min || selection.to < max;
+  const active = selection.from > min || selection.to < max || (nas != null && !nas.included);
   const [draft, setDraft] = useState({ from: String(selection.from), to: String(selection.to) });
 
   useEffect(() => {
@@ -133,36 +140,48 @@ export function RangeHistogram({ label, histogram, from, to, unit, onChange }: P
         ))}
       </div>
       <div className="hist-ends">
-        <label>
-          From
-          <input
-            type="number"
-            inputMode="numeric"
-            aria-label={`${label} from`}
-            value={draft.from}
-            onChange={(event) => setDraft((prev) => ({ ...prev, from: event.target.value }))}
-            onBlur={(event) => commit("from", event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") commit("from", draft.from);
-            }}
-          />
-          <span>{unit}</span>
-        </label>
-        <label>
-          To
-          <input
-            type="number"
-            inputMode="numeric"
-            aria-label={`${label} to`}
-            value={draft.to}
-            onChange={(event) => setDraft((prev) => ({ ...prev, to: event.target.value }))}
-            onBlur={(event) => commit("to", event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") commit("to", draft.to);
-            }}
-          />
-          <span>{unit}</span>
-        </label>
+        {nas ? (
+          <button
+            type="button"
+            className={nas.included ? "chip on hist-nas" : "chip hist-nas"}
+            aria-pressed={nas.included}
+            onClick={nas.onToggle}
+          >
+            NAS {nas.count}
+          </button>
+        ) : null}
+        <div className="hist-end-fields">
+          <label>
+            From
+            <input
+              type="number"
+              inputMode="numeric"
+              aria-label={`${label} from`}
+              value={draft.from}
+              onChange={(event) => setDraft((prev) => ({ ...prev, from: event.target.value }))}
+              onBlur={(event) => commit("from", event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") commit("from", draft.from);
+              }}
+            />
+            <span>{unit}</span>
+          </label>
+          <label>
+            To
+            <input
+              type="number"
+              inputMode="numeric"
+              aria-label={`${label} to`}
+              value={draft.to}
+              onChange={(event) => setDraft((prev) => ({ ...prev, to: event.target.value }))}
+              onBlur={(event) => commit("to", event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") commit("to", draft.to);
+              }}
+            />
+            <span>{unit}</span>
+          </label>
+        </div>
       </div>
     </div>
   );

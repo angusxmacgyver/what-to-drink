@@ -2,7 +2,7 @@
 
 **How to use this document.** This is the whole build. Drop it into a new chat with: `This is the structure of the project. We are on Milestone N of 6. Continue from there.` Treat earlier milestones as done unless the repo shows otherwise. Update **Current milestone** in this file when a milestone’s Done when is met.
 
-**Current milestone:** 6 of 6 (Remote editing) is paused. Export and backups remain — see Milestone 6. Current work, taken ahead of that: filter design cleanup (range histogram filters for Age and ABV). The ABV histogram is in the filter bar. Age is still the slider; its histogram and the NAS toggle are next. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
+**Current milestone:** 6 of 6 (Remote editing) is paused. Export and backups remain — see Milestone 6. The range histogram filters for Age and ABV are in the filter bar. Age has a NAS toggle beside its From and To fields, on by default, and NAS is no longer a stop on the age axis. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
 **Living copy:** this file.
 
@@ -143,8 +143,8 @@ Separate view of killed bottles. Same 12 fields as available. Not in Library scr
 Reusable components, used by The Library and Pick a Dram as they apply:
 
 - Distillery / Producer (multi)
-- Age range (NAS is the left stop; include it by leaving the min thumb there, or pin both thumbs on NAS)
-- ABV range
+- Age range, snapped to whole years, with a NAS toggle beside From and To (on by default; blank ages count as NAS)
+- ABV range, snapped to whole percents (a blank ABV stays in the results)
 - Theme (multi)
 - Flavor Families (multi)
 - Sub-Characteristics (multi)
@@ -287,7 +287,7 @@ Not scheduled yet.
   - **Last third.** A field or flag for a bottle in its last third, marking it a prime target for consumption.
   - **Just poured.** A "Just poured" button on a bottle in The Library, and a matching one on the Pick a Dram result.
   - **Recent drams.** A rotating list of the last 25 drams marked as poured, oldest dropping off as new ones arrive.
-- **Filter design cleanup.** In progress, ahead of the rest of Milestone 6. First item: replace the ABV and Age sliders with range histogram filters (full requirement below). When built, this supersedes the Age and ABV lines under Shared filters (NAS stops being the left stop of the age axis). The histogram model lives in `src/lib/histogram.ts`. The ABV control is in the filter bar (bars, drag handles, and From/To). Age is still the slider.
+- **Filter design cleanup.** The first item is in place, ahead of the rest of Milestone 6: ABV and Age are range histogram filters (full requirement below). NAS is a toggle beside the Age From and To fields, not a stop on the age axis. The histogram model lives in `src/lib/histogram.ts`.
 - **Pick a Dram refactor.** Filters move into a drawer, options become grids with live counts, and results become a card grid with a picked state. Comes after the range histogram filters, which it consumes (full requirement below).
 - **Quick Pours.** Curated starting points (e.g. Heavily Peated, Sweet & Mellow, Spicy & Dry) applied as presets the user can then refine. The Pick a Dram prototype showed these replacing Themes; that is a taxonomy change, so it is not part of the refactor, where Theme stays a normal facet.
 - **Origin imagery.** A visual mapping for each bottle, showing its region of Scotland or its country of origin.
@@ -311,7 +311,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
   - `abv`: number (percent).
   - `age`: either a positive number (years) OR the sentinel value `NAS` (no age statement).
 - Derive each histogram's numeric domain from the data at runtime, do not hardcode it:
-  - ABV domain = [min ABV, max ABV] across all bottles (floor/ceil to the bin width).
+  - ABV domain = [min ABV, max ABV] across bottles at or above 40% (floor/ceil to the bin width). Anything under 40% is bad data and is left off the axis.
   - Age domain = [min numeric age, max numeric age] across bottles whose `age` is numeric. (NAS bottles are excluded from this domain.)
 - Blanks (the canonical schema allows both until the sheet cleanup lands):
   - Blank Age is treated as `NAS`: counted on the NAS button and governed by the NAS toggle.

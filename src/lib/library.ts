@@ -1,5 +1,5 @@
 import type { Bottle, FilterState } from "../types";
-import { matchesAbvRange } from "./histogram";
+import { matchesAbvRange, matchesAgeRange } from "./histogram";
 
 export type LibraryRow = {
   bottleKey: string;
@@ -135,13 +135,9 @@ export function matchesStatus(bottle: Bottle, statuses: string[]): boolean {
 }
 
 function matchesAge(bottle: Bottle, filters: FilterState): boolean {
-  if (!filters.ageMin && !filters.ageMax) return true;
-  if (bottle.age === "NAS") return filters.ageMin === "NAS";
-  if (typeof bottle.age !== "number") return false;
-  if (filters.ageMin === "NAS" && filters.ageMax === "NAS") return false;
-  if (filters.ageMin && filters.ageMin !== "NAS" && bottle.age < Number(filters.ageMin)) return false;
-  if (filters.ageMax && filters.ageMax !== "NAS" && bottle.age > Number(filters.ageMax)) return false;
-  return true;
+  const from = filters.ageMin === "" ? Number.NEGATIVE_INFINITY : Number(filters.ageMin);
+  const to = filters.ageMax === "" ? Number.POSITIVE_INFINITY : Number(filters.ageMax);
+  return matchesAgeRange(bottle.age, from, to, filters.includeNas);
 }
 
 export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {

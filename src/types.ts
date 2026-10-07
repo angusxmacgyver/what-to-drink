@@ -49,6 +49,7 @@ export type FilterState = {
   statuses: string[];
   ageMin: string;
   ageMax: string;
+  includeNas: boolean;
   abvMin: string;
   abvMax: string;
   families: string[];
@@ -64,6 +65,7 @@ export const emptyFilters = (): FilterState => ({
   statuses: [],
   ageMin: "",
   ageMax: "",
+  includeNas: true,
   abvMin: "",
   abvMax: "",
   families: [],

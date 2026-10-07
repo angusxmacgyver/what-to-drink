@@ -1,10 +1,9 @@
 import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { DistilleryCombobox } from "./DistilleryCombobox";
-import { RangeSlider } from "./RangeSlider";
 import { RangeHistogram } from "./RangeHistogram";
 import { distilleryCounts, subsForFamilies } from "../lib/library";
-import { buildHistogram } from "../lib/histogram";
+import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { familyClass, subFamilyClass } from "../lib/colors";
 
 type Props = {
@@ -39,24 +38,15 @@ export function Filters({
 
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
 
-  const hasNas = bottles.some((b) => b.age === "NAS");
   const ages = bottles.map((b) => b.age).filter((a): a is number => typeof a === "number");
-  const abvs = bottles.map((b) => b.abv).filter((a): a is number => a != null);
-  const ageMinBound = ages.length ? Math.min(...ages) : 0;
-  const ageMaxBound = ages.length ? Math.max(...ages) : 1;
-  const ageSliderMin = hasNas && ages.length ? ageMinBound - 1 : ageMinBound;
+  const abvs = abvHistogramValues(bottles.map((b) => b.abv));
+  const ageHistogram = buildHistogram(ages, 2);
   const abvHistogram = buildHistogram(abvs, 2);
-
-  const encodeAge = (n: number) => (hasNas && n <= ageSliderMin ? "NAS" : String(n));
-  const decodeAge = (s: string, fallback: number) => {
-    if (s === "") return fallback;
-    if (s === "NAS") return ageSliderMin;
-    return Number(s);
-  };
+  const nas = nasCount(bottles.map((b) => b.age));
 
   const setAge = (low: number, high: number) => {
-    if (low <= ageSliderMin && high >= ageMaxBound) set({ ageMin: "", ageMax: "" });
-    else set({ ageMin: encodeAge(low), ageMax: encodeAge(high) });
+    if (!ageHistogram || (low <= ageHistogram.min && high >= ageHistogram.max)) set({ ageMin: "", ageMax: "" });
+    else set({ ageMin: String(low), ageMax: String(high) });
   };
   const setAbv = (low: number, high: number) => {
     if (!abvHistogram || (low <= abvHistogram.min && high >= abvHistogram.max)) set({ abvMin: "", abvMax: "" });
@@ -95,27 +85,30 @@ export function Filters({
         value={filters.themes}
         onChange={(themes) => set({ themes })}
       />
-      {ages.length ? (
-        <RangeSlider
-          label="Age"
-          min={ageSliderMin}
-          max={ageMaxBound}
-          step={1}
-          low={decodeAge(filters.ageMin, ageSliderMin)}
-          high={decodeAge(filters.ageMax, ageMaxBound)}
-          format={(n) => (hasNas && n <= ageSliderMin ? "NAS" : `${n} yr`)}
-          onChange={setAge}
-        />
-      ) : null}
-      {abvHistogram ? (
-        <RangeHistogram
-          label="ABV"
-          histogram={abvHistogram}
-          unit="%"
-          from={filters.abvMin === "" ? abvHistogram.min : Number(filters.abvMin)}
-          to={filters.abvMax === "" ? abvHistogram.max : Number(filters.abvMax)}
-          onChange={setAbv}
-        />
+      {ageHistogram || abvHistogram ? (
+        <div className="hist-pair">
+          {ageHistogram ? (
+            <RangeHistogram
+              label="Age"
+              histogram={ageHistogram}
+              unit="yr"
+              from={filters.ageMin === "" ? ageHistogram.min : Number(filters.ageMin)}
+              to={filters.ageMax === "" ? ageHistogram.max : Number(filters.ageMax)}
+              onChange={setAge}
+              nas={{ included: filters.includeNas, count: nas, onToggle: () => set({ includeNas: !filters.includeNas }) }}
+            />
+          ) : null}
+          {abvHistogram ? (
+            <RangeHistogram
+              label="ABV"
+              histogram={abvHistogram}
+              unit="%"
+              from={filters.abvMin === "" ? abvHistogram.min : Number(filters.abvMin)}
+              to={filters.abvMax === "" ? abvHistogram.max : Number(filters.abvMax)}
+              onChange={setAbv}
+            />
+          ) : null}
+        </div>
       ) : null}
       {showGeo ? (
         <>

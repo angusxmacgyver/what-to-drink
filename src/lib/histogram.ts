@@ -53,6 +53,12 @@ export function clampSelection(
   return { from: lo, to: hi };
 }
 
+export const ABV_FLOOR = 40;
+
+export function abvHistogramValues(values: (number | null)[]): number[] {
+  return values.filter((value): value is number => value != null && value >= ABV_FLOOR);
+}
+
 export function matchesAbvRange(abv: number | null, from: number, to: number): boolean {
   if (abv == null) return true;
   return abv >= from && abv <= to;
