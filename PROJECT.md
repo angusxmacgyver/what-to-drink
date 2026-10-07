@@ -118,7 +118,7 @@ Laptop-first, responsive web. Bottle detail stays in place (no new page). Expand
 
 List of all live bottles, grouped by `bottleKey`. Compact row: distillery, expression, age, ABV, theme, **stock count**. Five Ardbeg Cask Strength 10s render as one row `×5`.
 
-Selecting a row expands the 12 canonical fields (plus SMWS extras when present). If instances of the same `bottleKey` differ on Location or Status, the expanded detail lists the split.
+Selecting a row expands one field block for the expression (the 12 canonical fields, plus SMWS extras when present): the first bottle whose status is Open, or the first bottle if none are Open. That block is shown once, even when the other bottles differ. When there is more than one physical bottle, each is listed as status and location only, with Mark open, Edit, and Kill on that line. Selecting the row again, or Escape, closes the detail.
 
 Search and filters apply to this list.
 

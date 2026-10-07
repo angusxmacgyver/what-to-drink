@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, type Bottle } from "../types";
-import { distilleryCounts, groupLibrary, matchesFilters, matchesStatus, subOwnerFamily, subsForFamilies } from "./library";
+import {
+  detailBottle,
+  distilleryCounts,
+  groupLibrary,
+  matchesFilters,
+  matchesStatus,
+  subOwnerFamily,
+  subsForFamilies,
+} from "./library";
 
 let nextId = 0;
 
@@ -175,5 +183,20 @@ describe("groupLibrary", () => {
     const [row] = groupLibrary([bottle({ age: 10, abv: 46 }), bottle({ age: 12, abv: 57.1 })]);
     expect(row.ageLabel).toBe("mixed");
     expect(row.abvLabel).toBe("mixed");
+  });
+});
+
+describe("detailBottle", () => {
+  it("uses the first Open bottle when one exists", () => {
+    const closed = bottle({ id: "closed", status: "Closed" });
+    const open = bottle({ id: "open", status: "Open" });
+    const later = bottle({ id: "later", status: "Open" });
+    expect(detailBottle([closed, open, later]).id).toBe("open");
+  });
+
+  it("uses the first bottle when none are Open", () => {
+    const first = bottle({ id: "first", status: "Closed" });
+    const second = bottle({ id: "second", status: "Closed" });
+    expect(detailBottle([first, second]).id).toBe("first");
   });
 });

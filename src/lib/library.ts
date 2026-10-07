@@ -96,6 +96,11 @@ function abvLabel(bottles: Bottle[]): string {
   return "mixed";
 }
 
+/** Fields for an expression come from the first Open bottle, or the first bottle if none are Open. */
+export function detailBottle(bottles: Bottle[]): Bottle {
+  return bottles.find((bottle) => bottle.status === "Open") ?? bottles[0];
+}
+
 export function groupLibrary(bottles: Bottle[]): LibraryRow[] {
   const map = new Map<string, Bottle[]>();
   for (const bottle of bottles) {

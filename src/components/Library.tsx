@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Bottle, FilterState } from "../types";
-import { groupLibrary, matchesFilters, matchesStatus } from "../lib/library";
+import { detailBottle, groupLibrary, matchesFilters, matchesStatus } from "../lib/library";
 import { BottleFields } from "./BottleFields";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
@@ -15,10 +15,69 @@ type Props = {
   onOpen?: (id: string) => void;
 };
 
+type Actions = Pick<Props, "owner" | "onEdit" | "onKill" | "onOpen">;
+
+function BottleActions({ bottle, owner, onEdit, onKill, onOpen }: Actions & { bottle: Bottle }) {
+  if (!owner) return null;
+  return (
+    <div className="owner-actions">
+      {bottle.status === "Closed" && onOpen ? (
+        <button type="button" onClick={() => onOpen(bottle.id)}>
+          Mark open
+        </button>
+      ) : null}
+      {onEdit ? (
+        <button type="button" onClick={() => onEdit(bottle)}>
+          Edit
+        </button>
+      ) : null}
+      {onKill ? (
+        <button type="button" className="danger" onClick={() => onKill(bottle.id)}>
+          Kill → Graveyard
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: Bottle[] }) {
+  const shown = detailBottle(bottles);
+  return (
+    <div className="detail">
+      <BottleFields bottle={shown} />
+      {bottles.length > 1 ? (
+        <ul className="bottle-splits">
+          {bottles.map((bottle) => (
+            <li key={bottle.id}>
+              <span>
+                {bottle.status}
+                {bottle.location ? ` · ${bottle.location}` : ""}
+              </span>
+              <BottleActions bottle={bottle} {...actions} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <BottleActions bottle={shown} {...actions} />
+      )}
+    </div>
+  );
+}
+
 export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
   const rows = groupLibrary(filtered);
+  const actions = { owner, onEdit, onKill, onOpen };
+
+  useEffect(() => {
+    if (!openKey) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenKey(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openKey]);
 
   return (
     <section className="panel">
@@ -39,6 +98,7 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
               <button
                 type="button"
                 className="row-main"
+                aria-expanded={expanded}
                 onClick={() => setOpenKey(expanded ? null : row.bottleKey)}
               >
                 <span className="who">
@@ -51,38 +111,7 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
                 {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
                 <FlavorTags families={row.flavorFamilies} subs={row.subCharacteristics} />
               </button>
-              {expanded
-                ? row.bottles.map((bottle) => (
-                    <div key={bottle.id} className="detail">
-                      {row.stock > 1 ? (
-                        <p className="split">
-                          {bottle.status}
-                          {bottle.location ? ` · ${bottle.location}` : ""}
-                        </p>
-                      ) : null}
-                      <BottleFields bottle={bottle} />
-                      {owner ? (
-                        <div className="owner-actions">
-                          {bottle.status === "Closed" && onOpen ? (
-                            <button type="button" onClick={() => onOpen(bottle.id)}>
-                              Mark open
-                            </button>
-                          ) : null}
-                          {onEdit ? (
-                            <button type="button" onClick={() => onEdit(bottle)}>
-                              Edit
-                            </button>
-                          ) : null}
-                          {onKill ? (
-                            <button type="button" className="danger" onClick={() => onKill(bottle.id)}>
-                              Kill → Graveyard
-                            </button>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))
-                : null}
+              {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
             </article>
           );
         })}

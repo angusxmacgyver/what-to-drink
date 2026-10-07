@@ -736,6 +736,30 @@ nav button.on,
   padding: 4px 8px 22px;
 }
 
+.bottle-splits {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bottle-splits li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  background: var(--chip);
+  border-radius: 8px;
+}
+
+.bottle-splits .owner-actions {
+  margin-top: 0;
+}
+
 .notes-stage {
   display: grid;
   grid-template-columns: 1fr 1fr;
