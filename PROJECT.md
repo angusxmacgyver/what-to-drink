@@ -43,14 +43,14 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 
 ## Source data
 
-Ingest file (current snapshot): [`/Users/max.krueger/Downloads/Whisky Inventory_Sept_22_1623.xlsx`](/Users/max.krueger/Downloads/Whisky Inventory_Sept_22_1623.xlsx)
+Ingest file (current snapshot): [`/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 7 .xlsx`](/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky%20Inventory-%20Oct%207%20.xlsx)
 
 Workbook sheets to read:
 
-- **Open Bottles** — 157 rows (as of 22 Sep 2026, 16:23)
-- **Closed Bottles** — 174 rows
-- **SMWS** — 176 rows (same cellar; different columns)
-- **Fallen soldiers** — 5 rows → Graveyard
+- **Open Bottles** — 190 rows (as of 7 Oct 2026)
+- **Closed Bottles** — 173 rows
+- **SMWS** — 176 rows (same cellar; different columns). The expression is in **Name (Bottling)**
+- **Fallen soldiers** — 7 rows → Graveyard
 - **Apartment** — empty; keep the mapper ready
 - Skip **Draft Participants** (contacts). Do not copy that sheet into the app or git.
 
@@ -96,7 +96,7 @@ On each replace-import: copy current `data/bottles.json` to `data/bottles.backup
 ### SMWS → schema (built into ingest)
 
 - Distillery → Distillery / Producer
-- Bottling (display) → **Full Code + Name (USA)**
+- Bottling (display) → **Name (Bottling)** on the current sheet, or **Full Code + Name (USA)** when that older column is present
 - Age, ABV, Status, Location, Region, Theme, Flavor Families, Sub-Characteristics, Tasting Notes → same-named canonical fields
 - Notes (placeholder) → `SMWS Cask` plus `Secondary Maturation`
 - Keep on detail only: Full Code, Distillery No., Cask No., Flavor Profile, SMWS Cask, Secondary Maturation, Name (Intl), Vintage, SMWS URL

@@ -120,11 +120,14 @@ function fromOpenClosed(
 function fromSmws(row: Record<string, unknown>, id: string): Bottle {
   const distillery = cell(row, "Distillery");
   const usa = cell(row, "Name (USA)");
+  const asBottling = cell(row, "Name (Bottling)");
   const fullCode = cell(row, "Full Code");
   const location = cell(row, "Location");
   const region = cell(row, "Region");
   const smwsCask = cell(row, "SMWS Cask");
   const secondary = cell(row, "Secondary Maturation");
+  const writtenNotes = cell(row, "Notes");
+  const bottling = usa ? [fullCode, usa].filter(Boolean).join(" ") : asBottling || fullCode;
   const extras: SmwsExtras = {
     fullCode,
     distilleryNo: cell(row, "Distillery No."),
@@ -138,13 +141,13 @@ function fromSmws(row: Record<string, unknown>, id: string): Bottle {
   };
   return {
     id,
-    bottleKey: bottleKeyFor(distillery, usa, fullCode, usa),
+    bottleKey: bottleKeyFor(distillery, bottling, fullCode, usa || asBottling),
     distillery,
-    bottling: [fullCode, usa].filter(Boolean).join(" "),
+    bottling,
     age: parseAge(cell(row, "Age")),
     abv: parseAbv(cell(row, "ABV", "ABV %")),
     status: parseStatus(cell(row, "Status"), false),
-    notes: [smwsCask, secondary].filter(Boolean).join(" — "),
+    notes: writtenNotes || [smwsCask, secondary].filter(Boolean).join(" — "),
     tastingNotes: cell(row, "Tasting Notes"),
     location,
     region,

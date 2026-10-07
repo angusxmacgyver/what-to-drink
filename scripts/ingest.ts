@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { catalogFromWorkbook } from "../src/lib/ingest.ts";
 
 const DEFAULT_XLSX =
-  "/Users/max.krueger/Downloads/Whisky Inventory_Sept_22_1623.xlsx";
+  "/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 7 .xlsx";
 
 const source = path.resolve(process.argv[2] ?? DEFAULT_XLSX);
 const dataDir = path.resolve("data");
