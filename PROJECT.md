@@ -405,7 +405,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
    - Candidate set: place scope first, never Empty/Killed, and the availability toggle adds only Closed bottles.
    - Target: recompute in under 100 ms for low thousands of bottles.
 2. **Option grid component.** Done. A reusable wrapping grid of tiles. Each tile is a real button with pressed state, a label, its count, and a swatch for flavor families (`familyClass`, `src/lib/colors.ts`). Zero counts are de-emphasized but selectable. Sections collapse and remember that for the session; a section with picks shows its own "Clear" link. Built so The Library can use it later.
-3. **Applied tray.** A helper that turns the current filters into removable chips, plus "Clear all". One component serves the drawer ("In your glass") and the results summary row.
+3. **Applied tray.** Done. A helper that turns the current filters into removable chips, plus "Clear all". One component serves the drawer ("In your glass") and the results summary row.
 4. **Drawer shell.** A `Filters` header button with an active-count badge. The drawer slides in over the results with a scrim; `Esc` closes it. Focus stays inside while open and returns to `Filters` on close. Sticky footer with `Pour one` and the live count.
 5. **Facets in the drawer.**
    - Move every facet out of the inline `Filters` in `src/components/PickADram.tsx` into the drawer; Age and ABV use the range histogram controls.

@@ -1165,6 +1165,12 @@ nav button.on,
   font-variant-numeric: tabular-nums;
 }
 
+.applied-tray { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.applied-title, .applied-empty { margin: 0; }
+.applied-empty { color: var(--muted); font-style: italic; }
+.applied-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.applied-chip { display: inline-flex; align-items: center; gap: 6px; }
+
 .chip {
   background: var(--chip);
   border: 1px solid var(--line);
