@@ -2,8 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import type { Bottle, FilterState } from "../types";
 import { dramPool } from "../lib/library";
 import { BottleFields } from "./BottleFields";
+import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
-import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
 
 type Place = "house" | "apartment";
@@ -79,21 +79,6 @@ export function PickADram({
         <p className="empty">No bottles are tagged for the apartment yet. The house holds the cellar.</p>
       ) : (
         <>
-          <label className="inline">
-            <input
-              type="checkbox"
-              checked={includeClosed}
-              onChange={(e) => setIncludeClosed(e.target.checked)}
-            />
-            Include closed bottles
-          </label>
-          <Filters
-            bottles={bottles}
-            filters={filters}
-            onChange={onFilters}
-            showGeo
-            showSearch
-          />
           <p className="count">{pool.length} available</p>
           <button type="button" className="roll" onClick={roll} disabled={pool.length === 0}>
             Pour one
@@ -124,7 +109,16 @@ export function PickADram({
             setFiltersOpen(false);
             filtersButton.current?.focus();
           }}
-        />
+        >
+          <DramFacets
+            bottles={bottles}
+            place={place}
+            includeClosed={includeClosed}
+            onIncludeClosed={setIncludeClosed}
+            filters={filters}
+            onChange={onFilters}
+          />
+        </FilterDrawer>
       ) : null}
     </section>
   );

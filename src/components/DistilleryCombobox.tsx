@@ -59,7 +59,16 @@ export function DistilleryCombobox({ options, counts, value, onChange }: Props) 
   };
 
   return (
-    <div className="combobox grow" ref={root}>
+    <div
+      className="combobox grow"
+      ref={root}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open) return;
+        event.stopPropagation();
+        event.preventDefault();
+        setOpen(false);
+      }}
+    >
       <span className="combobox-label">Distillery / Producer</span>
       {value.length ? (
         <div className="combobox-chips">

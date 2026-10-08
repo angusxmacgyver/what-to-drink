@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import type { FilterState } from "../types";
 import { appliedChips } from "../lib/applied";
 import { AppliedTray } from "./AppliedTray";
@@ -43,9 +43,10 @@ type DrawerProps = {
   available: number;
   onPour: () => void;
   onClose: () => void;
+  children?: ReactNode;
 };
 
-export function FilterDrawer({ filters, onChange, available, onPour, onClose }: DrawerProps) {
+export function FilterDrawer({ filters, onChange, available, onPour, onClose, children }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -78,6 +79,7 @@ export function FilterDrawer({ filters, onChange, available, onPour, onClose }: 
       <div className="drawer-scrim" onClick={onClose} />
       <div ref={panelRef} className="drawer" role="dialog" aria-modal="true" aria-label="Filters" tabIndex={-1}>
         <AppliedTray title="In your glass" filters={filters} onChange={onChange} />
+        <div className="drawer-body">{children}</div>
         <footer className="drawer-footer">
           <span className="count">{available} available</span>
           <button type="button" className="roll" onClick={onPour} disabled={available === 0}>

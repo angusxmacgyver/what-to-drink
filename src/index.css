@@ -1176,6 +1176,13 @@ nav button.on,
 .drawer-root { position: fixed; inset: 0; z-index: 40; }
 .drawer-scrim { position: absolute; inset: 0; background: color-mix(in srgb, #000 45%, transparent); }
 .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 100%); display: flex; flex-direction: column; gap: 16px; padding: 20px; background: var(--bg); border-left: 1px solid var(--line); animation: drawer-in 160ms ease-out; }
+.drawer-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
+.drawer .filters { margin-bottom: 0; }
+.drawer .hist-pair { grid-template-columns: 1fr; }
+.drawer .option-section,
+.drawer .chipset-hint,
+.drawer .match-row { grid-column: 1 / -1; }
+.match-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .drawer-footer { margin-top: auto; position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; background: var(--bg); }
 @keyframes drawer-in { from { transform: translateX(24px); } }
 @media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
