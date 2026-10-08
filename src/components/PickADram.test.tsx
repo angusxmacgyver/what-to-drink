@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { emptyFilters, type Bottle } from "../types";
-import { DramResults, DramSummary } from "./PickADram";
+import { saveDramSelection } from "../lib/store";
+import { DramResults, DramSummary, PickADram } from "./PickADram";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
   return {
@@ -173,5 +174,34 @@ describe("DramSummary", () => {
     expect(html).toContain("Most constraining");
     const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
     expect(undo).not.toContain("disabled");
+  });
+});
+
+describe("PickADram persistence", () => {
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key),
+    });
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("opens on the saved place", () => {
+    saveDramSelection({ filters: emptyFilters(), place: "house", includeOpen: true, includeClosed: false });
+    const html = renderToStaticMarkup(
+      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
+    );
+    expect(html).toContain("Randomizer · house");
+    expect(html).not.toContain("Are you at the apartment or the house?");
+  });
+
+  it("asks where you are when nothing is saved", () => {
+    const html = renderToStaticMarkup(
+      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
+    );
+    expect(html).toContain("Are you at the apartment or the house?");
   });
 });

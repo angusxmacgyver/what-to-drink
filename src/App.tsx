@@ -18,8 +18,10 @@ import {
   fetchRemoteCatalog,
   isOwner,
   killBottle,
+  loadDramSelection,
   loadStoredCatalog,
   loadTheme,
+  saveDramFilters,
   replaceCatalog,
   saveBottle,
   saveCatalog,
@@ -37,7 +39,7 @@ const seed = seeded as Catalog;
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [catalog, setCatalog] = useState<Catalog>(seed);
-  const [filters, setFilters] = useState(emptyFilters);
+  const [filters, setFilters] = useState(() => loadDramSelection()?.filters ?? emptyFilters());
   const [owner, setOwnerState] = useState(false);
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [notice, setNotice] = useState("");
@@ -62,6 +64,10 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     saveTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    saveDramFilters(filters);
+  }, [filters]);
 
   useEffect(() => {
     setOwnerState(isOwner());

@@ -1,4 +1,4 @@
-import type { Bottle, Catalog } from "../types";
+import { emptyFilters, type Bottle, type Catalog, type FilterState } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
@@ -6,6 +6,80 @@ const PIN_KEY = "what-to-drink-owner-pin";
 const THEME_KEY = "what-to-drink-theme";
 const LIBRARY_LAYOUT_KEY = "what-to-drink-library-layout";
 const COLLAPSED_SECTIONS_KEY = "what-to-drink-collapsed-sections";
+const DRAM_SELECTION_KEY = "what-to-drink-dram-selection";
+
+export type DramPlaceChoice = "house" | "apartment" | null;
+
+export type DramSelection = {
+  filters: FilterState;
+  place: DramPlaceChoice;
+  includeOpen: boolean;
+  includeClosed: boolean;
+};
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function sanitizeFilters(value: unknown): FilterState {
+  const blank = emptyFilters();
+  if (!value || typeof value !== "object") return blank;
+  const raw = value as Partial<Record<keyof FilterState, unknown>>;
+  return {
+    ...blank,
+    search: typeof raw.search === "string" ? raw.search : "",
+    distilleries: stringList(raw.distilleries),
+    themes: stringList(raw.themes),
+    statuses: stringList(raw.statuses),
+    ageMin: typeof raw.ageMin === "string" ? raw.ageMin : "",
+    ageMax: typeof raw.ageMax === "string" ? raw.ageMax : "",
+    includeNas: raw.includeNas !== false,
+    abvMin: typeof raw.abvMin === "string" ? raw.abvMin : "",
+    abvMax: typeof raw.abvMax === "string" ? raw.abvMax : "",
+    families: stringList(raw.families),
+    subs: stringList(raw.subs),
+    flavorMatch: raw.flavorMatch === "any" ? "any" : "all",
+    countries: stringList(raw.countries),
+    regions: stringList(raw.regions),
+  };
+}
+
+export function loadDramSelection(): DramSelection | null {
+  try {
+    const raw = localStorage.getItem(DRAM_SELECTION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return null;
+    const record = parsed as Partial<DramSelection>;
+    return {
+      filters: sanitizeFilters(record.filters),
+      place: record.place === "house" || record.place === "apartment" ? record.place : null,
+      includeOpen: record.includeOpen !== false,
+      includeClosed: record.includeClosed === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveDramSelection(selection: DramSelection): void {
+  localStorage.setItem(DRAM_SELECTION_KEY, JSON.stringify(selection));
+}
+
+export function saveDramFilters(filters: FilterState): void {
+  const current = loadDramSelection();
+  saveDramSelection({
+    filters,
+    place: current?.place ?? null,
+    includeOpen: current?.includeOpen ?? true,
+    includeClosed: current?.includeClosed ?? false,
+  });
+}
+
+export function saveDramScope(scope: Pick<DramSelection, "place" | "includeOpen" | "includeClosed">): void {
+  const current = loadDramSelection();
+  saveDramSelection({ filters: current?.filters ?? emptyFilters(), ...scope });
+}
 
 export type Theme = "dark" | "light";
 export type LibraryLayout = "list" | "grid";

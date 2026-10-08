@@ -428,7 +428,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
    - Leave a spot in the picked detail panel for the Pour tracking "Just poured" button; don't build the button.
 8. **Results summary and zero state.** Done. A summary row with `N available`, the tray chips, and "Clear all". With no matches, replace the grid with "No bottles match this combination." `Pour one` is disabled only at zero pourable bottles.
 9. **Zero recovery.** Done. In the drawer footer: "Undo last", backed by a session history of selection states, and the applied filters with the most constraining one flagged (the single removal that brings back the most bottles).
-10. **Local persistence.** Selection state saved per device in `localStorage`; no server call. Whether it carries across sessions depends on open question 2.
+10. **Local persistence.** Done. Selection state saved per device in `localStorage`; no server call. The tray carries across sessions, which answers open question 2.
 
 **Acceptance criteria.**
 
@@ -451,7 +451,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
 **Open questions (resolve before build).**
 
 1. Is a "search within filters" box needed, to reach a value behind progressive disclosure (e.g. a sub-characteristic) without picking its parent first?
-2. Does the applied tray carry across sessions, or reset each visit? This decides step 10.
+2. Does the applied tray carry across sessions, or reset each visit? It carries. Step 10 stores the selection in `localStorage`.
 3. Does `Change place` move into the drawer as a scope selector, or stay in the header? Today it resets the screen to the House/Apartment chooser.
 4. Status vocabulary. In code, `BottleStatus` is `"Open" | "Closed" | "empty" | "Killed"` (`src/types.ts`). The Graveyard is `Killed`, so this spec's "Empty" maps to `Killed`. A separate `empty` status exists in ingest and would sit among live Library bottles; it is already excluded from `dramPool`, and no current bottle has it. Still to decide: should ingest turn `empty` into `Killed`, and do sealed and unopened need to be distinct?
 

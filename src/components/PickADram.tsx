@@ -3,6 +3,7 @@ import type { Bottle, FilterState } from "../types";
 import { dramPool, groupLibrary } from "../lib/library";
 import { choosePour, prefersReducedMotion, rollFrames, settlePick } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
+import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
@@ -105,9 +106,9 @@ export function PickADram({
   filters: FilterState;
   onFilters: (next: FilterState) => void;
 }) {
-  const [place, setPlace] = useState<Place | null>(null);
-  const [includeOpen, setIncludeOpen] = useState(true);
-  const [includeClosed, setIncludeClosed] = useState(false);
+  const [place, setPlace] = useState<Place | null>(() => loadDramSelection()?.place ?? null);
+  const [includeOpen, setIncludeOpen] = useState(() => loadDramSelection()?.includeOpen ?? true);
+  const [includeClosed, setIncludeClosed] = useState(() => loadDramSelection()?.includeClosed ?? false);
   const [pick, setPick] = useState<Bottle | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [rollingKey, setRollingKey] = useState<string | null>(null);
@@ -141,6 +142,10 @@ export function PickADram({
     setCanUndo(popped.stack.length > 0);
     if (popped.previous) onFilters(popped.previous);
   };
+
+  useEffect(() => {
+    saveDramScope({ place, includeOpen, includeClosed });
+  }, [place, includeOpen, includeClosed]);
 
   const stopRoll = () => {
     timers.current.forEach((id) => window.clearTimeout(id));
