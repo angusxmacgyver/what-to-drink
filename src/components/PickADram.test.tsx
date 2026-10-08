@@ -152,5 +152,26 @@ describe("DramSummary", () => {
     expect(html).toContain("Clear all");
     expect(html).not.toContain("the grid");
     expect(html).not.toContain("Nothing matches these filters.");
+    const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
+    expect(undo).toContain("disabled");
+  });
+
+  it("flags the most constraining filter and enables undo", () => {
+    const html = renderToStaticMarkup(
+      <DramSummary
+        available={0}
+        filters={{ ...emptyFilters(), families: ["Smoke"] }}
+        onFilters={() => {}}
+        onUndo={() => {}}
+        canUndo
+        flagId={"family\nSmoke"}
+      >
+        <p>the grid</p>
+      </DramSummary>,
+    );
+    expect(html).toContain("recovery");
+    expect(html).toContain("Most constraining");
+    const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
+    expect(undo).not.toContain("disabled");
   });
 });

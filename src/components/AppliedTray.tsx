@@ -5,9 +5,10 @@ type Props = {
   filters: FilterState;
   onChange: (next: FilterState) => void;
   title?: string;
+  flagId?: string | null;
 };
 
-export function AppliedTray({ filters, onChange, title }: Props) {
+export function AppliedTray({ filters, onChange, title, flagId = null }: Props) {
   const chips = appliedChips(filters);
   return (
     <div className="applied-tray">
@@ -27,6 +28,7 @@ export function AppliedTray({ filters, onChange, title }: Props) {
               >
                 {chip.swatch ? <span className={`family-dot ${chip.swatch}`} aria-hidden="true" /> : null}
                 <span>{chip.label}</span>
+                {chip.id === flagId ? <span className="constraint-flag">Most constraining</span> : null}
               </button>
             ))}
           </div>

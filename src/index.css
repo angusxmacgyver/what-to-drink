@@ -1176,6 +1176,9 @@ nav button.on,
 .dram-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 16px; }
 .dram-summary .count { margin: 0; }
 .dram-summary .applied-tray { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.recovery { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.recovery .empty { margin: 0; }
+.constraint-flag { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
 .applied-title, .applied-empty { margin: 0; }
 .applied-empty { color: var(--muted); font-style: italic; }
 .applied-chips { display: flex; flex-wrap: wrap; gap: 6px; }

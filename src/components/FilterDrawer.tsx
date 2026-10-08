@@ -42,11 +42,24 @@ type DrawerProps = {
   onChange: (next: FilterState) => void;
   available: number;
   onPour: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
+  flagId?: string | null;
   onClose: () => void;
   children?: ReactNode;
 };
 
-export function FilterDrawer({ filters, onChange, available, onPour, onClose, children }: DrawerProps) {
+export function FilterDrawer({
+  filters,
+  onChange,
+  available,
+  onPour,
+  onUndo,
+  canUndo,
+  flagId = null,
+  onClose,
+  children,
+}: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -78,10 +91,13 @@ export function FilterDrawer({ filters, onChange, available, onPour, onClose, ch
     <div className="drawer-root">
       <div className="drawer-scrim" onClick={onClose} />
       <div ref={panelRef} className="drawer" role="dialog" aria-modal="true" aria-label="Filters" tabIndex={-1}>
-        <AppliedTray title="In your glass" filters={filters} onChange={onChange} />
+        <AppliedTray title="In your glass" filters={filters} onChange={onChange} flagId={flagId} />
         <div className="drawer-body">{children}</div>
         <footer className="drawer-footer">
           <span className="count">{available} available</span>
+          <button type="button" className="textish" onClick={onUndo} disabled={!canUndo}>
+            Undo last
+          </button>
           <button type="button" className="roll" onClick={onPour} disabled={available === 0}>
             Pour one
           </button>

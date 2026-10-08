@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "
 import type { Bottle, FilterState } from "../types";
 import { dramPool, groupLibrary } from "../lib/library";
 import { choosePour, prefersReducedMotion, rollFrames, settlePick } from "../lib/pour";
+import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
@@ -62,20 +63,35 @@ export function DramSummary({
   available,
   filters,
   onFilters,
+  onUndo,
+  canUndo = false,
+  flagId = null,
   children,
 }: {
   available: number;
   filters: FilterState;
   onFilters: (next: FilterState) => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
+  flagId?: string | null;
   children: ReactNode;
 }) {
   return (
     <>
       <div className="dram-summary">
         <p className="count">{available} available</p>
-        <AppliedTray filters={filters} onChange={onFilters} />
+        <AppliedTray filters={filters} onChange={onFilters} flagId={flagId} />
       </div>
-      {available === 0 ? <p className="empty">No bottles match this combination.</p> : children}
+      {available === 0 ? (
+        <div className="recovery">
+          <p className="empty">No bottles match this combination.</p>
+          <button type="button" onClick={onUndo} disabled={!canUndo}>
+            Undo last
+          </button>
+        </div>
+      ) : (
+        children
+      )}
     </>
   );
 }
@@ -100,11 +116,31 @@ export function PickADram({
   const filtersButton = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
   const pendingId = useRef<string | null>(null);
+  const history = useRef<FilterState[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
 
   const pool = useMemo(() => {
     if (!place) return [];
     return dramPool(bottles, place, includeClosed, filters, includeOpen);
   }, [bottles, place, includeClosed, includeOpen, filters]);
+
+  const flagId = useMemo(() => {
+    if (!place || pool.length > 0) return null;
+    return mostConstraining(bottles, place, includeClosed, filters, includeOpen);
+  }, [bottles, place, includeClosed, includeOpen, filters, pool.length]);
+
+  const changeFilters = (next: FilterState) => {
+    history.current = pushHistory(history.current, filters);
+    setCanUndo(true);
+    onFilters(next);
+  };
+
+  const undo = () => {
+    const popped = popHistory(history.current);
+    history.current = popped.stack;
+    setCanUndo(popped.stack.length > 0);
+    if (popped.previous) onFilters(popped.previous);
+  };
 
   const stopRoll = () => {
     timers.current.forEach((id) => window.clearTimeout(id));
@@ -230,7 +266,14 @@ export function PickADram({
       {emptyApartment ? (
         <p className="empty">No bottles are tagged for the apartment yet. The house holds the cellar.</p>
       ) : (
-        <DramSummary available={pool.length} filters={filters} onFilters={onFilters}>
+        <DramSummary
+          available={pool.length}
+          filters={filters}
+          onFilters={changeFilters}
+          onUndo={undo}
+          canUndo={canUndo}
+          flagId={flagId}
+        >
           <DramResults
             bottles={pool}
             openKey={openKey}
@@ -244,9 +287,12 @@ export function PickADram({
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
-          onChange={onFilters}
+          onChange={changeFilters}
           available={pool.length}
           onPour={roll}
+          onUndo={undo}
+          canUndo={canUndo}
+          flagId={flagId}
           onClose={() => {
             setFiltersOpen(false);
             filtersButton.current?.focus();
@@ -260,7 +306,7 @@ export function PickADram({
             includeClosed={includeClosed}
             onIncludeClosed={setIncludeClosed}
             filters={filters}
-            onChange={onFilters}
+            onChange={changeFilters}
           />
         </FilterDrawer>
       ) : null}

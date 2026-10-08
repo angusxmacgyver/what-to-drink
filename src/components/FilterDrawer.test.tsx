@@ -40,6 +40,8 @@ describe("FilterDrawer", () => {
         onChange={() => {}}
         available={4}
         onPour={() => {}}
+        onUndo={() => {}}
+        canUndo
         onClose={() => {}}
       />,
     );
@@ -48,6 +50,7 @@ describe("FilterDrawer", () => {
     expect(html).toContain("In your glass");
     expect(html).toContain(">4 available<");
     expect(html).toContain("Pour one");
+    expect(html).toContain("Undo last");
     expect(html).not.toContain("disabled");
   });
 
@@ -58,10 +61,14 @@ describe("FilterDrawer", () => {
         onChange={() => {}}
         available={0}
         onPour={() => {}}
+        onUndo={() => {}}
+        canUndo={false}
         onClose={() => {}}
       />,
     );
     expect(html).toContain("disabled");
     expect(html).toContain(">0 available<");
+    const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
+    expect(undo).toContain("disabled");
   });
 });
