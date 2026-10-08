@@ -4,12 +4,14 @@ import {
   addBottles,
   fetchRemoteCatalog,
   isOwner,
+  loadCollapsedSections,
   loadLibraryLayout,
   loadStoredCatalog,
   replaceCatalog,
   saveBottle,
   saveLibraryLayout,
   setOwner,
+  setSectionCollapsed,
   unlockOwner,
 } from "./store";
 
@@ -73,6 +75,22 @@ describe("library layout", () => {
     expect(loadLibraryLayout()).toBe("grid");
     localStorage.setItem("what-to-drink-library-layout", "cards");
     expect(loadLibraryLayout()).toBe("list");
+  });
+});
+
+describe("collapsed sections", () => {
+  it("remembers a collapsed section for this session and forgets it when opened", () => {
+    expect(loadCollapsedSections()).toEqual([]);
+    setSectionCollapsed("region", true);
+    setSectionCollapsed("theme", true);
+    expect(loadCollapsedSections()).toEqual(["region", "theme"]);
+    setSectionCollapsed("region", false);
+    expect(loadCollapsedSections()).toEqual(["theme"]);
+  });
+
+  it("ignores a stored value that is not a list of names", () => {
+    sessionStorage.setItem("what-to-drink-collapsed-sections", "{\"region\":true}");
+    expect(loadCollapsedSections()).toEqual([]);
   });
 });
 

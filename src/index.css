@@ -1115,6 +1115,56 @@ nav button.on,
   gap: 6px;
 }
 
+.option-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.option-section-toggle {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chip);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-tile.on {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--on-gold);
+  font-weight: 600;
+}
+
+.option-tile.quiet:not(.on) { opacity: 0.45; }
+
+.option-count {
+  font-variant-numeric: tabular-nums;
+}
+
 .chip {
   background: var(--chip);
   border: 1px solid var(--line);
