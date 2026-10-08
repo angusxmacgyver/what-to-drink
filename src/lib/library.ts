@@ -195,14 +195,20 @@ export type DramPlace = "house" | "apartment";
 
 export type CountFacet = "distillery" | "theme" | "family" | "sub" | "country" | "region";
 
-/** Pourable bottles at a place. Closed joins only when asked. Killed and empty never do. */
-export function dramCandidates(bottles: Bottle[], place: DramPlace, includeClosed: boolean): Bottle[] {
+/** Pourable bottles at a place. Open is on unless turned off. Closed joins only when asked. Killed and empty never do. */
+export function dramCandidates(
+  bottles: Bottle[],
+  place: DramPlace,
+  includeClosed: boolean,
+  includeOpen = true,
+): Bottle[] {
   return bottles.filter((bottle) => {
     if (place === "apartment" && !bottle.atApartment) return false;
     if (place === "house" && bottle.atApartment) return false;
     if (bottle.status === "Killed" || bottle.status === "empty") return false;
     if (bottle.status === "Closed") return includeClosed;
-    return bottle.status === "Open";
+    if (bottle.status === "Open") return includeOpen;
+    return false;
   });
 }
 
@@ -232,12 +238,13 @@ export function facetCounts(
   filters: FilterState,
   facet: CountFacet,
   options: readonly string[],
+  includeOpen = true,
 ): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const option of options) counts[option] = 0;
   const wanted = new Set(options);
   const narrowed = withoutFacet(filters, facet);
-  for (const bottle of dramCandidates(bottles, place, includeClosed)) {
+  for (const bottle of dramCandidates(bottles, place, includeClosed, includeOpen)) {
     if (!matchesFilters(bottle, narrowed)) continue;
     for (const value of valuesForFacet(bottle, facet)) {
       if (wanted.has(value)) counts[value] += 1;
@@ -251,6 +258,7 @@ export function dramPool(
   place: DramPlace,
   includeClosed: boolean,
   filters: FilterState,
+  includeOpen = true,
 ): Bottle[] {
-  return dramCandidates(bottles, place, includeClosed).filter((bottle) => matchesFilters(bottle, filters));
+  return dramCandidates(bottles, place, includeClosed, includeOpen).filter((bottle) => matchesFilters(bottle, filters));
 }

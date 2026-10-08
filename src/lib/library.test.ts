@@ -250,11 +250,13 @@ describe("dramCandidates", () => {
     ]);
   });
 
-  it("adds closed bottles only when the availability toggle is on", () => {
+  it("adds closed bottles only when asked, and open bottles only while opened is on", () => {
     expect(dramCandidates([open, closed, killed, emptied], "house", true).map((b) => b.id)).toEqual([
       "open",
       "closed",
     ]);
+    expect(dramCandidates([open, closed], "house", true, false).map((b) => b.id)).toEqual(["closed"]);
+    expect(dramCandidates([open, closed], "house", false, false)).toEqual([]);
   });
 
   it("keeps the apartment pool on its own", () => {

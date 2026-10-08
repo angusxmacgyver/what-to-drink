@@ -38,11 +38,13 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
   };
 }
 
-function render(bottles: Bottle[], filters: FilterState = emptyFilters(), includeClosed = false) {
+function render(bottles: Bottle[], filters: FilterState = emptyFilters(), includeClosed = false, includeOpen = true) {
   return renderToStaticMarkup(
     <DramFacets
       bottles={bottles}
       place="house"
+      includeOpen={includeOpen}
+      onIncludeOpen={() => {}}
       includeClosed={includeClosed}
       onIncludeClosed={() => {}}
       filters={filters}
@@ -104,10 +106,14 @@ describe("DramFacets", () => {
     const narrowed = render(places, { ...emptyFilters(), regions: ["Speyside"], countries: ["Scotland"] });
     expect(narrowed).toContain('>Peated</span><span class="option-count">0<');
     expect(narrowed).not.toContain("disabled");
-    expect(render(places)).not.toContain(">Sealed<");
+    const idle = render(places);
+    expect(idle.indexOf(">Opened<")).toBeLessThan(idle.indexOf(">Search<"));
+    expect(idle).toContain('aria-pressed="true">Opened');
+    expect(idle).toContain('aria-pressed="false">Closed');
+    expect(idle).not.toContain(">Sealed<");
+    expect(idle).not.toContain("Include unopened bottles");
     expect(render(places, emptyFilters(), true)).toContain(">Sealed<");
-    expect(render(places)).toContain("Include unopened bottles");
-    expect(render(places)).not.toContain("Include closed bottles");
+    expect(render(places, emptyFilters(), true, false)).not.toContain(">Peated<");
     expect(render(places)).toContain(">Age<");
     expect(render(places)).toContain(">ABV<");
     expect(render(places)).toContain('aria-label="Flavor match"');

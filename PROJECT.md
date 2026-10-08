@@ -412,7 +412,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
    - Sub-characteristics appear only once a family is picked, grouped under each picked family.
    - Region is grouped by picked country. With no country picked, show a prompt instead of the flat list. Single-region countries get no sub-list.
    - Rename "Include closed bottles" so it clearly means unopened, never empty.
-6. **Results grid with in-place detail.**
+6. **Results grid with in-place detail.** Done.
    - Matching pourable bottles render as a wrapping grid of cards, one per expression (`bottleKey`), like The Library's grouping.
    - Each card: distillery name on top, expression below. No SMWS or distillery code (codes leave the data in a later cleanup). Then region and country (once, when they're the same), flavor-family swatches, age, ABV, and a ×N count of matching pourable bottles.
    - Long names: distillery gets one line, ending in "…" if it runs over (longest today is 27 characters). Expression wraps to at most two lines, then "…" (in the 6 Oct 2026 catalog, 57 expressions exceed 30 characters; the longest is 65). The full name stays in the card's hover text and accessible label, and in the detail panel.

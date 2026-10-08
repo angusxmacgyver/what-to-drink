@@ -7,6 +7,7 @@ import {
   matchesFilters,
   matchesStatus,
   originLabel,
+  uniqueTags,
   type LibraryRow,
 } from "../lib/library";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
@@ -94,6 +95,10 @@ export function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: B
   return (
     <div className="detail">
       <BottleFields bottle={shown} />
+      <FlavorTags
+        families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
+        subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}
+      />
       {bottles.length > 1 ? (
         <ul className="bottle-splits">
           {bottles.map((bottle) => (

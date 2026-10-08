@@ -10,6 +10,8 @@ import { RangeHistogram } from "./RangeHistogram";
 type Props = {
   bottles: Bottle[];
   place: DramPlace;
+  includeOpen?: boolean;
+  onIncludeOpen: (next: boolean) => void;
   includeClosed: boolean;
   onIncludeClosed: (next: boolean) => void;
   filters: FilterState;
@@ -39,11 +41,20 @@ function unownedSubs(bottles: Bottle[]): string[] {
   return sorted(bottles.flatMap((bottle) => bottle.subCharacteristics).filter((sub) => subOwnerFamily(sub) === undefined));
 }
 
-export function DramFacets({ bottles, place, includeClosed, onIncludeClosed, filters, onChange }: Props) {
-  const candidates = dramCandidates(bottles, place, includeClosed);
+export function DramFacets({
+  bottles,
+  place,
+  includeOpen = true,
+  onIncludeOpen,
+  includeClosed,
+  onIncludeClosed,
+  filters,
+  onChange,
+}: Props) {
+  const candidates = dramCandidates(bottles, place, includeClosed, includeOpen);
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
   const tiles = (facet: CountFacet, options: string[], swatch?: (label: string) => string) => {
-    const tally = facetCounts(bottles, place, includeClosed, filters, facet, options);
+    const tally = facetCounts(bottles, place, includeClosed, filters, facet, options, includeOpen);
     return options.map((label) => ({ label, count: tally[label] ?? 0, swatch: swatch?.(label) }));
   };
   const scoped = (
@@ -95,8 +106,18 @@ export function DramFacets({ bottles, place, includeClosed, onIncludeClosed, fil
     else set({ abvMin: String(low), abvMax: String(high) });
   };
 
+  const availability = (on: boolean) => (on ? "chip on" : "chip");
+
   return (
     <>
+      <div className="match-row" role="group" aria-label="Opened or closed">
+        <button type="button" className={availability(includeOpen)} aria-pressed={includeOpen} onClick={() => onIncludeOpen(!includeOpen)}>
+          Opened
+        </button>
+        <button type="button" className={availability(includeClosed)} aria-pressed={includeClosed} onClick={() => onIncludeClosed(!includeClosed)}>
+          Closed
+        </button>
+      </div>
       <div className="filters">
         <label className="grow">
           Search
@@ -108,7 +129,7 @@ export function DramFacets({ bottles, place, includeClosed, onIncludeClosed, fil
         </label>
         <DistilleryCombobox
           options={distilleries}
-          counts={facetCounts(bottles, place, includeClosed, filters, "distillery", distilleries)}
+          counts={facetCounts(bottles, place, includeClosed, filters, "distillery", distilleries, includeOpen)}
           value={filters.distilleries}
           onChange={(next) => set({ distilleries: next })}
         />
@@ -169,10 +190,6 @@ export function DramFacets({ bottles, place, includeClosed, onIncludeClosed, fil
           filters.countries.map((country) => scoped(`region-${country}`, country, "regions", "region", multiRegions(candidates, country)))
         )}
       </div>
-      <label className="inline">
-        <input type="checkbox" checked={includeClosed} onChange={(event) => onIncludeClosed(event.target.checked)} />
-        Include unopened bottles
-      </label>
     </>
   );
 }

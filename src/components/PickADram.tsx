@@ -1,12 +1,37 @@
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { Bottle, FilterState } from "../types";
-import { dramPool } from "../lib/library";
+import { dramPool, groupLibrary } from "../lib/library";
 import { BottleFields } from "./BottleFields";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { FlavorTags } from "./FlavorTags";
+import { ExpressionDetail, LibraryCard } from "./Library";
 
 type Place = "house" | "apartment";
+
+export function DramResults({
+  bottles,
+  openKey,
+  onToggle,
+}: {
+  bottles: Bottle[];
+  openKey: string | null;
+  onToggle: (key: string) => void;
+}) {
+  return (
+    <div className="library-grid">
+      {groupLibrary(bottles).map((row) => {
+        const expanded = openKey === row.bottleKey;
+        return (
+          <Fragment key={row.bottleKey}>
+            <LibraryCard row={row} expanded={expanded} onToggle={() => onToggle(row.bottleKey)} />
+            {expanded ? <ExpressionDetail bottles={row.bottles} owner={false} /> : null}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
 
 export function PickADram({
   bottles,
@@ -18,15 +43,26 @@ export function PickADram({
   onFilters: (next: FilterState) => void;
 }) {
   const [place, setPlace] = useState<Place | null>(null);
+  const [includeOpen, setIncludeOpen] = useState(true);
   const [includeClosed, setIncludeClosed] = useState(false);
   const [pick, setPick] = useState<Bottle | null>(null);
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
 
   const pool = useMemo(() => {
     if (!place) return [];
-    return dramPool(bottles, place, includeClosed, filters);
-  }, [bottles, place, includeClosed, filters]);
+    return dramPool(bottles, place, includeClosed, filters, includeOpen);
+  }, [bottles, place, includeClosed, includeOpen, filters]);
+
+  useEffect(() => {
+    if (!openKey || filtersOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenKey(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openKey, filtersOpen]);
 
   const roll = () => {
     if (!place) return;
@@ -70,7 +106,7 @@ export function PickADram({
             buttonRef={filtersButton}
             onClick={() => setFiltersOpen(true)}
           />
-          <button type="button" className="textish" onClick={() => { setPlace(null); setPick(null); setFiltersOpen(false); }}>
+          <button type="button" className="textish" onClick={() => { setPlace(null); setPick(null); setOpenKey(null); setFiltersOpen(false); }}>
             Change place
           </button>
         </div>
@@ -83,7 +119,15 @@ export function PickADram({
           <button type="button" className="roll" onClick={roll} disabled={pool.length === 0}>
             Pour one
           </button>
-          {pool.length === 0 ? <p className="empty">Nothing matches these filters.</p> : null}
+          {pool.length === 0 ? (
+            <p className="empty">Nothing matches these filters.</p>
+          ) : (
+            <DramResults
+              bottles={pool}
+              openKey={openKey}
+              onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+            />
+          )}
           {pick ? (
             <div className="result">
               <h2>
@@ -113,6 +157,8 @@ export function PickADram({
           <DramFacets
             bottles={bottles}
             place={place}
+            includeOpen={includeOpen}
+            onIncludeOpen={setIncludeOpen}
             includeClosed={includeClosed}
             onIncludeClosed={setIncludeClosed}
             filters={filters}
