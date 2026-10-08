@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import type { Bottle, FilterState } from "../types";
 import { familyClass } from "../lib/colors";
 import {
@@ -54,25 +54,40 @@ export function LibraryCard({
   row,
   expanded,
   onToggle,
+  picked = false,
+  rolling = false,
+  where,
+  cardId,
 }: {
   row: LibraryRow;
   expanded: boolean;
   onToggle: () => void;
+  picked?: boolean;
+  rolling?: boolean;
+  where?: string;
+  cardId?: string;
 }) {
   const shown = detailBottle(row.bottles);
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
+  const place = where || "not tagged yet";
+  const classes = ["library-card", expanded ? "open" : "", picked ? "picked" : "", rolling ? "rolling" : ""]
+    .filter(Boolean)
+    .join(" ");
   return (
     <button
       type="button"
-      className={expanded ? "library-card open" : "library-card"}
+      id={cardId}
+      className={classes}
       aria-expanded={expanded}
-      aria-label={name}
+      aria-label={picked ? `${name}. Your dram. Bottle is at: ${place}.` : name}
       title={name}
       onClick={onToggle}
     >
+      {picked ? <span className="your-dram">Your dram</span> : null}
       <strong className="card-distillery">{row.distillery}</strong>
       <em className="card-expression">{row.bottling}</em>
+      {picked ? <span className="card-where">Bottle is at: {place}</span> : null}
       {origin ? <span className="card-origin">{origin}</span> : null}
       {row.flavorFamilies.length ? (
         <span className="card-swatches">
@@ -90,7 +105,11 @@ export function LibraryCard({
   );
 }
 
-export function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: Bottle[] }) {
+export function ExpressionDetail({
+  bottles,
+  trail,
+  ...actions
+}: Actions & { bottles: Bottle[]; trail?: ReactNode }) {
   const shown = detailBottle(bottles);
   return (
     <div className="detail">
@@ -114,6 +133,7 @@ export function ExpressionDetail({ bottles, ...actions }: Actions & { bottles: B
       ) : (
         <BottleActions bottle={shown} {...actions} />
       )}
+      {trail}
     </div>
   );
 }

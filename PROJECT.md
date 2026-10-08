@@ -419,7 +419,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
    - Selecting a card opens a full-width detail panel under its row; later cards move down. One panel open at a time; selecting the card again or pressing `Esc` closes it.
    - The panel shows `BottleFields` and `FlavorTags`, plus status and location. If the matching bottles differ in location or status, list the split, as the Library row does.
    - Cards are real buttons with an expanded state, built so The Library can use the card and panel later as a grid view.
-7. **Picked state (randomizer).**
+7. **Picked state (randomizer).** Done.
    - `Pour one` picks one physical bottle (`id`), so stock of 5 is five chances. That expression's card gets a picked state separate from viewing: an accent ring, a "Your dram" label, and the picked bottle's location shown prominently. Viewing other cards doesn't clear it.
    - After a pick, scroll to the card and open its detail. Announce the pick through a live region.
    - A short roll animation (the highlight skips across cards before landing), skipped when the system is set to reduce motion.

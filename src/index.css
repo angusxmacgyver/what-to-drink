@@ -740,6 +740,13 @@ nav button.on,
   box-shadow: inset 0 0 0 1px var(--gold);
 }
 
+.library-card.picked { box-shadow: 0 0 0 3px var(--gold); }
+.library-card.open.picked { box-shadow: inset 0 0 0 1px var(--gold), 0 0 0 3px var(--gold); }
+.library-card.rolling { outline: 2px solid var(--amber); outline-offset: 2px; }
+.your-dram { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.card-where { font-weight: 700; color: var(--amber); }
+.live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+
 .card-distillery,
 .card-expression,
 .card-origin {

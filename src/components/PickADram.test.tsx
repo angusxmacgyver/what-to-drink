@@ -27,8 +27,14 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
   };
 }
 
-function render(bottles: Bottle[], openKey: string | null = null) {
-  return renderToStaticMarkup(<DramResults bottles={bottles} openKey={openKey} onToggle={() => {}} />);
+function render(
+  bottles: Bottle[],
+  openKey: string | null = null,
+  extra: { pickedId?: string | null; rollingKey?: string | null; announce?: string } = {},
+) {
+  return renderToStaticMarkup(
+    <DramResults bottles={bottles} openKey={openKey} onToggle={() => {}} {...extra} />,
+  );
 }
 
 describe("DramResults", () => {
@@ -83,5 +89,38 @@ describe("DramResults", () => {
     expect(html).toContain("Closed · Crate");
     expect(html.match(/bottle-fields/g)).toHaveLength(1);
     expect(html).not.toContain("99.9");
+  });
+
+  it("marks the picked card, opens its detail, and leaves a spot for Just poured", () => {
+    const html = render(pair, "ardbeg::10", {
+      pickedId: "closed",
+      announce: "Your dram: Ardbeg 10. Bottle is at: Crate.",
+    });
+    expect(html).toContain("library-card open picked");
+    expect(html).toContain("Your dram");
+    expect(html).toContain("Bottle is at: Crate");
+    expect(html).toContain('aria-label="Ardbeg 10. Your dram. Bottle is at: Crate."');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain("Your dram: Ardbeg 10. Bottle is at: Crate.");
+    expect(html).toContain("just-poured");
+    expect(html).not.toContain('class="result"');
+  });
+
+  it("keeps the picked card when another card is open", () => {
+    const html = render([...pair, hakushu], "hakushu::12", { pickedId: "closed" });
+    const cards = [...html.matchAll(/<button[^>]*class="([^"]*)"/g)].map((match) => match[1]);
+    expect(cards[0]).toContain("picked");
+    expect(cards[0]).not.toContain("open");
+    expect(cards[1]).toContain("open");
+    expect(cards[1]).not.toContain("picked");
+    expect(html).not.toContain("just-poured");
+    expect(html).toContain("Your dram");
+  });
+
+  it("highlights a card mid-roll without calling it the dram yet", () => {
+    const html = render([...pair, hakushu], null, { rollingKey: "hakushu::12" });
+    expect(html).toContain("library-card rolling");
+    expect(html).not.toContain("picked");
+    expect(html).not.toContain("Your dram");
   });
 });
