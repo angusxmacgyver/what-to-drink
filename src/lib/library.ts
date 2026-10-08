@@ -143,12 +143,6 @@ function inList(selected: string[], value: string): boolean {
   return selected.length === 0 || selected.includes(value);
 }
 
-function matchesTags(selected: string[], tags: string[], mode: FilterState["flavorMatch"]): boolean {
-  if (selected.length === 0) return true;
-  if (mode === "any") return selected.some((tag) => tags.includes(tag));
-  return selected.every((tag) => tags.includes(tag));
-}
-
 export function matchesStatus(bottle: Bottle, statuses: string[]): boolean {
   return inList(statuses, bottle.status);
 }
@@ -172,8 +166,14 @@ export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
     if (!matchesAbvRange(bottle.abv, from, to)) return false;
   }
 
-  if (!matchesTags(filters.families, bottle.flavorFamilies, filters.flavorMatch)) return false;
-  if (!matchesTags(filters.subs, bottle.subCharacteristics, filters.flavorMatch)) return false;
+  if (filters.families.length > 0) {
+    const has = filters.families.every((f) => bottle.flavorFamilies.includes(f));
+    if (!has) return false;
+  }
+  if (filters.subs.length > 0) {
+    const has = filters.subs.every((s) => bottle.subCharacteristics.includes(s));
+    if (!has) return false;
+  }
 
   if (filters.search.trim()) {
     const q = filters.search.trim().toLowerCase();
@@ -191,66 +191,17 @@ export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
   return true;
 }
 
-export type DramPlace = "house" | "apartment";
-
-export type CountFacet = "distillery" | "theme" | "family" | "sub" | "country" | "region";
-
-/** Pourable bottles at a place. Closed joins only when asked. Killed and empty never do. */
-export function dramCandidates(bottles: Bottle[], place: DramPlace, includeClosed: boolean): Bottle[] {
-  return bottles.filter((bottle) => {
-    if (place === "apartment" && !bottle.atApartment) return false;
-    if (place === "house" && bottle.atApartment) return false;
-    if (bottle.status === "Killed" || bottle.status === "empty") return false;
-    if (bottle.status === "Closed") return includeClosed;
-    return bottle.status === "Open";
-  });
-}
-
-function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
-  if (facet === "distillery") return { ...filters, distilleries: [] };
-  if (facet === "theme") return { ...filters, themes: [] };
-  if (facet === "family") return { ...filters, families: [] };
-  if (facet === "sub") return { ...filters, subs: [] };
-  if (facet === "country") return { ...filters, countries: [] };
-  return { ...filters, regions: [] };
-}
-
-function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
-  if (facet === "distillery") return [bottle.distillery];
-  if (facet === "theme") return [bottle.theme];
-  if (facet === "family") return bottle.flavorFamilies;
-  if (facet === "sub") return bottle.subCharacteristics;
-  if (facet === "country") return [bottle.country];
-  return [bottle.region];
-}
-
-/** How many candidates would show each option if that option were the facet's only pick. */
-export function facetCounts(
-  bottles: Bottle[],
-  place: DramPlace,
-  includeClosed: boolean,
-  filters: FilterState,
-  facet: CountFacet,
-  options: readonly string[],
-): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const option of options) counts[option] = 0;
-  const wanted = new Set(options);
-  const narrowed = withoutFacet(filters, facet);
-  for (const bottle of dramCandidates(bottles, place, includeClosed)) {
-    if (!matchesFilters(bottle, narrowed)) continue;
-    for (const value of valuesForFacet(bottle, facet)) {
-      if (wanted.has(value)) counts[value] += 1;
-    }
-  }
-  return counts;
-}
-
 export function dramPool(
   bottles: Bottle[],
-  place: DramPlace,
+  place: "house" | "apartment",
   includeClosed: boolean,
   filters: FilterState,
 ): Bottle[] {
-  return dramCandidates(bottles, place, includeClosed).filter((bottle) => matchesFilters(bottle, filters));
+  return bottles.filter((bottle) => {
+    if (place === "apartment" && !bottle.atApartment) return false;
+    if (place === "house" && bottle.atApartment) return false;
+    if (!includeClosed && bottle.status !== "Open") return false;
+    if (bottle.status === "Killed" || bottle.status === "empty") return false;
+    return matchesFilters(bottle, filters);
+  });
 }

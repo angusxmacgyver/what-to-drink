@@ -5,7 +5,6 @@ const OWNER_KEY = "what-to-drink-owner";
 const PIN_KEY = "what-to-drink-owner-pin";
 const THEME_KEY = "what-to-drink-theme";
 const LIBRARY_LAYOUT_KEY = "what-to-drink-library-layout";
-const COLLAPSED_SECTIONS_KEY = "what-to-drink-collapsed-sections";
 
 export type Theme = "dark" | "light";
 export type LibraryLayout = "list" | "grid";
@@ -16,22 +15,6 @@ export function loadLibraryLayout(): LibraryLayout {
 
 export function saveLibraryLayout(layout: LibraryLayout): void {
   localStorage.setItem(LIBRARY_LAYOUT_KEY, layout);
-}
-
-export function loadCollapsedSections(): string[] {
-  try {
-    const parsed = JSON.parse(sessionStorage.getItem(COLLAPSED_SECTIONS_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-export function setSectionCollapsed(id: string, collapsed: boolean): void {
-  const ids = new Set(loadCollapsedSections());
-  if (collapsed) ids.add(id);
-  else ids.delete(id);
-  sessionStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify([...ids]));
 }
 
 export function loadTheme(): Theme {

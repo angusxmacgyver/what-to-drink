@@ -54,8 +54,6 @@ export type FilterState = {
   abvMax: string;
   families: string[];
   subs: string[];
-  /** How picked flavor families combine, and how picked sub-characteristics combine. */
-  flavorMatch: "any" | "all";
   countries: string[];
   regions: string[];
 };
@@ -72,7 +70,6 @@ export const emptyFilters = (): FilterState => ({
   abvMax: "",
   families: [],
   subs: [],
-  flavorMatch: "all",
   countries: [],
   regions: [],
 });
