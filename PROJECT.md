@@ -399,7 +399,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
 
 **Build steps.** One commit each, aiming for under 200 lines.
 
-1. **Facet counts and candidate set.** Pure logic with tests.
+1. **Facet counts and candidate set.** Done. Pure logic with tests.
    - A faceted count helper in `src/lib/library.ts`: bottles matching every active facet except the option's own, combined with that option.
    - Add the flavor any/all mode to `FilterState` (`src/types.ts`).
    - Candidate set: place scope first, never Empty/Killed, and the availability toggle adds only Closed bottles.
