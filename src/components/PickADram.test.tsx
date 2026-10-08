@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Bottle } from "../types";
-import { DramResults } from "./PickADram";
+import { emptyFilters, type Bottle } from "../types";
+import { DramResults, DramSummary } from "./PickADram";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
   return {
@@ -122,5 +122,35 @@ describe("DramResults", () => {
     expect(html).toContain("library-card rolling");
     expect(html).not.toContain("picked");
     expect(html).not.toContain("Your dram");
+  });
+});
+
+describe("DramSummary", () => {
+  it("shows the count, the applied chips, and Clear all above the grid", () => {
+    const html = renderToStaticMarkup(
+      <DramSummary available={3} filters={{ ...emptyFilters(), families: ["Smoke"] }} onFilters={() => {}}>
+        <p>the grid</p>
+      </DramSummary>,
+    );
+    expect(html).toContain(">3 available<");
+    expect(html).toContain('aria-label="Remove Smoke"');
+    expect(html).toContain("Clear all");
+    expect(html).toContain("the grid");
+    expect(html).not.toContain("No bottles match this combination.");
+    expect(html).not.toContain("Pour one");
+  });
+
+  it("replaces the grid when the combination matches nothing", () => {
+    const html = renderToStaticMarkup(
+      <DramSummary available={0} filters={{ ...emptyFilters(), families: ["Smoke"] }} onFilters={() => {}}>
+        <p>the grid</p>
+      </DramSummary>,
+    );
+    expect(html).toContain(">0 available<");
+    expect(html).toContain("No bottles match this combination.");
+    expect(html).toContain('aria-label="Remove Smoke"');
+    expect(html).toContain("Clear all");
+    expect(html).not.toContain("the grid");
+    expect(html).not.toContain("Nothing matches these filters.");
   });
 });

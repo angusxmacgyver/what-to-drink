@@ -426,7 +426,7 @@ Rationale: whisky ABV and age statements are effectively quantized (they land on
    - "Pour another" never repeats the last pick unless it's the only pourable bottle left.
    - Clear the picked state if a filter change removes that bottle.
    - Leave a spot in the picked detail panel for the Pour tracking "Just poured" button; don't build the button.
-8. **Results summary and zero state.** A summary row with `N available`, the tray chips, and "Clear all". With no matches, replace the grid with "No bottles match this combination." `Pour one` is disabled only at zero pourable bottles.
+8. **Results summary and zero state.** Done. A summary row with `N available`, the tray chips, and "Clear all". With no matches, replace the grid with "No bottles match this combination." `Pour one` is disabled only at zero pourable bottles.
 9. **Zero recovery.** In the drawer footer: "Undo last", backed by a session history of selection states, and the applied filters with the most constraining one flagged (the single removal that brings back the most bottles).
 10. **Local persistence.** Selection state saved per device in `localStorage`; no server call. Whether it carries across sessions depends on open question 2.
 

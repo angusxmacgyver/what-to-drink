@@ -1,7 +1,8 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Bottle, FilterState } from "../types";
 import { dramPool, groupLibrary } from "../lib/library";
 import { choosePour, prefersReducedMotion, rollFrames, settlePick } from "../lib/pour";
+import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { ExpressionDetail, LibraryCard } from "./Library";
@@ -53,6 +54,28 @@ export function DramResults({
           );
         })}
       </div>
+    </>
+  );
+}
+
+export function DramSummary({
+  available,
+  filters,
+  onFilters,
+  children,
+}: {
+  available: number;
+  filters: FilterState;
+  onFilters: (next: FilterState) => void;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <div className="dram-summary">
+        <p className="count">{available} available</p>
+        <AppliedTray filters={filters} onChange={onFilters} />
+      </div>
+      {available === 0 ? <p className="empty">No bottles match this combination.</p> : children}
     </>
   );
 }
@@ -207,24 +230,16 @@ export function PickADram({
       {emptyApartment ? (
         <p className="empty">No bottles are tagged for the apartment yet. The house holds the cellar.</p>
       ) : (
-        <>
-          <p className="count">{pool.length} available</p>
-          <button type="button" className="roll" onClick={roll} disabled={pool.length === 0}>
-            Pour one
-          </button>
-          {pool.length === 0 ? (
-            <p className="empty">Nothing matches these filters.</p>
-          ) : (
-            <DramResults
-              bottles={pool}
-              openKey={openKey}
-              pickedId={pick?.id ?? null}
-              rollingKey={rollingKey}
-              announce={announce}
-              onToggle={(key) => setOpenKey(openKey === key ? null : key)}
-            />
-          )}
-        </>
+        <DramSummary available={pool.length} filters={filters} onFilters={onFilters}>
+          <DramResults
+            bottles={pool}
+            openKey={openKey}
+            pickedId={pick?.id ?? null}
+            rollingKey={rollingKey}
+            announce={announce}
+            onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+          />
+        </DramSummary>
       )}
       {filtersOpen ? (
         <FilterDrawer
