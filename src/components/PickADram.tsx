@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Bottle, FilterState } from "../types";
 import { dramPool } from "../lib/library";
 import { BottleFields } from "./BottleFields";
+import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
 
@@ -19,6 +20,8 @@ export function PickADram({
   const [place, setPlace] = useState<Place | null>(null);
   const [includeClosed, setIncludeClosed] = useState(false);
   const [pick, setPick] = useState<Bottle | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersButton = useRef<HTMLButtonElement>(null);
 
   const pool = useMemo(() => {
     if (!place) return [];
@@ -60,9 +63,17 @@ export function PickADram({
           <p className="eyebrow">Randomizer · {place}</p>
           <h1>Pick a Dram</h1>
         </div>
-        <button type="button" className="textish" onClick={() => { setPlace(null); setPick(null); }}>
-          Change place
-        </button>
+        <div className="panel-actions">
+          <FiltersButton
+            count={activeFilterCount(filters)}
+            open={filtersOpen}
+            buttonRef={filtersButton}
+            onClick={() => setFiltersOpen(true)}
+          />
+          <button type="button" className="textish" onClick={() => { setPlace(null); setPick(null); setFiltersOpen(false); }}>
+            Change place
+          </button>
+        </div>
       </header>
       {emptyApartment ? (
         <p className="empty">No bottles are tagged for the apartment yet. The house holds the cellar.</p>
@@ -103,6 +114,18 @@ export function PickADram({
           ) : null}
         </>
       )}
+      {filtersOpen ? (
+        <FilterDrawer
+          filters={filters}
+          onChange={onFilters}
+          available={pool.length}
+          onPour={roll}
+          onClose={() => {
+            setFiltersOpen(false);
+            filtersButton.current?.focus();
+          }}
+        />
+      ) : null}
     </section>
   );
 }

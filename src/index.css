@@ -1171,6 +1171,15 @@ nav button.on,
 .applied-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .applied-chip { display: inline-flex; align-items: center; gap: 6px; }
 
+.panel-actions { display: flex; align-items: center; gap: 14px; }
+.filters-badge { display: inline-block; margin-left: 6px; min-width: 1.2em; padding: 0 6px; border-radius: 999px; background: var(--gold); color: var(--on-gold); font-size: 12px; font-weight: 700; text-align: center; }
+.drawer-root { position: fixed; inset: 0; z-index: 40; }
+.drawer-scrim { position: absolute; inset: 0; background: color-mix(in srgb, #000 45%, transparent); }
+.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 100%); display: flex; flex-direction: column; gap: 16px; padding: 20px; background: var(--bg); border-left: 1px solid var(--line); animation: drawer-in 160ms ease-out; }
+.drawer-footer { margin-top: auto; position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; background: var(--bg); }
+@keyframes drawer-in { from { transform: translateX(24px); } }
+@media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
+
 .chip {
   background: var(--chip);
   border: 1px solid var(--line);
