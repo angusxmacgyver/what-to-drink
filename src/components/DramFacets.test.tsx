@@ -117,5 +117,6 @@ describe("DramFacets", () => {
     expect(render(places)).toContain(">Age<");
     expect(render(places)).toContain(">ABV<");
     expect(render(places)).toContain('aria-label="Flavor match"');
+    expect(render(places)).not.toContain("Search distilleries");
   });
 });

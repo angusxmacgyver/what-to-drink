@@ -1,8 +1,7 @@
 import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
-import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeHistogram } from "./RangeHistogram";
-import { distilleryCounts, matchesFilters, matchesStatus, subsForFamilies, withoutRange } from "../lib/library";
+import { matchesFilters, matchesStatus, subsForFamilies, withoutRange } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { familyClass, subFamilyClass } from "../lib/colors";
 
@@ -27,9 +26,7 @@ export function Filters({
   showSearch = true,
   showStatus = false,
 }: Props) {
-  const distilleries = uniq(bottles.map((b) => b.distillery));
   const statuses = uniq(bottles.map((b) => b.status));
-  const distilleryTally = distilleryCounts(bottles);
   const themes = uniq(bottles.map((b) => b.theme));
   const families = uniq(bottles.flatMap((b) => b.flavorFamilies));
   const subs = subsForFamilies(bottles, filters.families);
@@ -68,12 +65,6 @@ export function Filters({
           />
         </label>
       ) : null}
-      <DistilleryCombobox
-        options={distilleries}
-        counts={distilleryTally}
-        value={filters.distilleries}
-        onChange={(distilleries) => set({ distilleries })}
-      />
       {showStatus ? (
         <ChipSelect
           label="Status"

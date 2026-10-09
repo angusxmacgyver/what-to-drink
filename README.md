@@ -26,7 +26,7 @@ Owner tools are behind the lock glyph next to the theme switch. A correct PIN op
 
 The Library and Pick a Dram share the same filter bar.
 
-You can search distillery, expression, or Society code. Distillery, theme, country, region, flavor families, and sub-characteristics are multi-select. Distillery is a type-to-search box that shows how many bottles each producer has. Flavor families and sub-characteristics are color-coded. Sub-characteristics appear once you pick a flavor family, and only list the ones that family owns, on bottles that have every family you picked. A filter only applies once you set it. Untagged bottles still appear when that filter is idle.
+You can search distillery, expression, or Society code. There is no separate distillery box; the search covers it. Theme, country, region, flavor families, and sub-characteristics are multi-select. Flavor families and sub-characteristics are color-coded. Sub-characteristics appear once you pick a flavor family, and only list the ones that family owns, on bottles that have every family you picked. A filter only applies once you set it. Untagged bottles still appear when that filter is idle.
 
 Age and ABV are range histograms, not sliders. Each one is a bar chart of the cellar, a brush you can drag, and From and To fields that stay in step with the brush. Values snap to whole years or whole percents. NAS is a toggle beside the Age From and To fields, on by default. It is not a stop on the age axis. Blank ages count as NAS. A blank ABV stays in the results.
 

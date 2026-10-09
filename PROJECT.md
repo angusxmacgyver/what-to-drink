@@ -142,7 +142,7 @@ Separate view of killed bottles. Same 12 fields as available. Not in Library scr
 
 Reusable components, used by The Library and Pick a Dram as they apply:
 
-- Distillery / Producer (multi)
+- Distillery / Producer — reached through text search; the separate distillery typeahead was removed
 - Age range, snapped to whole years, with a NAS toggle beside From and To (on by default; blank ages count as NAS)
 - ABV range, snapped to whole percents (a blank ABV stays in the results)
 - Theme (multi)

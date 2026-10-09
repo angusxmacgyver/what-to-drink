@@ -3,7 +3,6 @@ import type { CountFacet, DramPlace } from "../lib/library";
 import { dramCandidates, facetCounts, matchesFilters, subOwnerFamily, uniqueTags, withoutRange } from "../lib/library";
 import { familyClass, subFamilyClass } from "../lib/colors";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
-import { DistilleryCombobox } from "./DistilleryCombobox";
 import { OptionGrid } from "./OptionGrid";
 import { RangeHistogram } from "./RangeHistogram";
 
@@ -79,7 +78,6 @@ export function DramFacets({
     );
   };
 
-  const distilleries = sorted(candidates.map((bottle) => bottle.distillery));
   const themes = sorted(candidates.map((bottle) => bottle.theme));
   const families = sorted(candidates.flatMap((bottle) => bottle.flavorFamilies));
   const countries = sorted(candidates.map((bottle) => bottle.country));
@@ -129,12 +127,6 @@ export function DramFacets({
             placeholder="Distillery, expression, code…"
           />
         </label>
-        <DistilleryCombobox
-          options={distilleries}
-          counts={facetCounts(bottles, place, includeClosed, filters, "distillery", distilleries, includeOpen)}
-          value={filters.distilleries}
-          onChange={(next) => set({ distilleries: next })}
-        />
         <OptionGrid id="theme" label="Theme" options={tiles("theme", themes)} value={filters.themes} onChange={(next) => set({ themes: next })} />
         <div className="match-row" role="group" aria-label="Flavor match">
           <span className="chipset-label">Match</span>
