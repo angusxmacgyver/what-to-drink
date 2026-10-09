@@ -66,28 +66,36 @@ beforeEach(() => {
 });
 
 describe("Library layout", () => {
-  it("defaults to the list, in distillery then expression order", () => {
+  it("defaults to a list grouped by distillery with section counts", () => {
     const html = renderToStaticMarkup(
       <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">List');
     expect(html).toContain('aria-pressed="false">Grid');
     expect(html).not.toContain("library-card");
-    const names = [...html.matchAll(/<strong>([^<]+)<\/strong><em>([^<]+)<\/em>/g)].map((match) => match[1] + " " + match[2]);
-    expect(names).toEqual(["Ardbeg Spectacular", "Hakushu 12 Year"]);
+    const headings = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((match) => match[1]);
+    const expressions = [...html.matchAll(/<em>([^<]+)<\/em>/g)].map((match) => match[1]);
+    expect(headings).toEqual(["Ardbeg", "Hakushu"]);
+    expect(expressions).toEqual(["Spectacular", "12 Year"]);
+    expect(html).toContain("1 expression · 2 bottles");
+    expect(html).toContain("1 expression · 1 bottle");
+    expect(html).not.toContain("<strong>Ardbeg</strong>");
   });
 
-  it("opens the grid from the saved choice, with the same order and no code", () => {
+  it("opens a grouped grid with full accessible names and no repeated maker labels", () => {
     localStorage.setItem("what-to-drink-library-layout", "grid");
     const html = renderToStaticMarkup(
       <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">Grid');
     expect(html).not.toContain('class="list"');
+    const headings = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((match) => match[1]);
     const labels = [...html.matchAll(/aria-label="([^"]+)"/g)].map((match) => match[1]);
+    expect(headings).toEqual(["Ardbeg", "Hakushu"]);
     expect(labels).toContain("Ardbeg Spectacular");
     expect(labels).toContain("Hakushu 12 Year");
     expect(labels.indexOf("Ardbeg Spectacular")).toBeLessThan(labels.indexOf("Hakushu 12 Year"));
+    expect(html).not.toContain("card-distillery");
     expect(html).toContain("Islay · Scotland");
     expect(html).toContain(">Japan<");
     expect(html).not.toContain("Japan · Japan");

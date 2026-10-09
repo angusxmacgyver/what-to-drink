@@ -712,6 +712,21 @@ nav button.on,
   font-size: 13px;
 }
 
+.distillery-groups { display: flex; flex-direction: column; gap: 18px; }
+.distillery-group { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--bg-2) 30%, var(--bg)); }
+.distillery-group:nth-child(even) { background: color-mix(in srgb, var(--chip) 22%, var(--bg)); }
+
+.distillery-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 12px;
+}
+
+.distillery-head h2 { margin: 0; font-size: 20px; line-height: 1.2; }
+.distillery-head span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1615,6 +1630,8 @@ nav button.on,
   .row-main {
     grid-template-columns: 1fr 1fr;
   }
+  .distillery-group { padding: 10px; }
+  .distillery-head { align-items: flex-start; flex-direction: column; }
   .notes-stage {
     grid-template-columns: 1fr;
   }

@@ -5,6 +5,7 @@ import {
   distilleryCounts,
   dramCandidates,
   facetCounts,
+  groupDistilleries,
   groupLibrary,
   matchesFilters,
   matchesStatus,
@@ -187,6 +188,26 @@ describe("groupLibrary", () => {
     const [row] = groupLibrary([bottle({ age: 10, abv: 46 }), bottle({ age: 12, abv: 57.1 })]);
     expect(row.ageLabel).toBe("mixed");
     expect(row.abvLabel).toBe("mixed");
+  });
+});
+
+describe("groupDistilleries", () => {
+  it("keeps row order and reports expression and bottle counts", () => {
+    const rows = groupLibrary([
+      bottle({ id: "ardbeg-open", bottleKey: "ardbeg::10", distillery: "Ardbeg", bottling: "10" }),
+      bottle({ id: "ardbeg-closed", bottleKey: "ardbeg::10", distillery: "Ardbeg", bottling: "10" }),
+      bottle({ id: "ardbeg-oogie", bottleKey: "ardbeg::oogie", distillery: "Ardbeg", bottling: "Uigeadail" }),
+      bottle({ id: "lagavulin", bottleKey: "lagavulin::16", distillery: "Lagavulin", bottling: "16" }),
+    ]);
+
+    const groups = groupDistilleries(rows);
+
+    expect(groups.map((group) => group.distillery)).toEqual(["Ardbeg", "Lagavulin"]);
+    expect(groups[0].rows.map((row) => row.bottling)).toEqual(["10", "Uigeadail"]);
+    expect(groups[0].expressionCount).toBe(2);
+    expect(groups[0].bottleCount).toBe(3);
+    expect(groups[1].expressionCount).toBe(1);
+    expect(groups[1].bottleCount).toBe(1);
   });
 });
 

@@ -14,6 +14,13 @@ export type LibraryRow = {
   stock: number;
 };
 
+export type DistilleryGroup = {
+  distillery: string;
+  rows: LibraryRow[];
+  expressionCount: number;
+  bottleCount: number;
+};
+
 function ageLabel(bottles: Bottle[]): string {
   const values = [...new Set(bottles.map((b) => (b.age == null ? "" : String(b.age))))];
   if (values.length === 1) return values[0] || "—";
@@ -137,6 +144,26 @@ export function groupLibrary(bottles: Bottle[]): LibraryRow[] {
     return d !== 0 ? d : a.bottling.localeCompare(b.bottling);
   });
   return rows;
+}
+
+export function groupDistilleries(rows: LibraryRow[]): DistilleryGroup[] {
+  const groups: DistilleryGroup[] = [];
+  for (const row of rows) {
+    const current = groups.at(-1);
+    if (current?.distillery === row.distillery) {
+      current.rows.push(row);
+      current.expressionCount += 1;
+      current.bottleCount += row.stock;
+    } else {
+      groups.push({
+        distillery: row.distillery,
+        rows: [row],
+        expressionCount: 1,
+        bottleCount: row.stock,
+      });
+    }
+  }
+  return groups;
 }
 
 function inList(selected: string[], value: string): boolean {

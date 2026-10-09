@@ -3,11 +3,13 @@ import type { Bottle, FilterState } from "../types";
 import { familyClass } from "../lib/colors";
 import {
   detailBottle,
+  groupDistilleries,
   groupLibrary,
   matchesFilters,
   matchesStatus,
   originLabel,
   uniqueTags,
+  type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
@@ -59,6 +61,7 @@ export function LibraryCard({
   where,
   cardId,
   transitionName,
+  showDistillery = true,
 }: {
   row: LibraryRow;
   expanded: boolean;
@@ -68,6 +71,7 @@ export function LibraryCard({
   where?: string;
   cardId?: string;
   transitionName?: string;
+  showDistillery?: boolean;
 }) {
   const shown = detailBottle(row.bottles);
   const origin = originLabel(shown.region, shown.country);
@@ -88,7 +92,7 @@ export function LibraryCard({
       onClick={onToggle}
     >
       {picked ? <span className="your-dram">Your dram</span> : null}
-      <strong className="card-distillery">{row.distillery}</strong>
+      {showDistillery ? <strong className="card-distillery">{row.distillery}</strong> : null}
       <em className="card-expression">{row.bottling}</em>
       {picked ? <span className="card-where">Bottle is at: {place}</span> : null}
       {origin ? <span className="card-origin">{origin}</span> : null}
@@ -106,6 +110,29 @@ export function LibraryCard({
         {row.stock > 1 ? <span className="stock">×{row.stock}</span> : null}
       </span>
     </button>
+  );
+}
+
+function itemCount(count: number, singular: string) {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+}
+
+function DistilleryHeader({
+  distillery,
+  expressions,
+  bottles,
+}: {
+  distillery: string;
+  expressions: number;
+  bottles: number;
+}) {
+  return (
+    <header className="distillery-head">
+      <h2>{distillery}</h2>
+      <span>
+        {itemCount(expressions, "expression")} · {itemCount(bottles, "bottle")}
+      </span>
+    </header>
   );
 }
 
@@ -143,11 +170,73 @@ export function ExpressionDetail({
   );
 }
 
+function DistillerySection({
+  group,
+  layout,
+  openKey,
+  onToggle,
+  ...actions
+}: Actions & {
+  group: DistilleryGroup;
+  layout: LibraryLayout;
+  openKey: string | null;
+  onToggle: (key: string) => void;
+}) {
+  return (
+    <section className="distillery-group">
+      <DistilleryHeader
+        distillery={group.distillery}
+        expressions={group.expressionCount}
+        bottles={group.bottleCount}
+      />
+      <div className={layout === "grid" ? "library-grid" : "list"}>
+        {group.rows.map((row) => {
+          const expanded = openKey === row.bottleKey;
+          if (layout === "grid") {
+            return (
+              <Fragment key={row.bottleKey}>
+                <LibraryCard
+                  row={row}
+                  expanded={expanded}
+                  showDistillery={false}
+                  onToggle={() => onToggle(row.bottleKey)}
+                />
+                {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
+              </Fragment>
+            );
+          }
+          return (
+            <article key={row.bottleKey} className={expanded ? "row open" : "row"}>
+              <button
+                type="button"
+                className="row-main"
+                aria-expanded={expanded}
+                onClick={() => onToggle(row.bottleKey)}
+              >
+                <span className="who">
+                  <em>{row.bottling}</em>
+                </span>
+                <span>{row.ageLabel}</span>
+                <span>{row.abvLabel}</span>
+                <span className="theme">{row.theme}</span>
+                {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
+                <FlavorTags families={row.flavorFamilies} subs={row.subCharacteristics} />
+              </button>
+              {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
   const rows = groupLibrary(filtered);
+  const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
 
   useEffect(() => {
@@ -184,51 +273,18 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
         </div>
       </header>
       <Filters bottles={bottles} filters={filters} onChange={onFilters} showStatus />
-      {layout === "grid" ? (
-        <div className="library-grid">
-          {rows.map((row) => {
-            const expanded = openKey === row.bottleKey;
-            return (
-              <Fragment key={row.bottleKey}>
-                <LibraryCard
-                  row={row}
-                  expanded={expanded}
-                  onToggle={() => setOpenKey(expanded ? null : row.bottleKey)}
-                />
-                {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
-              </Fragment>
-            );
-          })}
-        </div>
-      ) : null}
-      {layout === "list" ? (
-        <div className="list">
-          {rows.map((row) => {
-            const expanded = openKey === row.bottleKey;
-            return (
-              <article key={row.bottleKey} className={expanded ? "row open" : "row"}>
-                <button
-                  type="button"
-                  className="row-main"
-                  aria-expanded={expanded}
-                  onClick={() => setOpenKey(expanded ? null : row.bottleKey)}
-                >
-                  <span className="who">
-                    <strong>{row.distillery}</strong>
-                    <em>{row.bottling}</em>
-                  </span>
-                  <span>{row.ageLabel}</span>
-                  <span>{row.abvLabel}</span>
-                  <span className="theme">{row.theme}</span>
-                  {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
-                  <FlavorTags families={row.flavorFamilies} subs={row.subCharacteristics} />
-                </button>
-                {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
-              </article>
-            );
-          })}
-        </div>
-      ) : null}
+      <div className="distillery-groups">
+        {groups.map((group) => (
+          <DistillerySection
+            key={group.distillery}
+            group={group}
+            layout={layout}
+            openKey={openKey}
+            onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+            {...actions}
+          />
+        ))}
+      </div>
     </section>
   );
 }
