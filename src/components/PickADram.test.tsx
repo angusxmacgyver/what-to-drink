@@ -31,7 +31,7 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
 function render(
   bottles: Bottle[],
   openKey: string | null = null,
-  extra: { pickedId?: string | null; rollingKey?: string | null; announce?: string } = {},
+  extra: { pickedId?: string | null; announce?: string } = {},
 ) {
   return renderToStaticMarkup(
     <DramResults bottles={bottles} openKey={openKey} onToggle={() => {}} {...extra} />,
@@ -92,6 +92,8 @@ describe("DramResults", () => {
     expect(grid).not.toContain("bottle-fields");
     expect(html).toContain("tag family");
     expect(html).toContain("Woodsmoke &amp; Campfire");
+    expect(html).not.toContain(">Flavor families<");
+    expect(html).not.toContain(">Sub-characteristics<");
     expect(html).toContain("Open · Bar");
     expect(html).toContain("Closed · Crate");
     expect(html.match(/bottle-fields/g)).toHaveLength(1);
@@ -101,14 +103,16 @@ describe("DramResults", () => {
   it("marks the picked card, opens its detail, and leaves a spot for Just poured", () => {
     const html = render(pair, "ardbeg::10", {
       pickedId: "closed",
-      announce: "Your dram: Ardbeg 10. Bottle is at: Crate.",
+      announce: "Your dram: Ardbeg 10. Bottle is at: Bar.",
     });
     expect(html).toContain("library-card open picked");
     expect(html).toContain("Your dram");
-    expect(html).toContain("Bottle is at: Crate");
-    expect(html).toContain('aria-label="Ardbeg 10. Your dram. Bottle is at: Crate."');
+    expect(html).toContain("Bottle is at: Bar");
+    expect(html).not.toContain("Bottle is at: Crate");
+    expect(html).toContain("Closed · Crate");
+    expect(html).toContain('aria-label="Ardbeg 10. Your dram. Bottle is at: Bar."');
     expect(html).toContain('aria-live="polite"');
-    expect(html).toContain("Your dram: Ardbeg 10. Bottle is at: Crate.");
+    expect(html).toContain("Your dram: Ardbeg 10. Bottle is at: Bar.");
     expect(html).toContain("just-poured");
     expect(html).toContain('class="dram-dialog picked"');
     expect(html).not.toContain('class="result"');
@@ -125,12 +129,6 @@ describe("DramResults", () => {
     expect(html).toContain("Your dram");
   });
 
-  it("highlights a card mid-roll without calling it the dram yet", () => {
-    const html = render([...pair, hakushu], null, { rollingKey: "hakushu::12" });
-    expect(html).toContain("library-card rolling");
-    expect(html).not.toContain("picked");
-    expect(html).not.toContain("Your dram");
-  });
 });
 
 describe("DramSummary", () => {

@@ -55,7 +55,7 @@ export function LibraryCard({
   expanded,
   onToggle,
   picked = false,
-  rolling = false,
+  bordered = false,
   where,
   cardId,
   transitionName,
@@ -64,7 +64,7 @@ export function LibraryCard({
   expanded: boolean;
   onToggle: () => void;
   picked?: boolean;
-  rolling?: boolean;
+  bordered?: boolean;
   where?: string;
   cardId?: string;
   transitionName?: string;
@@ -73,7 +73,7 @@ export function LibraryCard({
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
-  const classes = ["library-card", expanded ? "open" : "", picked ? "picked" : "", rolling ? "rolling" : ""]
+  const classes = ["library-card", expanded ? "open" : "", picked || bordered ? "picked" : ""]
     .filter(Boolean)
     .join(" ");
   return (
@@ -116,7 +116,7 @@ export function ExpressionDetail({
   const shown = detailBottle(bottles);
   return (
     <div className="detail">
-      <BottleFields bottle={shown} />
+      <BottleFields bottle={shown} flavorText={false} />
       <FlavorTags
         families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
         subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}

@@ -1,23 +1,30 @@
-const HOPS = 4;
+type Ticket = { id: string; status?: string; bottleKey?: string };
 
-export function choosePour<T extends { id: string }>(
+/** Closed bottles are not tickets while an open one of the same expression can be poured. */
+function tickets<T extends Ticket>(pool: T[]): T[] {
+  const openKeys = new Set(
+    pool.filter((item) => item.status === "Open" && item.bottleKey).map((item) => item.bottleKey),
+  );
+  if (openKeys.size === 0) return pool;
+  return pool.filter((item) => item.status === "Open" || !item.bottleKey || !openKeys.has(item.bottleKey));
+}
+
+export function choosePour<T extends Ticket>(
   pool: T[],
   lastId: string | null,
   random: () => number = Math.random,
 ): T | null {
-  if (pool.length === 0) return null;
-  const others = lastId == null ? [] : pool.filter((item) => item.id !== lastId);
-  const choices = others.length > 0 ? others : pool;
+  const pourable = tickets(pool);
+  if (pourable.length === 0) return null;
+  const others = lastId == null ? [] : pourable.filter((item) => item.id !== lastId);
+  const choices = others.length > 0 ? others : pourable;
   return choices[Math.floor(random() * choices.length)] ?? null;
 }
 
-/** Highlight frames before the landing card. Empty means land immediately. */
-export function rollFrames(keys: string[], landing: string, reduceMotion: boolean): string[] {
-  if (reduceMotion) return [];
-  const others = keys.filter((key) => key !== landing);
-  if (others.length === 0) return [];
-  const skips = Array.from({ length: HOPS }, (_, index) => others[index % others.length]);
-  return [...skips, landing];
+/** The bottle to walk to. A closed pick yields to an open one of the same expression. */
+export function leadBottle<T extends Ticket>(group: T[], picked: T): T {
+  if (picked.status === "Open") return picked;
+  return group.find((item) => item.bottleKey === picked.bottleKey && item.status === "Open") ?? picked;
 }
 
 export function settlePick<T extends { id: string }>(pick: T | null, pool: T[]): T | null {

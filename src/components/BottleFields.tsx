@@ -20,7 +20,7 @@ function NoteCard({ label, body }: { label: string; body: string }) {
   );
 }
 
-export function BottleFields({ bottle }: { bottle: Bottle }) {
+export function BottleFields({ bottle, flavorText = true }: { bottle: Bottle; flavorText?: boolean }) {
   const hasNotes = Boolean(bottle.notes);
   const hasTasting = Boolean(bottle.tastingNotes);
 
@@ -41,8 +41,12 @@ export function BottleFields({ bottle }: { bottle: Bottle }) {
         <Field label="Location" value={bottle.location || "—"} />
         <Field label="Region" value={bottle.region} />
         <Field label="Theme" value={bottle.theme} />
-        <Field label="Flavor families" value={bottle.flavorFamilies.join(" · ")} />
-        <Field label="Sub-characteristics" value={bottle.subCharacteristics.join(" · ")} />
+        {flavorText ? (
+          <>
+            <Field label="Flavor families" value={bottle.flavorFamilies.join(" · ")} />
+            <Field label="Sub-characteristics" value={bottle.subCharacteristics.join(" · ")} />
+          </>
+        ) : null}
         {bottle.smws ? (
           <>
             <Field label="Full code" value={bottle.smws.fullCode} />

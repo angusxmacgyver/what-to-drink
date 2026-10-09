@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import type { Bottle, FilterState } from "../types";
 import { dramPool, groupLibrary, type LibraryRow } from "../lib/library";
-import { cardTransitionName, choosePour, prefersReducedMotion, rollFrames, settlePick, withViewTransition } from "../lib/pour";
+import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
 import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -14,26 +14,84 @@ type Place = "house" | "apartment";
 
 const FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled])";
 
-function DramDetail({ row, picked, onClose }: { row: LibraryRow; picked?: Bottle; onClose: () => void }) {
+/** Resolves once the card has scrolled into view. Already-visible cards resolve immediately. */
+function revealCard(card: HTMLElement): Promise<void> {
+  if (prefersReducedMotion()) {
+    card.scrollIntoView({ block: "center", behavior: "auto" });
+    return Promise.resolve();
+  }
+  const rect = card.getBoundingClientRect();
+  if (rect.top >= 64 && rect.bottom <= window.innerHeight - 24) return Promise.resolve();
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("scrollend", finish);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, 700);
+    document.addEventListener("scrollend", finish);
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+}
+
+function growFromCard(dialog: HTMLElement, card: HTMLElement) {
+  const from = card.getBoundingClientRect();
+  const to = dialog.getBoundingClientRect();
+  if (!to.width || !to.height) return;
+  const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+  const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+  dialog.animate(
+    [
+      {
+        transform: `translate(${dx}px, ${dy}px) scale(${from.width / to.width}, ${from.height / to.height})`,
+        borderRadius: "12px",
+      },
+      { transform: "none", borderRadius: "16px" },
+    ],
+    { duration: 480, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+  );
+}
+
+function DramDetail({
+  row,
+  picked,
+  growFrom,
+  onClose,
+}: {
+  row: LibraryRow;
+  picked?: Bottle;
+  growFrom?: string | null;
+  onClose: () => void;
+}) {
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const dialog = panelRef.current;
+    const card = growFrom ? document.getElementById(growFrom) : null;
+    if (!dialog || !card || prefersReducedMotion()) return;
+    growFromCard(dialog, card);
+  }, [growFrom, row.bottleKey]);
 
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
     const returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    panel.querySelector<HTMLElement>(".dram-dialog-close")?.focus();
+    panel.querySelector<HTMLElement>(".dram-dialog-close")?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return;
       const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)];
       const next = trapTab(items, document.activeElement instanceof HTMLElement ? document.activeElement : null, event.shiftKey);
       if (!next) return;
       event.preventDefault();
-      next.focus();
+      next.focus({ preventScroll: true });
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      returnTo?.focus();
+      returnTo?.focus({ preventScroll: true });
     };
   }, [row.bottleKey]);
 
@@ -41,7 +99,7 @@ function DramDetail({ row, picked, onClose }: { row: LibraryRow; picked?: Bottle
   return (
     <div className="dram-dialog-root">
       <div className="dram-dialog-scrim" onClick={onClose} />
-      <div ref={panelRef} className={picked ? "dram-dialog picked" : "dram-dialog"} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={panelRef} className={["dram-dialog", picked ? "picked" : "", growFrom ? "from-card" : ""].filter(Boolean).join(" ")} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className="dram-dialog-head">
           <div>
             {picked ? <p className="your-dram">Your dram</p> : null}
@@ -68,17 +126,20 @@ export function DramResults({
   openKey,
   onToggle,
   pickedId = null,
-  rollingKey = null,
+  growFrom = null,
+  borderedKey = null,
   announce = "",
 }: {
   bottles: Bottle[];
   openKey: string | null;
   onToggle: (key: string) => void;
   pickedId?: string | null;
-  rollingKey?: string | null;
+  growFrom?: string | null;
+  borderedKey?: string | null;
   announce?: string;
 }) {
   const picked = pickedId ? bottles.find((bottle) => bottle.id === pickedId) : undefined;
+  const lead = picked ? leadBottle(bottles, picked) : undefined;
   const rows = groupLibrary(bottles);
   const openRow = rows.find((row) => row.bottleKey === openKey);
   return (
@@ -93,8 +154,8 @@ export function DramResults({
               row={row}
               expanded={openKey === row.bottleKey}
               picked={isPicked}
-              rolling={rollingKey === row.bottleKey}
-              where={isPicked ? picked?.location : undefined}
+              bordered={!isPicked && borderedKey === row.bottleKey}
+              where={isPicked ? lead?.location : undefined}
               cardId={`dram-${row.bottleKey}`}
               transitionName={cardTransitionName(row.bottleKey)}
               onToggle={() => onToggle(row.bottleKey)}
@@ -105,7 +166,8 @@ export function DramResults({
       {openRow ? (
         <DramDetail
           row={openRow}
-          picked={picked?.bottleKey === openRow.bottleKey ? picked : undefined}
+          picked={picked?.bottleKey === openRow.bottleKey ? lead : undefined}
+          growFrom={picked?.bottleKey === openRow.bottleKey ? growFrom : null}
           onClose={() => onToggle(openRow.bottleKey)}
         />
       ) : null}
@@ -173,11 +235,13 @@ export function PickADram({
   const [includeClosed, setIncludeClosed] = useState(() => loadDramSelection()?.includeClosed ?? false);
   const [pick, setPick] = useState<Bottle | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const [rollingKey, setRollingKey] = useState<string | null>(null);
+  const [growFrom, setGrowFrom] = useState<string | null>(null);
+  const [borderedKey, setBorderedKey] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
-  const timers = useRef<number[]>([]);
+  const pourGeneration = useRef(0);
+  const pauseTimer = useRef<number | null>(null);
   const pendingId = useRef<string | null>(null);
   const history = useRef<FilterState[]>([]);
   const [canUndo, setCanUndo] = useState(false);
@@ -218,12 +282,13 @@ export function PickADram({
     saveDramScope({ place, includeOpen, includeClosed });
   }, [place, includeOpen, includeClosed]);
 
-  const stopRoll = () => {
-    timers.current.forEach((id) => window.clearTimeout(id));
-    timers.current = [];
+  const cancelPour = () => {
+    pourGeneration.current += 1;
+    if (pauseTimer.current != null) {
+      window.clearTimeout(pauseTimer.current);
+      pauseTimer.current = null;
+    }
   };
-
-  useEffect(() => () => stopRoll(), []);
 
   useEffect(() => {
     if (!openKey || filtersOpen) return;
@@ -236,9 +301,10 @@ export function PickADram({
 
   useEffect(() => {
     if (pendingId.current != null && !pool.some((bottle) => bottle.id === pendingId.current)) {
-      stopRoll();
+      cancelPour();
       pendingId.current = null;
-      setRollingKey(null);
+      setGrowFrom(null);
+      setBorderedKey(null);
     }
     if (settlePick(pick, pool) !== pick) {
       setPick(null);
@@ -246,50 +312,62 @@ export function PickADram({
     }
   }, [pool, pick]);
 
-  useEffect(() => {
-    if (!pick || rollingKey) return;
-    document.getElementById(`dram-${pick.bottleKey}`)?.scrollIntoView({
-      block: "nearest",
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-    });
-  }, [pick, rollingKey]);
-
-  const land = (bottle: Bottle) => {
-    pendingId.current = null;
-    setRollingKey(null);
-    setPick(bottle);
-    setOpenKey(bottle.bottleKey);
-    setAnnounce(`Your dram: ${bottle.distillery} ${bottle.bottling}. Bottle is at: ${bottle.location || "not tagged yet"}.`);
-  };
-
-  const roll = () => {
+  const pour = () => {
     if (!place) return;
-    stopRoll();
+    cancelPour();
     if (pool.length === 0) {
       pendingId.current = null;
       setPick(null);
-      setRollingKey(null);
+      setGrowFrom(null);
+      setBorderedKey(null);
       return;
     }
     const next = choosePour(pool, pick?.id ?? null);
     if (!next) return;
-    pendingId.current = next.id;
+    const lead = leadBottle(pool, next);
+    const generation = pourGeneration.current;
+    const cardId = `dram-${lead.bottleKey}`;
+    pendingId.current = lead.id;
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setPick(null);
+    setBorderedKey(null);
     setOpenKey(null);
+    setGrowFrom(null);
     setAnnounce("");
-    const frames = rollFrames(
-      groupLibrary(pool).map((row) => row.bottleKey),
-      next.bottleKey,
-      prefersReducedMotion(),
-    );
-    if (frames.length === 0) {
-      land(next);
+    const open = () => {
+      if (generation !== pourGeneration.current) return;
+      pendingId.current = null;
+      setBorderedKey(null);
+      setPick(lead);
+      setGrowFrom(cardId);
+      setOpenKey(lead.bottleKey);
+      setAnnounce(`Your dram: ${lead.distillery} ${lead.bottling}. Bottle is at: ${lead.location || "not tagged yet"}.`);
+    };
+    const borderThenOpen = () => {
+      if (generation !== pourGeneration.current) return;
+      setBorderedKey(lead.bottleKey);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          if (generation !== pourGeneration.current) return;
+          pauseTimer.current = window.setTimeout(() => {
+            pauseTimer.current = null;
+            open();
+          }, 750);
+        });
+      });
+    };
+    const card = document.getElementById(cardId);
+    if (!card) {
+      open();
       return;
     }
-    frames.forEach((key, index) => {
-      timers.current.push(window.setTimeout(() => {
-        if (index < frames.length - 1) setRollingKey(key);
-        else land(next);
-      }, 80 * index));
+    window.requestAnimationFrame(() => {
+      const fresh = document.getElementById(cardId);
+      if (!fresh) {
+        open();
+        return;
+      }
+      void revealCard(fresh).then(borderThenOpen);
     });
   };
 
@@ -327,12 +405,13 @@ export function PickADram({
             onClick={() => setFiltersOpen(true)}
           />
           <button type="button" className="textish" onClick={() => {
-            stopRoll();
+            cancelPour();
             pendingId.current = null;
             setPlace(null);
             setPick(null);
             setOpenKey(null);
-            setRollingKey(null);
+            setGrowFrom(null);
+            setBorderedKey(null);
             setAnnounce("");
             setFiltersOpen(false);
           }}>
@@ -350,16 +429,21 @@ export function PickADram({
           onUndo={undo}
           canUndo={canUndo}
           flagId={flagId}
-          onPour={roll}
+          onPour={pour}
           poured={pick != null}
         >
           <DramResults
             bottles={shown}
             openKey={openKey}
             pickedId={pick?.id ?? null}
-            rollingKey={rollingKey}
+            growFrom={growFrom}
+            borderedKey={borderedKey}
             announce={announce}
-            onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+            onToggle={(key) => {
+              setGrowFrom(null);
+              setBorderedKey(null);
+              setOpenKey(openKey === key ? null : key);
+            }}
           />
         </DramSummary>
       )}

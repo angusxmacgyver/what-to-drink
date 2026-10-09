@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardTransitionName, choosePour, rollFrames, settlePick } from "./pour";
+import { cardTransitionName, choosePour, leadBottle, settlePick } from "./pour";
 
 describe("cardTransitionName", () => {
   it("makes a valid ident and keeps distinct keys distinct", () => {
@@ -26,16 +26,28 @@ describe("choosePour", () => {
     expect(choosePour([], "a", () => 0)).toBeNull();
     expect(choosePour([b], "a", () => 0)).toBe(b);
   });
+
+  it("leads to the open bottle when a closed one shares the expression", () => {
+    const open = { id: "open", status: "Open" as const, bottleKey: "hakushu::12" };
+    const closed = { id: "closed", status: "Closed" as const, bottleKey: "hakushu::12" };
+    const elsewhere = { id: "other", status: "Closed" as const, bottleKey: "glenfiddich::12" };
+    for (let step = 0; step < 10; step += 1) {
+      expect(choosePour([closed, open], null, () => step / 10)).toBe(open);
+    }
+    expect(choosePour([closed, elsewhere], null, () => 0)).toBe(closed);
+    const secondOpen = { id: "open-2", status: "Open" as const, bottleKey: "hakushu::12" };
+    expect(choosePour([open, secondOpen, closed], null, () => 0.9)).toBe(secondOpen);
+  });
 });
 
-describe("rollFrames", () => {
-  it("skips across the other cards and lands on the pick", () => {
-    expect(rollFrames(["a", "b", "c"], "b", false)).toEqual(["a", "c", "a", "c", "b"]);
-  });
+describe("leadBottle", () => {
+  const open = { id: "open", status: "Open", bottleKey: "hakushu::12", location: "Bar" };
+  const closed = { id: "closed", status: "Closed", bottleKey: "hakushu::12", location: "Mid Rack C" };
 
-  it("lands immediately for one card or reduced motion", () => {
-    expect(rollFrames(["only"], "only", false)).toEqual([]);
-    expect(rollFrames(["a", "b"], "b", true)).toEqual([]);
+  it("walks to the open bottle when the pick is its closed sibling", () => {
+    expect(leadBottle([closed, open], closed)).toBe(open);
+    expect(leadBottle([open, closed], open).location).toBe("Bar");
+    expect(leadBottle([closed], closed)).toBe(closed);
   });
 });
 
