@@ -568,7 +568,7 @@ nav button.on,
 .row-main {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(220px, 2.2fr) 70px 80px 1.2fr 52px;
+  grid-template-columns: minmax(220px, 2.2fr) minmax(150px, 0.9fr) 1.2fr 52px;
   gap: 12px;
   align-items: center;
   text-align: left;
@@ -612,6 +612,9 @@ nav button.on,
   font-style: italic;
 }
 
+.who strong em { color: var(--ink); font-weight: 700; }
+.list-facts { white-space: nowrap; }
+
 .theme {
   color: var(--muted);
   overflow: hidden;
@@ -636,6 +639,41 @@ nav button.on,
   gap: 6px;
   min-width: 0;
 }
+
+.flavor-lane { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 8px; align-items: start; }
+
+.flavor-lane-label,
+.flavor-cluster-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.flavor-lane-content { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.flavor-cluster {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px; border-left: 3px solid var(--family-color);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--family-color) 8%, transparent);
+}
+
+.flavor-cluster-label { color: var(--ink); letter-spacing: 0.06em; }
+.grouped .tag.family { background: color-mix(in srgb, var(--family-color) 32%, var(--bg-2)); font-weight: 700; }
+
+.tag.matched {
+  border-width: 2px; font-weight: 700;
+  background: color-mix(in srgb, var(--family-color) 48%, var(--bg-2));
+  box-shadow: inset 0 0 0 1px var(--family-color);
+  color: var(--ink);
+}
+
+.match-mark { margin-right: 4px; }
 
 .flavor-row {
   display: flex;
@@ -1673,6 +1711,7 @@ nav button.on,
   .row-main {
     grid-template-columns: 1fr 1fr;
   }
+  .flavor-lane { grid-template-columns: 1fr; }
   .distillery-group { padding: 10px; }
   .distillery-head { align-items: flex-start; flex-direction: column; }
   .notes-stage {

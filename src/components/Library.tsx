@@ -173,12 +173,14 @@ export function ExpressionDetail({
 function DistillerySection({
   group,
   layout,
+  filters,
   openKey,
   onToggle,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
   layout: LibraryLayout;
+  filters: FilterState;
   openKey: string | null;
   onToggle: (key: string) => void;
 }) {
@@ -214,13 +216,19 @@ function DistillerySection({
                 onClick={() => onToggle(row.bottleKey)}
               >
                 <span className="who">
-                  <em>{row.bottling}</em>
+                  <strong><em>{row.bottling}</em></strong>
                 </span>
-                <span>{row.ageLabel}</span>
-                <span>{row.abvLabel}</span>
+                <span className="list-facts">Age: {row.ageLabel} | ABV: {row.abvLabel}</span>
                 <span className={`theme ${smwsThemeClass(row.theme)}`}>{row.theme}</span>
                 {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
-                <FlavorTags families={row.flavorFamilies} subs={row.subCharacteristics} />
+                <FlavorTags
+                  families={row.flavorFamilies}
+                  subs={row.subCharacteristics}
+                  grouped
+                  selectedFamilies={filters.families}
+                  selectedSubs={filters.subs}
+                  subFamilies={filters.subFamilies}
+                />
               </button>
               {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
             </article>
@@ -279,6 +287,7 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
             key={group.distillery}
             group={group}
             layout={layout}
+            filters={filters}
             openKey={openKey}
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
             {...actions}

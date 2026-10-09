@@ -34,6 +34,7 @@ const openBottle = bottle({
   status: "Open",
   location: "Bar",
   theme: "Sweet & Zesty",
+  subCharacteristics: ["Honey"],
   notes: "OPEN-NOTE",
   tastingNotes: "OPEN-TASTE",
 });
@@ -82,7 +83,26 @@ describe("Library layout", () => {
     expect(html).toContain("1 expression · 2 bottles");
     expect(html).toContain("1 expression · 1 bottle");
     expect(html).not.toContain("<strong>Ardbeg</strong>");
+    expect(html).toContain("<strong><em>Spectacular</em></strong>");
+    expect(html).toContain("Age: NAS | ABV: 46%");
     expect(html).toContain('class="theme smws-theme-sweet-zesty"');
+  });
+
+  it("shows which list flavor tags drive the active filters", () => {
+    const filters = {
+      ...emptyFilters(),
+      families: ["Smoke"],
+      subs: ["Honey"],
+      subFamilies: { Honey: "Smoke" },
+    };
+    const html = renderToStaticMarkup(
+      <Library bottles={bottles} filters={filters} onFilters={() => {}} owner={false} />,
+    );
+    const list = html.slice(html.indexOf("distillery-groups"));
+    expect(list).toContain(">Families<");
+    expect(list).toContain(">Characteristics<");
+    expect(list).toContain('class="tag family family-smoke matched"');
+    expect(list).toContain('class="tag sub family-smoke matched"');
   });
 
   it("opens a grouped grid with full accessible names and no repeated maker labels", () => {
