@@ -47,6 +47,7 @@ describe("FilterDrawer", () => {
     );
     expect(html).toContain('role="dialog"');
     expect(html).toContain("drawer-scrim");
+    expect(html).toContain('aria-label="Close filters"');
     expect(html).toContain("In your glass");
     expect(html).toContain(">4 available<");
     expect(html).toContain("Pour one");
