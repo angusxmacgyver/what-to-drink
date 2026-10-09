@@ -1,7 +1,7 @@
 import type { Bottle, FilterState } from "../types";
 import type { CountFacet, DramPlace } from "../lib/library";
 import { dramCandidates, facetCounts, matchesFilters, subOwnerFamily, uniqueTags, withoutRange } from "../lib/library";
-import { familyClass, subFamilyClass } from "../lib/colors";
+import { familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { OptionGrid } from "./OptionGrid";
 import { RangeHistogram } from "./RangeHistogram";
@@ -127,7 +127,7 @@ export function DramFacets({
             placeholder="Distillery, expression, code…"
           />
         </label>
-        <OptionGrid id="theme" label="Theme" options={tiles("theme", themes)} value={filters.themes} onChange={(next) => set({ themes: next })} />
+        <OptionGrid id="theme" label="SMWS Theme" options={tiles("theme", themes, smwsThemeClass)} value={filters.themes} onChange={(next) => set({ themes: next })} />
         <div className="match-row" role="group" aria-label="Flavor match">
           <span className="chipset-label">Match</span>
           <button type="button" className={filters.flavorMatch === "any" ? "chip on" : "chip"} aria-pressed={filters.flavorMatch === "any"} onClick={() => set({ flavorMatch: "any" })}>

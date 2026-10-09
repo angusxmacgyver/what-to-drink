@@ -116,6 +116,7 @@ describe("DramFacets", () => {
     expect(render(places, emptyFilters(), true, false)).not.toContain(">Peated<");
     expect(render(places)).toContain(">Age<");
     expect(render(places)).toContain(">ABV<");
+    expect(render(places)).toContain(">SMWS Theme<");
     expect(render(places)).toContain('aria-label="Flavor match"');
     expect(render(places)).not.toContain("Search distilleries");
   });

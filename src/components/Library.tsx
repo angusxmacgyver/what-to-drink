@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import type { Bottle, FilterState } from "../types";
-import { familyClass } from "../lib/colors";
+import { familyClass, smwsThemeClass } from "../lib/colors";
 import {
   detailBottle,
   groupDistilleries,
@@ -218,7 +218,7 @@ function DistillerySection({
                 </span>
                 <span>{row.ageLabel}</span>
                 <span>{row.abvLabel}</span>
-                <span className="theme">{row.theme}</span>
+                <span className={`theme ${smwsThemeClass(row.theme)}`}>{row.theme}</span>
                 {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
                 <FlavorTags families={row.flavorFamilies} subs={row.subCharacteristics} />
               </button>

@@ -29,7 +29,6 @@ const THEME_ALIASES: Record<string, string> = {
   "deep rich & dried fruits": "Deep, Rich & Dried Fruits",
   "sweet fruity & mellow": "Sweet, Fruity & Mellow",
   "juicy oak & vanilla": "Juicy, Oak & Vanilla",
-  "bold & peaty": "Heavily Peated",
 };
 
 export function normalizeTheme(theme: string): string {

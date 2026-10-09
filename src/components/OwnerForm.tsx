@@ -122,7 +122,7 @@ export function OwnerForm({
         />
       </label>
       <label>
-        Theme
+        SMWS Theme
         <input value={form.theme} onChange={(e) => set({ theme: e.target.value })} />
       </label>
       <label>

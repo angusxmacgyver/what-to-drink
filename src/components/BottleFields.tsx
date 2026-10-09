@@ -28,7 +28,7 @@ function pertinentFields(bottle: Bottle) {
       <Field label="Status" value={bottle.status} />
       <Field label="Location" value={bottle.location || "—"} />
       <Field label="Region" value={bottle.region} />
-      <Field label="Theme" value={bottle.theme} />
+      <Field label="SMWS Theme" value={bottle.theme} />
     </>
   );
 }

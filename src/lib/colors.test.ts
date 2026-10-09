@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { familyClass, subFamilyClass } from "./colors";
+import { familyClass, smwsThemeClass, subFamilyClass } from "./colors";
 
 describe("familyClass", () => {
   it("maps every known flavor family to its own class", () => {
@@ -33,5 +33,19 @@ describe("subFamilyClass", () => {
   it("falls back to a neutral class for an uncurated sub-characteristic", () => {
     expect(subFamilyClass("Not Yet Catalogued")).toBe("family-other");
     expect(subFamilyClass("")).toBe("family-other");
+  });
+});
+
+describe("smwsThemeClass", () => {
+  it("keeps legacy and refined profile names on distinct palette classes", () => {
+    expect(smwsThemeClass("Juicy, Oak & Vanilla")).toBe("smws-theme-juicy-oak-vanilla");
+    expect(smwsThemeClass("Toasted Oak & Vanilla")).toBe("smws-theme-toasted-oak-vanilla");
+    expect(smwsThemeClass("Heavily Peated")).toBe("smws-theme-heavily-peated");
+    expect(smwsThemeClass("Bold & Peaty")).toBe("smws-theme-bold-peaty");
+  });
+
+  it("falls back to a neutral profile class", () => {
+    expect(smwsThemeClass("House style")).toBe("smws-theme-other");
+    expect(smwsThemeClass("")).toBe("smws-theme-other");
   });
 });

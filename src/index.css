@@ -619,6 +619,16 @@ nav button.on,
   white-space: nowrap;
 }
 
+.theme[class*="smws-theme-"] {
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid var(--family-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--family-color) 18%, var(--bg-2));
+  color: var(--ink);
+}
+
 .flavors {
   grid-column: 1 / -1;
   display: flex;
@@ -671,6 +681,28 @@ nav button.on,
 .family-wood { --family-color: var(--family-wood); }
 .family-other { --family-color: var(--line-strong); }
 
+.smws-theme-young-spritely { --family-color: #c58bc1; }
+.smws-theme-sweet-fruity-mellow { --family-color: #a65eac; }
+.smws-theme-spicy-sweet { --family-color: #743b88; }
+.smws-theme-spicy-dry { --family-color: #f7aa55; }
+.smws-theme-deep-rich-dried-fruits { --family-color: #ec7d2e; }
+.smws-theme-old-dignified { --family-color: #bd3c40; }
+.smws-theme-light-delicate { --family-color: #75c6d3; }
+.smws-theme-juicy-oak-vanilla { --family-color: #58a8ce; }
+.smws-theme-oily-coastal { --family-color: #2876a1; }
+.smws-theme-lightly-peated { --family-color: #acd48c; }
+.smws-theme-peated { --family-color: #70b74b; }
+.smws-theme-heavily-peated { --family-color: #2c7b3c; }
+.smws-theme-fragrant-floral { --family-color: #ed788b; }
+.smws-theme-toasted-oak-vanilla { --family-color: #f5a139; }
+.smws-theme-sweet-zesty { --family-color: #f26a0e; }
+.smws-theme-dried-fruits-spices { --family-color: #df1018; }
+.smws-theme-ripe-fruits-honey { --family-color: #98217f; }
+.smws-theme-coastal-maritime { --family-color: #0e7498; }
+.smws-theme-bold-peaty { --family-color: #078648; }
+.smws-theme-smoky-fruity { --family-color: #78bb43; }
+.smws-theme-other { --family-color: var(--line-strong); }
+
 .tag.family[class*="family-"] {
   background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
   border-color: var(--family-color);
@@ -691,6 +723,17 @@ nav button.on,
   background: var(--family-color);
   border-color: var(--family-color);
   color: var(--on-gold);
+}
+
+.chip[class*="smws-theme-"] {
+  background: color-mix(in srgb, var(--family-color) 20%, var(--bg-2));
+  border-color: var(--family-color);
+}
+
+.chip[class*="smws-theme-"].on {
+  background: color-mix(in srgb, var(--family-color) 55%, var(--bg-2));
+  box-shadow: inset 0 0 0 1px var(--family-color);
+  color: var(--ink);
 }
 
 .result .flavors {

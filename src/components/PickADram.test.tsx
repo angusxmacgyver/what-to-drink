@@ -98,7 +98,7 @@ describe("DramResults", () => {
     );
     const dialog = html.slice(html.indexOf("dram-dialog-root"));
     const at = (label: string) => dialog.indexOf(`>${label}<`);
-    const facts = ["Age", "ABV %", "Status", "Location", "Region", "Theme"];
+    const facts = ["Age", "ABV %", "Status", "Location", "Region", "SMWS Theme"];
     const notes = at("Notes");
     for (const label of facts) expect(at(label)).toBeGreaterThan(-1);
     for (const label of facts) expect(at(label)).toBeLessThan(notes);

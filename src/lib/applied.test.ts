@@ -12,6 +12,7 @@ describe("appliedChips", () => {
       ...emptyFilters(),
       search: " lag ",
       distilleries: ["Ardbeg"],
+      themes: ["Sweet & Zesty"],
       families: ["Smoke"],
       subs: ["Honey"],
       ageMin: "12",
@@ -23,12 +24,14 @@ describe("appliedChips", () => {
     expect(chips.map((chip) => chip.label)).toEqual([
       "Search: lag",
       "Ardbeg",
+      "Sweet & Zesty",
       "Smoke",
       "Honey",
       "Age 12–18 yr",
       "NAS off",
       "ABV from 46%",
     ]);
+    expect(chips.find((chip) => chip.label === "Sweet & Zesty")?.swatch).toBe("smws-theme-sweet-zesty");
     expect(chips.find((chip) => chip.label === "Smoke")?.swatch).toBe("family-smoke");
     expect(chips.find((chip) => chip.label === "Honey")?.swatch).toBe("family-sweet");
   });

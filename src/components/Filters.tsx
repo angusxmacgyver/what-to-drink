@@ -3,7 +3,7 @@ import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
 import { matchesFilters, matchesStatus, subsForFamilies, withoutRange } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
-import { familyClass, subFamilyClass } from "../lib/colors";
+import { familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 
 type Props = {
   bottles: Bottle[];
@@ -74,10 +74,11 @@ export function Filters({
         />
       ) : null}
       <ChipSelect
-        label="Theme"
+        label="SMWS Theme"
         options={themes}
         value={filters.themes}
         onChange={(themes) => set({ themes })}
+        colorFor={smwsThemeClass}
       />
       {ageHistogram || abvHistogram ? (
         <div className="hist-pair">

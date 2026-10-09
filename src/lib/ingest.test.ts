@@ -9,6 +9,18 @@ function sheet(name: string, rows: Record<string, string>[]): XLSX.WorkBook {
 }
 
 describe("Society import", () => {
+  it("accepts the SMWS Theme header while retaining the legacy Theme header", () => {
+    const modern = catalogFromWorkbook(
+      sheet("SMWS", [{ Distillery: "Ardbeg", "Full Code": "33.1", "SMWS Theme": "Bold & Peaty" }]),
+    );
+    const legacy = catalogFromWorkbook(
+      sheet("Open Bottles", [{ Distillery: "Ardbeg", Bottling: "10", Theme: "Heavily Peated" }]),
+    );
+
+    expect(modern.bottles[0].theme).toBe("Bold & Peaty");
+    expect(legacy.bottles[0].theme).toBe("Heavily Peated");
+  });
+
   it("uses Name (Bottling) as the expression, including the written notes", () => {
     const catalog = catalogFromWorkbook(
       sheet("SMWS", [

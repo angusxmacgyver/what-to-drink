@@ -33,6 +33,7 @@ const openBottle = bottle({
   id: "open",
   status: "Open",
   location: "Bar",
+  theme: "Sweet & Zesty",
   notes: "OPEN-NOTE",
   tastingNotes: "OPEN-TASTE",
 });
@@ -72,6 +73,7 @@ describe("Library layout", () => {
     );
     expect(html).toContain('aria-pressed="true">List');
     expect(html).toContain('aria-pressed="false">Grid');
+    expect(html).toContain("SMWS Theme");
     expect(html).not.toContain("library-card");
     const headings = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((match) => match[1]);
     const expressions = [...html.matchAll(/<em>([^<]+)<\/em>/g)].map((match) => match[1]);
@@ -80,6 +82,7 @@ describe("Library layout", () => {
     expect(html).toContain("1 expression · 2 bottles");
     expect(html).toContain("1 expression · 1 bottle");
     expect(html).not.toContain("<strong>Ardbeg</strong>");
+    expect(html).toContain('class="theme smws-theme-sweet-zesty"');
   });
 
   it("opens a grouped grid with full accessible names and no repeated maker labels", () => {

@@ -1,5 +1,5 @@
 import { type FilterState } from "../types";
-import { familyClass, subFamilyClass } from "./colors";
+import { familyClass, smwsThemeClass, subFamilyClass } from "./colors";
 
 export type AppliedChip = {
   id: string;
@@ -28,7 +28,7 @@ export function appliedChips(filters: FilterState): AppliedChip[] {
   if (search) chips.push({ id: chipId("search"), label: `Search: ${search}` });
   chips.push(
     ...listed("distillery", filters.distilleries),
-    ...listed("theme", filters.themes),
+    ...listed("theme", filters.themes, smwsThemeClass),
     ...listed("family", filters.families, familyClass),
     ...listed("sub", filters.subs, subFamilyClass),
     ...listed("country", filters.countries),
