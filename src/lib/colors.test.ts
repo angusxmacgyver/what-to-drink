@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { familyClass, smwsThemeClass, subFamilyClass } from "./colors";
+import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, splitBalancedRow, subFamilyClass } from "./colors";
 
 describe("familyClass", () => {
   it("maps every known flavor family to its own class", () => {
@@ -51,5 +51,35 @@ describe("smwsThemeClass", () => {
   it("falls back to a neutral profile class", () => {
     expect(smwsThemeClass("House style")).toBe("smws-theme-other");
     expect(smwsThemeClass("")).toBe("smws-theme-other");
+  });
+
+  it("orders profiles from purple through green and keeps unknown names last", () => {
+    const themes = ["Woodland", "Heavily Peated", "Young & Spritely", "Sweet & Zesty", "Oily & Coastal"];
+    expect([...themes].sort(compareSmwsThemes)).toEqual([
+      "Young & Spritely",
+      "Sweet & Zesty",
+      "Oily & Coastal",
+      "Heavily Peated",
+      "Woodland",
+    ]);
+  });
+});
+
+describe("compareFamilies", () => {
+  it("keeps wood with the oak-side flavors instead of at the end", () => {
+    const families = ["Wood", "Smoke", "Sweet", "Spice", "Coastal"];
+    expect([...families].sort(compareFamilies)).toEqual(["Sweet", "Spice", "Wood", "Coastal", "Smoke"]);
+  });
+});
+
+describe("splitBalancedRow", () => {
+  it("keeps at least three items on the second row", () => {
+    const [head, tail] = splitBalancedRow(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"], 3);
+    expect(head).toHaveLength(8);
+    expect(tail).toEqual(["i", "j", "k"]);
+  });
+
+  it("stays on one row when a second row could not hold three", () => {
+    expect(splitBalancedRow(["a", "b", "c", "d"], 3)).toEqual([["a", "b", "c", "d"], []]);
   });
 });

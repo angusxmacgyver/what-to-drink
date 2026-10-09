@@ -47,6 +47,57 @@ export function subFamilyClass(sub: string, selectedFamily?: string): string {
   return familyClass(selectedFamily || subOwnerFamily(sub) || "");
 }
 
+const SMWS_THEME_ORDER = [
+  "Young & Spritely",
+  "Sweet, Fruity & Mellow",
+  "Spicy & Sweet",
+  "Ripe Fruits & Honey",
+  "Fragrant & Floral",
+  "Spicy & Dry",
+  "Toasted Oak & Vanilla",
+  "Deep, Rich & Dried Fruits",
+  "Sweet & Zesty",
+  "Dried Fruits & Spices",
+  "Old & Dignified",
+  "Light & Delicate",
+  "Juicy, Oak & Vanilla",
+  "Oily & Coastal",
+  "Coastal & Maritime",
+  "Smoky & Fruity",
+  "Lightly Peated",
+  "Peated",
+  "Bold & Peaty",
+  "Heavily Peated",
+];
+
+const FAMILY_ORDER = [
+  "Sweet",
+  "Fruit (Fresh)",
+  "Fruit (Dried & Cooked)",
+  "Spice",
+  "Wood",
+  "Nutty & Cereal",
+  "Roasted & Rancio",
+  "Green, Herbal & Floral",
+  "Coastal",
+  "Savoury & Umami",
+  "Smoke",
+];
+
+function byKnownOrder(order: readonly string[]): (a: string, b: string) => number {
+  const index = new Map(order.map((name, position) => [name, position]));
+  return (a, b) =>
+    (index.get(a) ?? Number.POSITIVE_INFINITY) - (index.get(b) ?? Number.POSITIVE_INFINITY) || a.localeCompare(b);
+}
+
+export const compareSmwsThemes = byKnownOrder(SMWS_THEME_ORDER);
+export const compareFamilies = byKnownOrder(FAMILY_ORDER);
+
+export function splitBalancedRow<T>(items: T[], minSecond: number): [T[], T[]] {
+  if (minSecond < 1 || items.length < minSecond * 2) return [items, []];
+  return [items.slice(0, -minSecond), items.slice(-minSecond)];
+}
+
 export function smwsThemeClass(theme: string): string {
   return SMWS_THEME_CLASSES[theme] ?? "smws-theme-other";
 }

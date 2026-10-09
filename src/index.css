@@ -1248,6 +1248,8 @@ nav button.on,
   gap: 6px;
 }
 
+.row-break { flex-basis: 100%; height: 0; }
+
 .option-section {
   display: flex;
   flex-direction: column;

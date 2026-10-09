@@ -3,7 +3,7 @@ import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
 import { matchesFilters, matchesStatus, subOwnerFamily, subsForFamilies, withoutRange } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
-import { familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
+import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 
 type Props = {
   bottles: Bottle[];
@@ -27,8 +27,8 @@ export function Filters({
   showStatus = false,
 }: Props) {
   const statuses = uniq(bottles.map((b) => b.status));
-  const themes = uniq(bottles.map((b) => b.theme));
-  const families = uniq(bottles.flatMap((b) => b.flavorFamilies));
+  const themes = uniq(bottles.map((b) => b.theme)).sort(compareSmwsThemes);
+  const families = uniq(bottles.flatMap((b) => b.flavorFamilies)).sort(compareFamilies);
   const subs = subsForFamilies(bottles, filters.families);
   const countries = uniq(bottles.map((b) => b.country));
   const regions = uniq(bottles.map((b) => b.region));
@@ -138,6 +138,7 @@ export function Filters({
           set({ families: nextFamilies, subs: keptSubs, subFamilies: subFamiliesFor(keptSubs) });
         }}
         colorFor={familyClass}
+        minSecondRow={3}
       />
       <ChipSelect
         label="Sub-characteristics"

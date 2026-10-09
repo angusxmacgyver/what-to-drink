@@ -1,7 +1,7 @@
 import type { Bottle, FilterState } from "../types";
 import type { CountFacet, DramPlace } from "../lib/library";
 import { dramCandidates, facetCounts, matchesFilters, subOwnerFamily, uniqueTags, withoutRange } from "../lib/library";
-import { familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
+import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { OptionGrid } from "./OptionGrid";
 import { RangeHistogram } from "./RangeHistogram";
@@ -17,8 +17,8 @@ type Props = {
   onChange: (next: FilterState) => void;
 };
 
-function sorted(values: string[]): string[] {
-  return uniqueTags(values).sort((a, b) => a.localeCompare(b));
+function sorted(values: string[], compare: (a: string, b: string) => number = (a, b) => a.localeCompare(b)): string[] {
+  return uniqueTags(values).sort(compare);
 }
 
 function kept(current: string[], group: string[], next: string[]): string[] {
@@ -94,8 +94,8 @@ export function DramFacets({
     );
   };
 
-  const themes = sorted(candidates.map((bottle) => bottle.theme));
-  const families = sorted(candidates.flatMap((bottle) => bottle.flavorFamilies));
+  const themes = sorted(candidates.map((bottle) => bottle.theme), compareSmwsThemes);
+  const families = sorted(candidates.flatMap((bottle) => bottle.flavorFamilies), compareFamilies);
   const countries = sorted(candidates.map((bottle) => bottle.country));
   const loose = unownedSubs(candidates);
   const ageSource = candidates.filter((bottle) => matchesFilters(bottle, withoutRange(filters, "age")));
@@ -160,6 +160,7 @@ export function DramFacets({
           options={tiles("family", families, familyClass)}
           value={filters.families}
           onChange={pickFamilies}
+          minSecondRow={3}
         />
         {filters.families.length === 0 ? (
           <p className="chipset-hint">Pick a flavor family to narrow by sub-characteristic.</p>

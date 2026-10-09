@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { splitBalancedRow } from "../lib/colors";
 import { loadCollapsedSections, setSectionCollapsed } from "../lib/store";
 
 export type OptionTile = {
@@ -13,9 +14,10 @@ type Props = {
   options: OptionTile[];
   value: string[];
   onChange: (next: string[]) => void;
+  minSecondRow?: number;
 };
 
-export function OptionGrid({ id, label, options, value, onChange }: Props) {
+export function OptionGrid({ id, label, options, value, onChange, minSecondRow = 0 }: Props) {
   const [collapsed, setCollapsed] = useState(() => loadCollapsedSections().includes(id));
 
   const toggleSection = () => {
@@ -27,6 +29,19 @@ export function OptionGrid({ id, label, options, value, onChange }: Props) {
   const toggleOption = (option: string) => {
     onChange(value.includes(option) ? value.filter((item) => item !== option) : [...value, option]);
   };
+  const [head, tail] = splitBalancedRow(options, minSecondRow);
+  const tiles = (group: OptionTile[]) =>
+    group.map((option) => {
+      const on = value.includes(option.label);
+      const classes = ["option-tile", on ? "on" : "", option.count === 0 ? "quiet" : ""].filter(Boolean).join(" ");
+      return (
+        <button key={option.label} type="button" className={classes} aria-pressed={on} onClick={() => toggleOption(option.label)}>
+          {option.swatch ? <span className={`family-dot ${option.swatch}`} aria-hidden="true" /> : null}
+          <span>{option.label}</span>
+          <span className="option-count">{option.count}</span>
+        </button>
+      );
+    });
 
   return (
     <section className="option-section">
@@ -42,17 +57,9 @@ export function OptionGrid({ id, label, options, value, onChange }: Props) {
       </div>
       {collapsed ? null : (
         <div className="option-grid">
-          {options.map((option) => {
-            const on = value.includes(option.label);
-            const classes = ["option-tile", on ? "on" : "", option.count === 0 ? "quiet" : ""].filter(Boolean).join(" ");
-            return (
-              <button key={option.label} type="button" className={classes} aria-pressed={on} onClick={() => toggleOption(option.label)}>
-                {option.swatch ? <span className={`family-dot ${option.swatch}`} aria-hidden="true" /> : null}
-                <span>{option.label}</span>
-                <span className="option-count">{option.count}</span>
-              </button>
-            );
-          })}
+          {tiles(head)}
+          {tail.length ? <span className="row-break" /> : null}
+          {tiles(tail)}
         </div>
       )}
     </section>
