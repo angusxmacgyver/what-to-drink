@@ -821,6 +821,13 @@ nav button.on,
 .dram-dialog-head h2 { margin: 2px 0 4px; font-size: 22px; display: flex; flex-direction: column; }
 .dram-dialog-head h2 em { font-size: 16px; font-weight: 400; color: var(--muted); }
 .dram-dialog .detail { padding: 0 0 16px; }
+::view-transition-group(.dram-card) { animation-duration: 420ms; animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1); }
+::view-transition-new(.dram-card):only-child { animation: card-in 360ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+::view-transition-old(.dram-card):only-child { animation: card-out 260ms cubic-bezier(0.4, 0, 1, 1) both; }
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 200ms; }
+@keyframes card-in { from { opacity: 0; transform: scale(0.82) translateY(10px); filter: blur(4px); } }
+@keyframes card-out { to { opacity: 0; transform: scale(0.82); filter: blur(4px); } }
 @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(0.97); } }
 @media (max-width: 600px) {
   .dram-dialog-root { align-items: flex-end; padding: 0; }

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { choosePour, rollFrames, settlePick } from "./pour";
+import { cardTransitionName, choosePour, rollFrames, settlePick } from "./pour";
+
+describe("cardTransitionName", () => {
+  it("makes a valid ident and keeps distinct keys distinct", () => {
+    expect(cardTransitionName("ardbeg::cask-strength-10")).toBe("card-ardbeg_3a__3a_cask-strength-10");
+    expect(cardTransitionName("smws::1.246::a-one")).toMatch(/^card-[a-zA-Z0-9_-]+$/);
+    expect(cardTransitionName("a::b")).not.toBe(cardTransitionName("a-:b"));
+    expect(cardTransitionName("a_b")).not.toBe(cardTransitionName("a-b"));
+  });
+});
 
 const a = { id: "a" };
 const b = { id: "b" };

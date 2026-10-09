@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import type { Bottle, FilterState } from "../types";
 import { dramPool, groupLibrary, type LibraryRow } from "../lib/library";
-import { choosePour, prefersReducedMotion, rollFrames, settlePick } from "../lib/pour";
+import { cardTransitionName, choosePour, prefersReducedMotion, rollFrames, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
 import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -95,6 +96,7 @@ export function DramResults({
               rolling={rollingKey === row.bottleKey}
               where={isPicked ? picked?.location : undefined}
               cardId={`dram-${row.bottleKey}`}
+              transitionName={cardTransitionName(row.bottleKey)}
               onToggle={() => onToggle(row.bottleKey)}
             />
           );
@@ -184,6 +186,15 @@ export function PickADram({
     if (!place) return [];
     return dramPool(bottles, place, includeClosed, filters, includeOpen);
   }, [bottles, place, includeClosed, includeOpen, filters]);
+
+  const [shown, setShown] = useState(pool);
+  const latestPool = useRef(pool);
+  latestPool.current = pool;
+
+  useEffect(() => {
+    if (filtersOpen || shown === pool) return;
+    withViewTransition(() => flushSync(() => setShown(latestPool.current)));
+  }, [pool, filtersOpen, shown]);
 
   const flagId = useMemo(() => {
     if (!place || pool.length > 0) return null;
@@ -343,7 +354,7 @@ export function PickADram({
           poured={pick != null}
         >
           <DramResults
-            bottles={pool}
+            bottles={shown}
             openKey={openKey}
             pickedId={pick?.id ?? null}
             rollingKey={rollingKey}

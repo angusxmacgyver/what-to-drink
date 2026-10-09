@@ -25,6 +25,21 @@ export function settlePick<T extends { id: string }>(pick: T | null, pool: T[]):
   return pick;
 }
 
+/** A unique, valid CSS ident for a card's view transition. Each disallowed character is hex-escaped so keys never collide. */
+export function cardTransitionName(bottleKey: string): string {
+  return `card-${bottleKey.replace(/[^a-zA-Z0-9-]/g, (char) => `_${char.codePointAt(0)?.toString(16)}_`)}`;
+}
+
+/** Runs a state update inside a view transition when the browser can animate it. */
+export function withViewTransition(update: () => void): void {
+  const doc = typeof document === "undefined" ? undefined : document;
+  if (!doc?.startViewTransition || prefersReducedMotion()) {
+    update();
+    return;
+  }
+  doc.startViewTransition(update);
+}
+
 export function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 }

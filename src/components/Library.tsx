@@ -58,6 +58,7 @@ export function LibraryCard({
   rolling = false,
   where,
   cardId,
+  transitionName,
 }: {
   row: LibraryRow;
   expanded: boolean;
@@ -66,6 +67,7 @@ export function LibraryCard({
   rolling?: boolean;
   where?: string;
   cardId?: string;
+  transitionName?: string;
 }) {
   const shown = detailBottle(row.bottles);
   const origin = originLabel(shown.region, shown.country);
@@ -79,6 +81,7 @@ export function LibraryCard({
       type="button"
       id={cardId}
       className={classes}
+      style={transitionName ? { viewTransitionName: transitionName, viewTransitionClass: "dram-card" } : undefined}
       aria-expanded={expanded}
       aria-label={picked ? `${name}. Your dram. Bottle is at: ${place}.` : name}
       title={name}

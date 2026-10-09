@@ -79,6 +79,8 @@ describe("DramResults", () => {
     expect(html).not.toContain("99.9");
     expect(html).not.toContain("bottle-fields");
     expect(html.match(/aria-expanded="false"/g)).toHaveLength(2);
+    expect(html).toContain("view-transition-name:card-ardbeg_3a__3a_10");
+    expect(html).toContain("view-transition-class:dram-card");
   });
 
   it("opens one detail dialog with flavor tags and the status split, outside the grid", () => {
