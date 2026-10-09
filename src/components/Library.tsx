@@ -100,8 +100,9 @@ export function LibraryCard({
         </span>
       ) : null}
       <span className="card-facts">
-        <span>{row.ageLabel}</span>
-        <span>{row.abvLabel}</span>
+        <span>
+          Age: {row.ageLabel} | ABV: {row.abvLabel}
+        </span>
         {row.stock > 1 ? <span className="stock">×{row.stock}</span> : null}
       </span>
     </button>

@@ -138,5 +138,6 @@ describe("library card", () => {
     expect(html).toContain('title="Ardbeg Spectacular"');
     expect(html).toContain("family-dot");
     expect(html).toContain(">×2<");
+    expect(html).toContain("Age: NAS | ABV: 46%");
   });
 });
