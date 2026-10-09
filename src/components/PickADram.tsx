@@ -115,7 +115,7 @@ function DramDetail({
             </svg>
           </button>
         </header>
-        <ExpressionDetail bottles={row.bottles} owner={false} trail={picked ? <div className="just-poured" /> : undefined} />
+        <ExpressionDetail bottles={row.bottles} owner={false} factsFirst trail={picked ? <div className="just-poured" /> : undefined} />
       </div>
     </div>
   );

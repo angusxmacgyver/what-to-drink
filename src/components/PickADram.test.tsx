@@ -83,6 +83,33 @@ describe("DramResults", () => {
     expect(html).toContain("view-transition-class:dram-card");
   });
 
+  it("puts age, strength, and place above the notes, and keeps distillery and bottling in the header", () => {
+    const html = render(
+      [
+        bottle({
+          notes: "Cask note",
+          tastingNotes: "Cherry and nuts",
+          region: "Speyside",
+          theme: "Sherry",
+          smws: hakushu.smws,
+        }),
+      ],
+      "ardbeg::10",
+    );
+    const dialog = html.slice(html.indexOf("dram-dialog-root"));
+    const at = (label: string) => dialog.indexOf(`>${label}<`);
+    const facts = ["Age", "ABV %", "Status", "Location", "Region", "Theme"];
+    const notes = at("Notes");
+    for (const label of facts) expect(at(label)).toBeGreaterThan(-1);
+    for (const label of facts) expect(at(label)).toBeLessThan(notes);
+    expect(notes).toBeLessThan(at("Tasting notes"));
+    expect(at("Tasting notes")).toBeLessThan(at("Full code"));
+    expect(dialog).not.toContain("Distillery / Producer");
+    expect(dialog).not.toContain(">Bottling<");
+    expect(dialog).toContain(">Ardbeg<");
+    expect(dialog).toContain("<em>10</em>");
+  });
+
   it("opens one detail dialog with flavor tags and the status split, outside the grid", () => {
     const html = render([...pair, hakushu], "ardbeg::10");
     expect(html.match(/aria-expanded="true"/g)).toHaveLength(1);

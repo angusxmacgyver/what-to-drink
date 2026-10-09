@@ -961,6 +961,10 @@ nav button.on,
   margin: 0;
 }
 
+.fields-lead:not(:last-child) {
+  margin-bottom: 28px;
+}
+
 .field dt {
   font-size: 11px;
   letter-spacing: 0.12em;

@@ -111,12 +111,13 @@ export function LibraryCard({
 export function ExpressionDetail({
   bottles,
   trail,
+  factsFirst = false,
   ...actions
-}: Actions & { bottles: Bottle[]; trail?: ReactNode }) {
+}: Actions & { bottles: Bottle[]; trail?: ReactNode; factsFirst?: boolean }) {
   const shown = detailBottle(bottles);
   return (
     <div className="detail">
-      <BottleFields bottle={shown} flavorText={false} />
+      <BottleFields bottle={shown} flavorText={false} factsFirst={factsFirst} />
       <FlavorTags
         families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
         subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}
