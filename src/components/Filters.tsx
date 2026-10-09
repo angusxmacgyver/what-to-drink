@@ -1,7 +1,7 @@
 import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
-import { matchesFilters, matchesStatus, subsForFamilies, withoutRange } from "../lib/library";
+import { matchesFilters, matchesStatus, subOwnerFamily, subsForFamilies, withoutRange } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 
@@ -34,6 +34,14 @@ export function Filters({
   const regions = uniq(bottles.map((b) => b.region));
 
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
+  const subFamiliesFor = (nextSubs: string[]) => {
+    const next: Record<string, string> = {};
+    for (const sub of nextSubs) {
+      const family = filters.subFamilies[sub] || subOwnerFamily(sub);
+      if (family) next[sub] = family;
+    }
+    return next;
+  };
 
   const others = (axis: "age" | "abv") =>
     bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, withoutRange(filters, axis)));
@@ -127,7 +135,7 @@ export function Filters({
         value={filters.families}
         onChange={(nextFamilies) => {
           const keptSubs = filters.subs.filter((s) => subsForFamilies(bottles, nextFamilies).includes(s));
-          set({ families: nextFamilies, subs: keptSubs });
+          set({ families: nextFamilies, subs: keptSubs, subFamilies: subFamiliesFor(keptSubs) });
         }}
         colorFor={familyClass}
       />
@@ -135,9 +143,9 @@ export function Filters({
         label="Sub-characteristics"
         options={subs}
         value={filters.subs}
-        onChange={(subs) => set({ subs })}
+        onChange={(nextSubs) => set({ subs: nextSubs, subFamilies: subFamiliesFor(nextSubs) })}
         emptyHint="Pick a flavor family to narrow by sub-characteristic."
-        colorFor={subFamilyClass}
+        colorFor={(sub) => subFamilyClass(sub, filters.subFamilies[sub])}
       />
     </div>
   );

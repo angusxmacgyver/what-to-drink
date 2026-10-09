@@ -43,8 +43,8 @@ export function familyClass(family: string): string {
   return FAMILY_CLASSES[family] ?? FALLBACK_CLASS;
 }
 
-export function subFamilyClass(sub: string): string {
-  return familyClass(subOwnerFamily(sub) ?? "");
+export function subFamilyClass(sub: string, selectedFamily?: string): string {
+  return familyClass(selectedFamily || subOwnerFamily(sub) || "");
 }
 
 export function smwsThemeClass(theme: string): string {

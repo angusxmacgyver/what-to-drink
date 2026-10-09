@@ -15,6 +15,7 @@ describe("appliedChips", () => {
       themes: ["Sweet & Zesty"],
       families: ["Smoke"],
       subs: ["Honey"],
+      subFamilies: { Honey: "Smoke" },
       ageMin: "12",
       ageMax: "18",
       includeNas: false,
@@ -33,7 +34,7 @@ describe("appliedChips", () => {
     ]);
     expect(chips.find((chip) => chip.label === "Sweet & Zesty")?.swatch).toBe("smws-theme-sweet-zesty");
     expect(chips.find((chip) => chip.label === "Smoke")?.swatch).toBe("family-smoke");
-    expect(chips.find((chip) => chip.label === "Honey")?.swatch).toBe("family-sweet");
+    expect(chips.find((chip) => chip.label === "Honey")?.swatch).toBe("family-smoke");
   });
 
   it("names a one-sided age range from its open end", () => {
@@ -50,5 +51,15 @@ describe("appliedChips", () => {
     expect(removeChip(filters, age.id)).toMatchObject({ ageMin: "", ageMax: "" });
     expect(removeChip(filters, nas.id).includeNas).toBe(true);
     expect(removeChip(filters, "missing")).toBe(filters);
+  });
+
+  it("removes a sub-characteristic and its selected family context together", () => {
+    const filters = {
+      ...emptyFilters(),
+      subs: ["Brine & Sea Air"],
+      subFamilies: { "Brine & Sea Air": "Smoke" },
+    };
+    const chip = appliedChips(filters)[0];
+    expect(removeChip(filters, chip.id)).toMatchObject({ subs: [], subFamilies: {} });
   });
 });

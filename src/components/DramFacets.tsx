@@ -52,6 +52,16 @@ export function DramFacets({
 }: Props) {
   const candidates = dramCandidates(bottles, place, includeClosed, includeOpen);
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
+  const subFamiliesFor = (nextSubs: string[], selectedHere: string[], family: string) => {
+    const next: Record<string, string> = {};
+    for (const sub of nextSubs) {
+      const selectedFamily =
+        filters.subFamilies[sub] ||
+        (selectedHere.includes(sub) && family !== "Other" ? family : subOwnerFamily(sub));
+      if (selectedFamily) next[sub] = selectedFamily;
+    }
+    return next;
+  };
   const tiles = (facet: CountFacet, options: string[], swatch?: (label: string) => string) => {
     const tally = facetCounts(bottles, place, includeClosed, filters, facet, options, includeOpen);
     return options.map((label) => ({ label, count: tally[label] ?? 0, swatch: swatch?.(label) }));
@@ -73,7 +83,13 @@ export function DramFacets({
         label={label}
         options={tiles(facet, options, swatch)}
         value={selected.filter((item) => options.includes(item))}
-        onChange={(next) => set({ [field]: kept(selected, options, next) })}
+        onChange={(next) => {
+          const nextValues = kept(selected, options, next);
+          set({
+            [field]: nextValues,
+            ...(field === "subs" ? { subFamilies: subFamiliesFor(nextValues, next, label) } : {}),
+          });
+        }}
       />
     );
   };
@@ -91,7 +107,8 @@ export function DramFacets({
   const pickFamilies = (next: string[]) => {
     const allowed = new Set(next.flatMap((family) => ownedSubs(candidates, family)));
     if (next.length) for (const sub of loose) allowed.add(sub);
-    set({ families: next, subs: filters.subs.filter((sub) => allowed.has(sub)) });
+    const subs = filters.subs.filter((sub) => allowed.has(sub));
+    set({ families: next, subs, subFamilies: subFamiliesFor(subs, [], "") });
   };
   const pickCountries = (next: string[]) => {
     const allowed = new Set(next.flatMap((country) => multiRegions(candidates, country)));

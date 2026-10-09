@@ -30,7 +30,7 @@ export function appliedChips(filters: FilterState): AppliedChip[] {
     ...listed("distillery", filters.distilleries),
     ...listed("theme", filters.themes, smwsThemeClass),
     ...listed("family", filters.families, familyClass),
-    ...listed("sub", filters.subs, subFamilyClass),
+    ...listed("sub", filters.subs, (sub) => subFamilyClass(sub, filters.subFamilies[sub])),
     ...listed("country", filters.countries),
     ...listed("region", filters.regions),
   );
@@ -54,8 +54,17 @@ export function removeChip(filters: FilterState, id: string): FilterState {
   if (kind === "search") return { ...filters, search: "" };
   if (kind === "distillery") return { ...filters, distilleries: without(filters.distilleries, value) };
   if (kind === "theme") return { ...filters, themes: without(filters.themes, value) };
-  if (kind === "family") return { ...filters, families: without(filters.families, value) };
-  if (kind === "sub") return { ...filters, subs: without(filters.subs, value) };
+  if (kind === "family") {
+    return {
+      ...filters,
+      families: without(filters.families, value),
+      subFamilies: Object.fromEntries(Object.entries(filters.subFamilies).filter(([, family]) => family !== value)),
+    };
+  }
+  if (kind === "sub") {
+    const { [value]: _removed, ...subFamilies } = filters.subFamilies;
+    return { ...filters, subs: without(filters.subs, value), subFamilies };
+  }
   if (kind === "country") return { ...filters, countries: without(filters.countries, value) };
   if (kind === "region") return { ...filters, regions: without(filters.regions, value) };
   if (kind === "age") return { ...filters, ageMin: "", ageMax: "" };

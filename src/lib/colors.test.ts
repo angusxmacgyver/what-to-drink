@@ -30,6 +30,10 @@ describe("subFamilyClass", () => {
     expect(subFamilyClass("Anise & Herbal Spice")).toBe("family-herbal");
   });
 
+  it("prefers the family context used to select the sub-characteristic", () => {
+    expect(subFamilyClass("Honey", "Smoke")).toBe("family-smoke");
+  });
+
   it("falls back to a neutral class for an uncurated sub-characteristic", () => {
     expect(subFamilyClass("Not Yet Catalogued")).toBe("family-other");
     expect(subFamilyClass("")).toBe("family-other");

@@ -85,7 +85,13 @@ describe("library layout", () => {
 describe("dram selection", () => {
   it("round-trips the tray, place, and availability on this device", () => {
     const selection = {
-      filters: { ...emptyFilters(), families: ["Smoke"], flavorMatch: "any" as const },
+      filters: {
+        ...emptyFilters(),
+        families: ["Smoke"],
+        subs: ["Brine & Sea Air"],
+        subFamilies: { "Brine & Sea Air": "Coastal" },
+        flavorMatch: "any" as const,
+      },
       place: "apartment" as const,
       includeOpen: false,
       includeClosed: true,
@@ -119,6 +125,7 @@ describe("dram selection", () => {
     expect(loaded?.filters.families).toEqual(["Smoke"]);
     expect(loaded?.filters.flavorMatch).toBe("all");
     expect(loaded?.filters.distilleries).toEqual([]);
+    expect(loaded?.filters.subFamilies).toEqual({});
     expect(loaded?.place).toBeNull();
     expect(loaded?.includeOpen).toBe(true);
     expect(loaded?.includeClosed).toBe(true);

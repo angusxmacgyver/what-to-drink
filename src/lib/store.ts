@@ -21,10 +21,19 @@ function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
+function stringRecord(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+  );
+}
+
 function sanitizeFilters(value: unknown): FilterState {
   const blank = emptyFilters();
   if (!value || typeof value !== "object") return blank;
   const raw = value as Partial<Record<keyof FilterState, unknown>>;
+  const subs = stringList(raw.subs);
+  const storedSubFamilies = stringRecord(raw.subFamilies);
   return {
     ...blank,
     search: typeof raw.search === "string" ? raw.search : "",
@@ -37,7 +46,8 @@ function sanitizeFilters(value: unknown): FilterState {
     abvMin: typeof raw.abvMin === "string" ? raw.abvMin : "",
     abvMax: typeof raw.abvMax === "string" ? raw.abvMax : "",
     families: stringList(raw.families),
-    subs: stringList(raw.subs),
+    subs,
+    subFamilies: Object.fromEntries(subs.flatMap((sub) => storedSubFamilies[sub] ? [[sub, storedSubFamilies[sub]]] : [])),
     flavorMatch: raw.flavorMatch === "any" ? "any" : "all",
     countries: stringList(raw.countries),
     regions: stringList(raw.regions),
