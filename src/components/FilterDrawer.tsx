@@ -42,7 +42,6 @@ type DrawerProps = {
   filters: FilterState;
   onChange: (next: FilterState) => void;
   available: number;
-  onPour: () => void;
   onUndo: () => void;
   canUndo: boolean;
   flagId?: string | null;
@@ -54,7 +53,6 @@ export function FilterDrawer({
   filters,
   onChange,
   available,
-  onPour,
   onUndo,
   canUndo,
   flagId = null,
@@ -121,9 +119,6 @@ export function FilterDrawer({
           <span className="count">{available} available</span>
           <button type="button" className="textish" onClick={onUndo} disabled={!canUndo}>
             Undo last
-          </button>
-          <button type="button" className="roll" onClick={onPour} disabled={available === 0}>
-            Pour one
           </button>
         </footer>
       </div>

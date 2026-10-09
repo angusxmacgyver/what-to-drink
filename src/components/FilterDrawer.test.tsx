@@ -33,13 +33,12 @@ describe("FiltersButton", () => {
 });
 
 describe("FilterDrawer", () => {
-  it("lays the tray over a scrim with Pour one and the live count", () => {
+  it("lays the tray over a scrim with the live count and no pour button", () => {
     const html = renderToStaticMarkup(
       <FilterDrawer
         filters={emptyFilters()}
         onChange={() => {}}
         available={4}
-        onPour={() => {}}
         onUndo={() => {}}
         canUndo
         onClose={() => {}}
@@ -50,24 +49,22 @@ describe("FilterDrawer", () => {
     expect(html).toContain('aria-label="Close filters"');
     expect(html).toContain("In your glass");
     expect(html).toContain(">4 available<");
-    expect(html).toContain("Pour one");
+    expect(html).not.toContain("Pour one");
     expect(html).toContain("Undo last");
     expect(html).not.toContain("disabled");
   });
 
-  it("disables Pour one when nothing is available", () => {
+  it("disables Undo last with no history", () => {
     const html = renderToStaticMarkup(
       <FilterDrawer
         filters={emptyFilters()}
         onChange={() => {}}
         available={0}
-        onPour={() => {}}
         onUndo={() => {}}
         canUndo={false}
         onClose={() => {}}
       />,
     );
-    expect(html).toContain("disabled");
     expect(html).toContain(">0 available<");
     const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
     expect(undo).toContain("disabled");

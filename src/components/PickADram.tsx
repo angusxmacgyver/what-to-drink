@@ -67,6 +67,8 @@ export function DramSummary({
   onUndo,
   canUndo = false,
   flagId = null,
+  onPour,
+  poured = false,
   children,
 }: {
   available: number;
@@ -75,6 +77,8 @@ export function DramSummary({
   onUndo?: () => void;
   canUndo?: boolean;
   flagId?: string | null;
+  onPour?: () => void;
+  poured?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -82,6 +86,11 @@ export function DramSummary({
       <div className="dram-summary">
         <p className="count">{available} available</p>
         <AppliedTray filters={filters} onChange={onFilters} flagId={flagId} />
+        {onPour ? (
+          <button type="button" className="roll" onClick={onPour} disabled={available === 0}>
+            {poured ? "Pour another" : "Pour one"}
+          </button>
+        ) : null}
       </div>
       {available === 0 ? (
         <div className="recovery">
@@ -278,6 +287,8 @@ export function PickADram({
           onUndo={undo}
           canUndo={canUndo}
           flagId={flagId}
+          onPour={roll}
+          poured={pick != null}
         >
           <DramResults
             bottles={pool}
@@ -294,7 +305,6 @@ export function PickADram({
           filters={filters}
           onChange={changeFilters}
           available={pool.length}
-          onPour={roll}
           onUndo={undo}
           canUndo={canUndo}
           flagId={flagId}

@@ -141,6 +141,21 @@ describe("DramSummary", () => {
     expect(html).not.toContain("Pour one");
   });
 
+  it("offers Pour one beside the count, then Pour another, and disables it at zero", () => {
+    const summary = (available: number, poured = false) =>
+      renderToStaticMarkup(
+        <DramSummary available={available} filters={emptyFilters()} onFilters={() => {}} onPour={() => {}} poured={poured}>
+          <p>the grid</p>
+        </DramSummary>,
+      );
+    const ready = summary(3).match(/<button[^>]*class="roll"[^>]*>[^<]*<\/button>/)?.[0] ?? "";
+    expect(ready).toContain("Pour one");
+    expect(ready).not.toContain("disabled");
+    expect(summary(3, true)).toContain("Pour another");
+    const none = summary(0).match(/<button[^>]*class="roll"[^>]*>[^<]*<\/button>/)?.[0] ?? "";
+    expect(none).toContain("disabled");
+  });
+
   it("replaces the grid when the combination matches nothing", () => {
     const html = renderToStaticMarkup(
       <DramSummary available={0} filters={{ ...emptyFilters(), families: ["Smoke"] }} onFilters={() => {}}>
