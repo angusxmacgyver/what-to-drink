@@ -2,7 +2,7 @@ import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { DistilleryCombobox } from "./DistilleryCombobox";
 import { RangeHistogram } from "./RangeHistogram";
-import { distilleryCounts, subsForFamilies } from "../lib/library";
+import { distilleryCounts, matchesFilters, matchesStatus, subsForFamilies, withoutRange } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { familyClass, subFamilyClass } from "../lib/colors";
 
@@ -38,11 +38,14 @@ export function Filters({
 
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
 
-  const ages = bottles.map((b) => b.age).filter((a): a is number => typeof a === "number");
-  const abvs = abvHistogramValues(bottles.map((b) => b.abv));
+  const others = (axis: "age" | "abv") =>
+    bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, withoutRange(filters, axis)));
+  const ageSource = others("age");
+  const ages = ageSource.map((b) => b.age).filter((a): a is number => typeof a === "number");
+  const abvs = abvHistogramValues(others("abv").map((b) => b.abv));
   const ageHistogram = buildHistogram(ages, 2);
   const abvHistogram = buildHistogram(abvs, 2);
-  const nas = nasCount(bottles.map((b) => b.age));
+  const nas = nasCount(ageSource.map((b) => b.age));
 
   const setAge = (low: number, high: number) => {
     if (!ageHistogram || (low <= ageHistogram.min && high >= ageHistogram.max)) set({ ageMin: "", ageMax: "" });

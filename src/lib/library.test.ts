@@ -11,6 +11,7 @@ import {
   originLabel,
   subOwnerFamily,
   subsForFamilies,
+  withoutRange,
 } from "./library";
 
 let nextId = 0;
@@ -322,6 +323,37 @@ describe("facetCounts", () => {
     ]);
     expect(performance.now() - started).toBeLessThan(100);
     expect(counts).toEqual({ Ardbeg: 1000, Lagavulin: 1000, Bowmore: 0 });
+  });
+});
+
+describe("withoutRange", () => {
+  const smoky12 = bottle({ age: 12, abv: 46, flavorFamilies: ["Smoke"] });
+  const smoky25 = bottle({ age: 25, abv: 58, flavorFamilies: ["Smoke"] });
+  const smokyNas = bottle({ age: "NAS", abv: 50, flavorFamilies: ["Smoke"] });
+  const sweet18 = bottle({ age: 18, abv: 43, flavorFamilies: ["Sweet"] });
+  const all = [smoky12, smoky25, smokyNas, sweet18];
+  const filters = {
+    ...emptyFilters(),
+    families: ["Smoke"],
+    ageMin: "10",
+    ageMax: "14",
+    includeNas: false,
+    abvMin: "44",
+    abvMax: "48",
+  };
+
+  it("keeps bottles outside the age brush and NAS, and drops what another facet excludes", () => {
+    const pool = all.filter((b) => matchesFilters(b, withoutRange(filters, "age")));
+    expect(pool).toEqual([smoky12]);
+    const loose = { ...filters, abvMin: "", abvMax: "" };
+    expect(all.filter((b) => matchesFilters(b, withoutRange(loose, "age")))).toEqual([smoky12, smoky25, smokyNas]);
+  });
+
+  it("lifts only the ABV range for the ABV histogram", () => {
+    const pool = all.filter((b) => matchesFilters(b, withoutRange(filters, "abv")));
+    expect(pool).toEqual([smoky12]);
+    const anyAge = { ...filters, ageMin: "", ageMax: "", includeNas: true };
+    expect(all.filter((b) => matchesFilters(b, withoutRange(anyAge, "abv")))).toEqual([smoky12, smoky25, smokyNas]);
   });
 });
 

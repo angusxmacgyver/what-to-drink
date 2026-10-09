@@ -351,7 +351,10 @@ nav button.on,
   width: 100%;
   background: var(--line);
   border-radius: 2px 2px 0 0;
+  transition: height 280ms cubic-bezier(0.32, 0.72, 0, 1), background-color 160ms ease;
 }
+
+@media (prefers-reduced-motion: reduce) { .hist-bar { transition: none; } }
 
 .hist-bar.on {
   background: var(--gold);

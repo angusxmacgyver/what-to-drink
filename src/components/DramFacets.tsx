@@ -1,6 +1,6 @@
 import type { Bottle, FilterState } from "../types";
 import type { CountFacet, DramPlace } from "../lib/library";
-import { dramCandidates, facetCounts, subOwnerFamily, uniqueTags } from "../lib/library";
+import { dramCandidates, facetCounts, matchesFilters, subOwnerFamily, uniqueTags, withoutRange } from "../lib/library";
 import { familyClass, subFamilyClass } from "../lib/colors";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { DistilleryCombobox } from "./DistilleryCombobox";
@@ -84,9 +84,11 @@ export function DramFacets({
   const families = sorted(candidates.flatMap((bottle) => bottle.flavorFamilies));
   const countries = sorted(candidates.map((bottle) => bottle.country));
   const loose = unownedSubs(candidates);
-  const ages = candidates.map((bottle) => bottle.age).filter((age): age is number => typeof age === "number");
+  const ageSource = candidates.filter((bottle) => matchesFilters(bottle, withoutRange(filters, "age")));
+  const abvSource = candidates.filter((bottle) => matchesFilters(bottle, withoutRange(filters, "abv")));
+  const ages = ageSource.map((bottle) => bottle.age).filter((age): age is number => typeof age === "number");
   const ageHistogram = buildHistogram(ages, 2);
-  const abvHistogram = buildHistogram(abvHistogramValues(candidates.map((bottle) => bottle.abv)), 2);
+  const abvHistogram = buildHistogram(abvHistogramValues(abvSource.map((bottle) => bottle.abv)), 2);
 
   const pickFamilies = (next: string[]) => {
     const allowed = new Set(next.flatMap((family) => ownedSubs(candidates, family)));
@@ -168,7 +170,7 @@ export function DramFacets({
                 from={filters.ageMin === "" ? ageHistogram.min : Number(filters.ageMin)}
                 to={filters.ageMax === "" ? ageHistogram.max : Number(filters.ageMax)}
                 onChange={setAge}
-                nas={{ included: filters.includeNas, count: nasCount(candidates.map((bottle) => bottle.age)), onToggle: () => set({ includeNas: !filters.includeNas }) }}
+                nas={{ included: filters.includeNas, count: nasCount(ageSource.map((bottle) => bottle.age)), onToggle: () => set({ includeNas: !filters.includeNas }) }}
               />
             ) : null}
             {abvHistogram ? (

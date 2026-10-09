@@ -191,6 +191,12 @@ export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
   return true;
 }
 
+/** The filters with one range axis lifted, so its histogram shows what every other filter leaves. */
+export function withoutRange(filters: FilterState, axis: "age" | "abv"): FilterState {
+  if (axis === "age") return { ...filters, ageMin: "", ageMax: "", includeNas: true };
+  return { ...filters, abvMin: "", abvMax: "" };
+}
+
 export type DramPlace = "house" | "apartment";
 
 export type CountFacet = "distillery" | "theme" | "family" | "sub" | "country" | "region";
