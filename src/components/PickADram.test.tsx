@@ -81,9 +81,13 @@ describe("DramResults", () => {
     expect(html.match(/aria-expanded="false"/g)).toHaveLength(2);
   });
 
-  it("opens one detail panel with flavor tags and the status split", () => {
+  it("opens one detail dialog with flavor tags and the status split, outside the grid", () => {
     const html = render([...pair, hakushu], "ardbeg::10");
     expect(html.match(/aria-expanded="true"/g)).toHaveLength(1);
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-label="Close details"');
+    const grid = html.slice(html.indexOf("library-grid"), html.indexOf("dram-dialog-root"));
+    expect(grid).not.toContain("bottle-fields");
     expect(html).toContain("tag family");
     expect(html).toContain("Woodsmoke &amp; Campfire");
     expect(html).toContain("Open · Bar");
@@ -104,6 +108,7 @@ describe("DramResults", () => {
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain("Your dram: Ardbeg 10. Bottle is at: Crate.");
     expect(html).toContain("just-poured");
+    expect(html).toContain('class="dram-dialog picked"');
     expect(html).not.toContain('class="result"');
   });
 

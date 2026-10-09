@@ -1,15 +1,66 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Bottle, FilterState } from "../types";
-import { dramPool, groupLibrary } from "../lib/library";
+import { dramPool, groupLibrary, type LibraryRow } from "../lib/library";
 import { choosePour, prefersReducedMotion, rollFrames, settlePick } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
 import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
-import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
+import { activeFilterCount, FilterDrawer, FiltersButton, trapTab } from "./FilterDrawer";
 import { ExpressionDetail, LibraryCard } from "./Library";
 
 type Place = "house" | "apartment";
+
+const FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled])";
+
+function DramDetail({ row, picked, onClose }: { row: LibraryRow; picked?: Bottle; onClose: () => void }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panel.querySelector<HTMLElement>(".dram-dialog-close")?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const next = trapTab(items, document.activeElement instanceof HTMLElement ? document.activeElement : null, event.shiftKey);
+      if (!next) return;
+      event.preventDefault();
+      next.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      returnTo?.focus();
+    };
+  }, [row.bottleKey]);
+
+  const titleId = `dram-title-${row.bottleKey}`;
+  return (
+    <div className="dram-dialog-root">
+      <div className="dram-dialog-scrim" onClick={onClose} />
+      <div ref={panelRef} className={picked ? "dram-dialog picked" : "dram-dialog"} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <header className="dram-dialog-head">
+          <div>
+            {picked ? <p className="your-dram">Your dram</p> : null}
+            <h2 id={titleId}>
+              {row.distillery}
+              <em>{row.bottling}</em>
+            </h2>
+            {picked ? <p className="card-where">Bottle is at: {picked.location || "not tagged yet"}</p> : null}
+          </div>
+          <button type="button" className="drawer-close dram-dialog-close" aria-label="Close details" onClick={onClose}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <ExpressionDetail bottles={row.bottles} owner={false} trail={picked ? <div className="just-poured" /> : undefined} />
+      </div>
+    </div>
+  );
+}
 
 export function DramResults({
   bottles,
@@ -27,35 +78,35 @@ export function DramResults({
   announce?: string;
 }) {
   const picked = pickedId ? bottles.find((bottle) => bottle.id === pickedId) : undefined;
+  const rows = groupLibrary(bottles);
+  const openRow = rows.find((row) => row.bottleKey === openKey);
   return (
     <>
       <p className="live" aria-live="polite">{announce}</p>
       <div className="library-grid">
-        {groupLibrary(bottles).map((row) => {
-          const expanded = openKey === row.bottleKey;
+        {rows.map((row) => {
           const isPicked = picked?.bottleKey === row.bottleKey;
           return (
-            <Fragment key={row.bottleKey}>
-              <LibraryCard
-                row={row}
-                expanded={expanded}
-                picked={isPicked}
-                rolling={rollingKey === row.bottleKey}
-                where={isPicked ? picked?.location : undefined}
-                cardId={`dram-${row.bottleKey}`}
-                onToggle={() => onToggle(row.bottleKey)}
-              />
-              {expanded ? (
-                <ExpressionDetail
-                  bottles={row.bottles}
-                  owner={false}
-                  trail={isPicked ? <div className="just-poured" /> : undefined}
-                />
-              ) : null}
-            </Fragment>
+            <LibraryCard
+              key={row.bottleKey}
+              row={row}
+              expanded={openKey === row.bottleKey}
+              picked={isPicked}
+              rolling={rollingKey === row.bottleKey}
+              where={isPicked ? picked?.location : undefined}
+              cardId={`dram-${row.bottleKey}`}
+              onToggle={() => onToggle(row.bottleKey)}
+            />
           );
         })}
       </div>
+      {openRow ? (
+        <DramDetail
+          row={openRow}
+          picked={picked?.bottleKey === openRow.bottleKey ? picked : undefined}
+          onClose={() => onToggle(openRow.bottleKey)}
+        />
+      ) : null}
     </>
   );
 }
@@ -212,6 +263,7 @@ export function PickADram({
     const next = choosePour(pool, pick?.id ?? null);
     if (!next) return;
     pendingId.current = next.id;
+    setOpenKey(null);
     setAnnounce("");
     const frames = rollFrames(
       groupLibrary(pool).map((row) => row.bottleKey),
