@@ -905,6 +905,8 @@ nav button.on,
   padding: 16px 18px 18px;
 }
 
+.library-grid > .detail .flavors { margin-top: 12px; }
+
 .dram-dialog-root { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .dram-dialog-scrim { position: absolute; inset: 0; background: color-mix(in srgb, #000 45%, transparent); animation: scrim-in 200ms ease-out; }
 .dram-dialog { position: relative; width: min(720px, 100%); max-height: calc(100dvh - 48px); overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px 8px; animation: dialog-in 260ms cubic-bezier(0.32, 0.72, 0, 1); }

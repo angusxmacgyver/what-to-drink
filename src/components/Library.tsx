@@ -140,8 +140,10 @@ export function ExpressionDetail({
   bottles,
   trail,
   factsFirst = false,
+  groupedFlavors = false,
+  filters,
   ...actions
-}: Actions & { bottles: Bottle[]; trail?: ReactNode; factsFirst?: boolean }) {
+}: Actions & { bottles: Bottle[]; trail?: ReactNode; factsFirst?: boolean; groupedFlavors?: boolean; filters?: FilterState }) {
   const shown = detailBottle(bottles);
   return (
     <div className="detail">
@@ -149,6 +151,10 @@ export function ExpressionDetail({
       <FlavorTags
         families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
         subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}
+        grouped={groupedFlavors}
+        selectedFamilies={filters?.families}
+        selectedSubs={filters?.subs}
+        subFamilies={filters?.subFamilies}
       />
       {bottles.length > 1 ? (
         <ul className="bottle-splits">
@@ -203,7 +209,7 @@ function DistillerySection({
                   showDistillery={false}
                   onToggle={() => onToggle(row.bottleKey)}
                 />
-                {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
+                {expanded ? <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} {...actions} /> : null}
               </Fragment>
             );
           }

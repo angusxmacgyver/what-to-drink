@@ -143,6 +143,23 @@ describe("expression detail", () => {
     expect(html).toContain("Open · Bar");
     expect(html).toContain("Closed · Crate");
     expect(html).not.toContain("Mark open");
+    expect(html).toContain('class="tag family family-smoke"');
+    expect(html).not.toContain(">Characteristics<");
+  });
+
+  it("groups grid characteristics and fills the selected one", () => {
+    const html = renderToStaticMarkup(
+      <ExpressionDetail
+        bottles={[openBottle]}
+        owner={false}
+        groupedFlavors
+        filters={{ ...emptyFilters(), subs: ["Honey"], subFamilies: { Honey: "Smoke" } }}
+      />,
+    );
+    expect(html).toContain(">Characteristics<");
+    expect(html).toContain('class="flavor-cluster family-smoke"');
+    expect(html).toContain('class="tag sub family-smoke matched"');
+    expect(html).not.toContain('class="tag family');
   });
 
   it("puts Mark open, Edit, and Kill on each physical bottle", () => {
