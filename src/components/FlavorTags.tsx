@@ -26,7 +26,6 @@ function FlavorTag({
       className={["tag", kind, color, matched ? "matched" : ""].filter(Boolean).join(" ")}
       aria-label={matched ? `${label}, matches selected filter` : undefined}
     >
-      {matched ? <span className="match-mark" aria-hidden="true">✓</span> : null}
       {label}
     </span>
   );
@@ -42,9 +41,7 @@ export function FlavorTags({
 }: Props) {
   if (!families.length && !subs.length) return null;
   if (grouped) {
-    const orderedFamilies = [...families].sort(
-      (a, b) => Number(!selectedFamilies.includes(a)) - Number(!selectedFamilies.includes(b)),
-    );
+    if (!subs.length) return null;
     const groups = new Map<string, string[]>();
     for (const sub of subs) {
       const family = subFamilies[sub] || subOwnerFamily(sub) || "";
@@ -58,22 +55,6 @@ export function FlavorTags({
     });
     return (
       <div className="flavors grouped">
-        {orderedFamilies.length ? (
-          <div className="flavor-lane">
-            <span className="flavor-lane-label">Families</span>
-            <div className="flavor-lane-content">
-              {orderedFamilies.map((family) => (
-                <FlavorTag
-                  key={`f:${family}`}
-                  kind="family"
-                  label={family}
-                  color={familyClass(family)}
-                  matched={selectedFamilies.includes(family)}
-                />
-              ))}
-            </div>
-          </div>
-        ) : null}
         {orderedGroups.length ? (
           <div className="flavor-lane">
             <span className="flavor-lane-label">Characteristics</span>

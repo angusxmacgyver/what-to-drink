@@ -15,13 +15,14 @@ describe("FlavorTags", () => {
       />,
     );
 
-    expect(html).toContain(">Families<");
+    expect(html).not.toContain(">Families<");
+    expect(html).not.toContain('class="tag family');
     expect(html).toContain(">Characteristics<");
-    expect(html).toContain('class="tag family family-smoke matched"');
-    expect(html).toContain('aria-label="Smoke, matches selected filter"');
     expect(html).toContain('class="flavor-cluster family-smoke"');
     expect(html).toContain('class="tag sub family-smoke matched"');
     expect(html).toContain('aria-label="Honey, matches selected filter"');
+    expect(html).not.toContain("match-mark");
+    expect(html).not.toContain("✓");
     expect(html.indexOf("Smoke characteristics")).toBeLessThan(html.indexOf("Coastal characteristics"));
   });
 });

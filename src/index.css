@@ -666,15 +666,6 @@ nav button.on,
 .flavor-cluster-label { color: var(--ink); letter-spacing: 0.06em; }
 .grouped .tag.family { background: color-mix(in srgb, var(--family-color) 32%, var(--bg-2)); font-weight: 700; }
 
-.tag.matched {
-  border-width: 2px; font-weight: 700;
-  background: color-mix(in srgb, var(--family-color) 48%, var(--bg-2));
-  box-shadow: inset 0 0 0 1px var(--family-color);
-  color: var(--ink);
-}
-
-.match-mark { margin-right: 4px; }
-
 .flavor-row {
   display: flex;
   flex-wrap: wrap;
@@ -750,6 +741,13 @@ nav button.on,
 .tag.sub[class*="family-"] {
   background: color-mix(in srgb, var(--family-color) 14%, var(--bg-2));
   border-color: var(--family-color);
+}
+
+.tag.matched[class*="family-"] {
+  background: var(--family-color);
+  border-color: var(--family-color);
+  color: var(--on-gold);
+  font-weight: 700;
 }
 
 .chip[class*="family-"] {

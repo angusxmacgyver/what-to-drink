@@ -99,9 +99,9 @@ describe("Library layout", () => {
       <Library bottles={bottles} filters={filters} onFilters={() => {}} owner={false} />,
     );
     const list = html.slice(html.indexOf("distillery-groups"));
-    expect(list).toContain(">Families<");
+    expect(list).not.toContain(">Families<");
     expect(list).toContain(">Characteristics<");
-    expect(list).toContain('class="tag family family-smoke matched"');
+    expect(list).not.toContain('class="tag family');
     expect(list).toContain('class="tag sub family-smoke matched"');
   });
 
