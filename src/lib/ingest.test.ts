@@ -45,6 +45,28 @@ describe("Society import", () => {
     expect(bottle.distillery).toBe("Glenfarclas");
   });
 
+  it("reads Distillery / Producer and the combined Bottling name", () => {
+    const catalog = catalogFromWorkbook(
+      sheet("SMWS", [
+        {
+          "Distillery / Producer": "Glenfarclas",
+          Bottling: "1.278 - Fruitberg! Dead ahead!",
+          "Full Code": "1.278",
+          Age: "9",
+          "ABV %": "59.9",
+          Region: "Speyside, Spey",
+        },
+      ]),
+    );
+    const [bottle] = catalog.bottles;
+    expect(bottle.distillery).toBe("Glenfarclas");
+    expect(bottle.bottling).toBe("1.278 - Fruitberg! Dead ahead!");
+    expect(bottle.bottleKey).toBe("smws::1.278::1-278-fruitberg-dead-ahead");
+    expect(bottle.age).toBe(9);
+    expect(bottle.abv).toBe(59.9);
+    expect(bottle.smws?.fullCode).toBe("1.278");
+  });
+
   it("still joins Full Code and Name (USA) on the older column", () => {
     const catalog = catalogFromWorkbook(
       sheet("SMWS", [
