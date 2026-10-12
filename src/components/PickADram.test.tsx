@@ -117,8 +117,10 @@ describe("DramResults", () => {
     expect(html).toContain('aria-label="Close details"');
     const grid = html.slice(html.indexOf("library-grid"), html.indexOf("dram-dialog-root"));
     expect(grid).not.toContain("bottle-fields");
-    expect(html).toContain("tag family");
+    expect(html).toContain(">Characteristics<");
+    expect(html).toContain('class="flavor-cluster family-smoke"');
     expect(html).toContain("Woodsmoke &amp; Campfire");
+    expect(html).not.toContain("tag family");
     expect(html).not.toContain(">Flavor families<");
     expect(html).not.toContain(">Sub-characteristics<");
     expect(html).toContain("Open · Bar");

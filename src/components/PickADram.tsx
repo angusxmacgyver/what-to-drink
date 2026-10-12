@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
-import type { Bottle, FilterState } from "../types";
+import { emptyFilters, type Bottle, type FilterState } from "../types";
 import { dramPool, groupLibrary, type LibraryRow } from "../lib/library";
 import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
@@ -60,11 +60,13 @@ function DramDetail({
   picked,
   growFrom,
   onClose,
+  filters,
 }: {
   row: LibraryRow;
   picked?: Bottle;
   growFrom?: string | null;
   onClose: () => void;
+  filters: FilterState;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -115,7 +117,7 @@ function DramDetail({
             </svg>
           </button>
         </header>
-        <ExpressionDetail bottles={row.bottles} owner={false} factsFirst trail={picked ? <div className="just-poured" /> : undefined} />
+        <ExpressionDetail bottles={row.bottles} owner={false} factsFirst groupedFlavors filters={filters} trail={picked ? <div className="just-poured" /> : undefined} />
       </div>
     </div>
   );
@@ -129,6 +131,7 @@ export function DramResults({
   growFrom = null,
   borderedKey = null,
   announce = "",
+  filters = emptyFilters(),
 }: {
   bottles: Bottle[];
   openKey: string | null;
@@ -137,6 +140,7 @@ export function DramResults({
   growFrom?: string | null;
   borderedKey?: string | null;
   announce?: string;
+  filters?: FilterState;
 }) {
   const picked = pickedId ? bottles.find((bottle) => bottle.id === pickedId) : undefined;
   const lead = picked ? leadBottle(bottles, picked) : undefined;
@@ -169,6 +173,7 @@ export function DramResults({
           picked={picked?.bottleKey === openRow.bottleKey ? lead : undefined}
           growFrom={picked?.bottleKey === openRow.bottleKey ? growFrom : null}
           onClose={() => onToggle(openRow.bottleKey)}
+          filters={filters}
         />
       ) : null}
     </>
@@ -439,6 +444,7 @@ export function PickADram({
             growFrom={growFrom}
             borderedKey={borderedKey}
             announce={announce}
+            filters={filters}
             onToggle={(key) => {
               setGrowFrom(null);
               setBorderedKey(null);
