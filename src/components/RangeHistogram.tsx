@@ -103,11 +103,6 @@ export function RangeHistogram({ label, histogram, from, to, unit, onChange, nas
     <div className={active ? "hist on" : "hist"}>
       <div className="hist-head">
         <span>{label}</span>
-        <span className="hist-values">
-          {selection.from}
-          {unit} – {selection.to}
-          {unit}
-        </span>
       </div>
       <div
         className="hist-plot"
@@ -119,6 +114,7 @@ export function RangeHistogram({ label, histogram, from, to, unit, onChange, nas
           drag(mode, event);
         }}
       >
+        <div className="hist-shade" style={{ left: `${left}%`, width: `${brushWidth}%` }} />
         <div className="hist-bars" aria-hidden="true">
           {bins.map((bin) => (
             <div key={bin.from} className="hist-col">
@@ -129,9 +125,30 @@ export function RangeHistogram({ label, histogram, from, to, unit, onChange, nas
             </div>
           ))}
         </div>
-        <div className="hist-brush" style={{ left: `${left}%`, width: `${brushWidth}%` }} onPointerDown={(event) => drag("pan", event)}>
-          <button type="button" className="hist-handle left" aria-label={`${label} from`} onPointerDown={(event) => drag("from", event)} />
-          <button type="button" className="hist-handle right" aria-label={`${label} to`} onPointerDown={(event) => drag("to", event)} />
+        <div
+          className="hist-brush"
+          style={{ left: `${left}%`, width: `${brushWidth}%` }}
+          onPointerDown={(event) => drag("pan", event)}
+        >
+          <span className="hist-readout left">
+            {selection.from}
+            <span className="hist-unit">{unit}</span>
+          </span>
+          <span className="hist-readout right">
+            {selection.to}
+            <span className="hist-unit">{unit}</span>
+          </span>
+          <span className="hist-readout pair">
+            {selection.from}
+            <span className="hist-unit">{unit}</span>–{selection.to}
+            <span className="hist-unit">{unit}</span>
+          </span>
+          <button type="button" className="hist-handle left" aria-label={`${label} from`} onPointerDown={(event) => drag("from", event)}>
+            <span className="hist-grip" aria-hidden="true" />
+          </button>
+          <button type="button" className="hist-handle right" aria-label={`${label} to`} onPointerDown={(event) => drag("to", event)}>
+            <span className="hist-grip" aria-hidden="true" />
+          </button>
         </div>
       </div>
       <div className="hist-axis" aria-hidden="true">

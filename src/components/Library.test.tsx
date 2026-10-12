@@ -74,7 +74,9 @@ describe("Library layout", () => {
     );
     expect(html).toContain('aria-pressed="true">List');
     expect(html).toContain('aria-pressed="false">Grid');
-    expect(html).toContain("SMWS Theme");
+    expect(html).toContain(">Filters<");
+    expect(html).not.toContain("SMWS Theme");
+    expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain("library-card");
     const headings = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((match) => match[1]);
     const expressions = [...html.matchAll(/<em>([^<]+)<\/em>/g)].map((match) => match[1]);
@@ -86,6 +88,18 @@ describe("Library layout", () => {
     expect(html).toContain("<strong><em>Spectacular</em></strong>");
     expect(html).toContain("Age: NAS | ABV: 46%");
     expect(html).toContain('class="theme smws-theme-sweet-zesty"');
+  });
+
+  it("shows a shared filter on the page and keeps the controls in the drawer", () => {
+    const html = renderToStaticMarkup(
+      <Library bottles={bottles} filters={{ ...emptyFilters(), countries: ["USA"] }} onFilters={() => {}} owner={false} />,
+    );
+    expect(html).toContain("filters-badge");
+    expect(html).toContain(">1<");
+    expect(html).toContain('aria-label="Remove USA"');
+    expect(html).toContain(">Clear all<");
+    expect(html).not.toContain(">Country<");
+    expect(html).not.toContain('role="dialog"');
   });
 
   it("shows which list flavor tags drive the active filters", () => {

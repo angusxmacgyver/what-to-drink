@@ -45,6 +45,7 @@ type DrawerProps = {
   onUndo: () => void;
   canUndo: boolean;
   flagId?: string | null;
+  trayTitle?: string;
   onClose: () => void;
   children?: ReactNode;
 };
@@ -56,6 +57,7 @@ export function FilterDrawer({
   onUndo,
   canUndo,
   flagId = null,
+  trayTitle = "In your glass",
   onClose,
   children,
 }: DrawerProps) {
@@ -113,7 +115,7 @@ export function FilterDrawer({
             </svg>
           </button>
         </header>
-        <AppliedTray title="In your glass" filters={filters} onChange={onChange} flagId={flagId} />
+        <AppliedTray title={trayTitle} filters={filters} onChange={onChange} flagId={flagId} />
         <div className="drawer-body">{children}</div>
         <footer className="drawer-footer">
           <span className="count">{available} available</span>

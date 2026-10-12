@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Bottle, FilterState } from "../types";
 import { familyClass, smwsThemeClass } from "../lib/colors";
 import {
@@ -12,8 +12,11 @@ import {
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
+import { popHistory, pushHistory } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
+import { AppliedTray } from "./AppliedTray";
 import { BottleFields } from "./BottleFields";
+import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
 
@@ -248,23 +251,41 @@ function DistillerySection({
 export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersButton = useRef<HTMLButtonElement>(null);
+  const history = useRef<FilterState[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
   const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
   const rows = groupLibrary(filtered);
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
+  const filterCount = activeFilterCount(filters);
+
+  const changeFilters = (next: FilterState) => {
+    history.current = pushHistory(history.current, filters);
+    setCanUndo(true);
+    onFilters(next);
+  };
+
+  const undo = () => {
+    const popped = popHistory(history.current);
+    history.current = popped.stack;
+    setCanUndo(popped.stack.length > 0);
+    if (popped.previous) onFilters(popped.previous);
+  };
 
   useEffect(() => {
     saveLibraryLayout(layout);
   }, [layout]);
 
   useEffect(() => {
-    if (!openKey) return;
+    if (!openKey || filtersOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpenKey(null);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openKey]);
+  }, [openKey, filtersOpen]);
 
   return (
     <section className="panel">
@@ -273,6 +294,12 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
           <h1>The Library</h1>
         </div>
         <div className="panel-tools">
+          <FiltersButton
+            count={filterCount}
+            open={filtersOpen}
+            buttonRef={filtersButton}
+            onClick={() => setFiltersOpen(true)}
+          />
           <div className="view-toggle" role="group" aria-label="Library layout">
             <button type="button" aria-pressed={layout === "list"} onClick={() => setLayout("list")}>
               List
@@ -286,7 +313,11 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
           </p>
         </div>
       </header>
-      <Filters bottles={bottles} filters={filters} onChange={onFilters} showStatus />
+      {filterCount > 0 ? (
+        <div className="library-applied">
+          <AppliedTray filters={filters} onChange={changeFilters} />
+        </div>
+      ) : null}
       <div className="distillery-groups">
         {groups.map((group) => (
           <DistillerySection
@@ -300,6 +331,22 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
           />
         ))}
       </div>
+      {filtersOpen ? (
+        <FilterDrawer
+          filters={filters}
+          onChange={changeFilters}
+          available={filtered.length}
+          onUndo={undo}
+          canUndo={canUndo}
+          trayTitle="Applied"
+          onClose={() => {
+            setFiltersOpen(false);
+            filtersButton.current?.focus();
+          }}
+        >
+          <Filters bottles={bottles} filters={filters} onChange={changeFilters} showStatus showGeo />
+        </FilterDrawer>
+      ) : null}
     </section>
   );
 }
