@@ -120,7 +120,7 @@ function itemCount(count: number, singular: string) {
   return `${count} ${singular}${count === 1 ? "" : "s"}`;
 }
 
-function DistilleryHeader({
+export function DistilleryHeader({
   distillery,
   expressions,
   bottles,
