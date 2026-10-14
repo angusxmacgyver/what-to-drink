@@ -47,6 +47,7 @@ type DrawerProps = {
   flagId?: string | null;
   trayTitle?: string;
   onClose: () => void;
+  foot?: ReactNode;
   children?: ReactNode;
 };
 
@@ -59,6 +60,7 @@ export function FilterDrawer({
   flagId = null,
   trayTitle = "In your glass",
   onClose,
+  foot,
   children,
 }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,7 @@ export function FilterDrawer({
         </header>
         <AppliedTray title={trayTitle} filters={filters} onChange={onChange} flagId={flagId} />
         <div className="drawer-body">{children}</div>
+        {foot}
         <footer className="drawer-footer">
           <span className="count">{available} available</span>
           <button type="button" className="textish" onClick={onUndo} disabled={!canUndo}>

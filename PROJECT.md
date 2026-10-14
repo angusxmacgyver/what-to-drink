@@ -4,6 +4,8 @@
 
 **Current milestone:** 6 of 6 (Remote editing) is paused. Export and backups remain — see Milestone 6. The range histogram filters for Age and ABV are in the filter bar. Age has a NAS toggle beside its From and To fields, on by default, and NAS is no longer a stop on the age axis. Milestones 1–5 are done; Milestone 5 (Color-coded flavor families) finished across three PRs. The first version of the app is listed under **Done**. The roadmap was renumbered from 1.
 
+**Side quest:** Fancy Picker Easter Egg is done. This does not change the paused milestone.
+
 **Living copy:** this file.
 
 ---
@@ -281,6 +283,7 @@ The D1 database `what-to-drink` exists, is bound as `DB` in `wrangler.toml`, and
 
 Not scheduled yet.
 
+- **Fancy Picker Easter Egg. Done.** Pick a Dram's filter drawer has an "I feel fancy" checkbox. Checking it arms one pour; the next `Pour one` goes through an isolated Three.js wheel at `/fancy/index.html` (the explicit file, because Vite's dev server answers a bare `/fancy/` with the SPA). The React picker passes its already-filtered physical-bottle pool through `sessionStorage`, so the easter egg inherits every canonical filter without duplicating filter logic. Wheel labels group by expression, but the winner remains a physical bottle, preserving stock-weighted odds. The mini-app consumes the payload once and has no duplicate Library or filter UI.
 - **Apartment inventory.** The Apartment sheet mapper exists but the sheet is empty. Once bottles are tagged, Pick a Dram at the apartment should have a real pool.
 - **Sheet hygiene.** Theme spelling, SMWS location, status case. Cleanup in Excel; the next import picks it up.
 - **Pour tracking.** After Milestone 6 (remote editing), so pours are shared across devices rather than stuck in one browser. Its owner-only actions (see below) gate behind the same lock-glyph toggle Milestone 6 introduces, not a separate mechanism.

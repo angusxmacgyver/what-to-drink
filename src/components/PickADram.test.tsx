@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { emptyFilters, type Bottle } from "../types";
 import { saveDramSelection } from "../lib/store";
-import { DramResults, DramSummary, PickADram } from "./PickADram";
+import { DramResults, DramSummary, FancyModeControl, PickADram } from "./PickADram";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
   return {
@@ -225,6 +225,17 @@ describe("DramSummary", () => {
     expect(html).toContain("Most constraining");
     const undo = html.match(/<button[^>]*>Undo last<\/button>/)?.[0] ?? "";
     expect(undo).not.toContain("disabled");
+  });
+});
+
+describe("FancyModeControl", () => {
+  it("offers the cinematic wheel as an unchecked one-shot mode", () => {
+    const html = renderToStaticMarkup(<FancyModeControl armed={false} onChange={() => {}} />);
+    expect(html).toContain('type="checkbox"');
+    expect(html).not.toContain("checked");
+    expect(renderToStaticMarkup(<FancyModeControl armed onChange={() => {}} />)).toContain("checked");
+    expect(html).toContain("I feel fancy");
+    expect(html).not.toContain("<small");
   });
 });
 

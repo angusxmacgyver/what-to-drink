@@ -1493,6 +1493,8 @@ nav button.on,
 .drawer-close { background: var(--chip); border: 1px solid var(--line); color: var(--ink); width: 36px; height: 36px; padding: 0; border-radius: 50%; cursor: pointer; flex: none; display: inline-flex; align-items: center; justify-content: center; }
 .drawer-close:hover { border-color: var(--gold); color: var(--gold); }
 .drawer-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
+.fancy-mode { display: flex; align-items: center; gap: 10px; flex: none; padding: 10px 2px 0; cursor: pointer; font-family: var(--serif); font-size: 17px; }
+.fancy-mode input { width: 18px; height: 18px; margin: 0; accent-color: var(--gold); }
 .drawer .filters { margin-bottom: 0; }
 .drawer .hist-pair { grid-template-columns: 1fr; }
 .drawer .option-section,

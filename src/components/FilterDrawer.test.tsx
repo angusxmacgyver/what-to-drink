@@ -54,6 +54,24 @@ describe("FilterDrawer", () => {
     expect(html).not.toContain("disabled");
   });
 
+  it("pins extra content below the scrolling facets", () => {
+    const html = renderToStaticMarkup(
+      <FilterDrawer
+        filters={emptyFilters()}
+        onChange={() => {}}
+        available={4}
+        onUndo={() => {}}
+        canUndo
+        onClose={() => {}}
+        foot={<p>I feel fancy</p>}
+      >
+        <p>the facets</p>
+      </FilterDrawer>,
+    );
+    expect(html.indexOf("the facets")).toBeLessThan(html.indexOf("I feel fancy"));
+    expect(html.indexOf("I feel fancy")).toBeLessThan(html.indexOf("drawer-footer"));
+  });
+
   it("disables Undo last with no history", () => {
     const html = renderToStaticMarkup(
       <FilterDrawer

@@ -16,6 +16,8 @@ Selecting a row or a card opens one detail under that row. Later cards move down
 
 **Pick a Dram** is a randomizer, not a second list. You say whether you are at the house or the apartment, optionally narrow the pool, then pour one. The default pool is open bottles at that place. You can include closed bottles. Chance is per physical bottle, so a stock of five is five tickets. The result names the bottle and where it sits. Graveyard bottles never come up. If nothing is tagged for the apartment, the app says so instead of rolling the house by accident.
 
+For a hidden bit of theater, the filter drawer's **I feel fancy** checkbox arms the next pour. `Pour one` then opens an isolated Three.js wheel using the exact pool left by the current place, availability, and filters. The mode is one-shot; returning leaves the regular picker unchanged.
+
 **Graveyard** is killed bottles only. Browse-only. They are not in The Library and not in the randomizer.
 
 **Analytics** is a picture of the cellar, counted by physical bottle: headline numbers, open vs closed, where it's from, top producers, age and ABV, how much of it is smoky, a flavor fingerprint that lays the open bottles over the whole cellar, and a palate cloud of sub-characteristics grouped by flavor family. Each graphic has a one-line takeaway worked out from the numbers. It updates with every import or edit and never changes bottles.

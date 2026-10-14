@@ -9,6 +9,7 @@ import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton, trapTab } from "./FilterDrawer";
 import { DistilleryHeader, ExpressionDetail, LibraryCard } from "./Library";
+import { FANCY_PICKER_URL, stageFancyPool } from "../lib/fancy";
 
 type Place = "house" | "apartment";
 
@@ -238,6 +239,15 @@ export function DramSummary({
   );
 }
 
+export function FancyModeControl({ armed, onChange }: { armed: boolean; onChange: (next: boolean) => void }) {
+  return (
+    <label className="fancy-mode">
+      <input type="checkbox" checked={armed} onChange={(event) => onChange(event.currentTarget.checked)} />
+      <span>I feel fancy</span>
+    </label>
+  );
+}
+
 export function PickADram({
   bottles,
   filters,
@@ -256,6 +266,7 @@ export function PickADram({
   const [borderedKey, setBorderedKey] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [fancyArmed, setFancyArmed] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
   const pourGeneration = useRef(0);
   const pauseTimer = useRef<number | null>(null);
@@ -337,6 +348,12 @@ export function PickADram({
       setPick(null);
       setGrowFrom(null);
       setBorderedKey(null);
+      return;
+    }
+    if (fancyArmed) {
+      stageFancyPool(pool);
+      setFancyArmed(false);
+      window.location.assign(FANCY_PICKER_URL);
       return;
     }
     const next = choosePour(pool, pick?.id ?? null);
@@ -481,6 +498,7 @@ export function PickADram({
             setFiltersOpen(false);
             filtersButton.current?.focus();
           }}
+          foot={<FancyModeControl armed={fancyArmed} onChange={setFancyArmed} />}
         >
           <DramFacets
             bottles={bottles}
