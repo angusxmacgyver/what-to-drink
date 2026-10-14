@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { emptyFilters, type Bottle, type FilterState } from "../types";
-import { dramPool, groupLibrary, type LibraryRow } from "../lib/library";
+import { dramPool, groupDistilleries, groupLibrary, type LibraryRow } from "../lib/library";
 import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
 import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton, trapTab } from "./FilterDrawer";
-import { ExpressionDetail, LibraryCard } from "./Library";
+import { DistilleryHeader, ExpressionDetail, LibraryCard } from "./Library";
 
 type Place = "house" | "apartment";
 
@@ -145,27 +145,39 @@ export function DramResults({
   const picked = pickedId ? bottles.find((bottle) => bottle.id === pickedId) : undefined;
   const lead = picked ? leadBottle(bottles, picked) : undefined;
   const rows = groupLibrary(bottles);
+  const groups = groupDistilleries(rows);
   const openRow = rows.find((row) => row.bottleKey === openKey);
   return (
     <>
       <p className="live" aria-live="polite">{announce}</p>
-      <div className="library-grid">
-        {rows.map((row) => {
-          const isPicked = picked?.bottleKey === row.bottleKey;
-          return (
-            <LibraryCard
-              key={row.bottleKey}
-              row={row}
-              expanded={openKey === row.bottleKey}
-              picked={isPicked}
-              bordered={!isPicked && borderedKey === row.bottleKey}
-              where={isPicked ? lead?.location : undefined}
-              cardId={`dram-${row.bottleKey}`}
-              transitionName={cardTransitionName(row.bottleKey)}
-              onToggle={() => onToggle(row.bottleKey)}
+      <div className="distillery-groups">
+        {groups.map((group) => (
+          <section key={group.distillery} className="distillery-group">
+            <DistilleryHeader
+              distillery={group.distillery}
+              expressions={group.expressionCount}
+              bottles={group.bottleCount}
             />
-          );
-        })}
+            <div className="library-grid">
+              {group.rows.map((row) => {
+                const isPicked = picked?.bottleKey === row.bottleKey;
+                return (
+                  <LibraryCard
+                    key={row.bottleKey}
+                    row={row}
+                    expanded={openKey === row.bottleKey}
+                    picked={isPicked}
+                    bordered={!isPicked && borderedKey === row.bottleKey}
+                    where={isPicked ? lead?.location : undefined}
+                    cardId={`dram-${row.bottleKey}`}
+                    transitionName={cardTransitionName(row.bottleKey)}
+                    onToggle={() => onToggle(row.bottleKey)}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
       {openRow ? (
         <DramDetail
@@ -409,18 +421,22 @@ export function PickADram({
             buttonRef={filtersButton}
             onClick={() => setFiltersOpen(true)}
           />
-          <button type="button" className="textish" onClick={() => {
-            cancelPour();
-            pendingId.current = null;
-            setPlace(null);
-            setPick(null);
-            setOpenKey(null);
-            setGrowFrom(null);
-            setBorderedKey(null);
-            setAnnounce("");
-            setFiltersOpen(false);
-          }}>
-            Change place
+          <button
+            type="button"
+            className="textish"
+            onClick={() => {
+              cancelPour();
+              pendingId.current = null;
+              setPlace(place === "house" ? "apartment" : "house");
+              setPick(null);
+              setOpenKey(null);
+              setGrowFrom(null);
+              setBorderedKey(null);
+              setAnnounce("");
+              setFiltersOpen(false);
+            }}
+          >
+            Switch to {place === "house" ? "apartment" : "house"}
           </button>
         </div>
       </header>

@@ -922,15 +922,55 @@ nav button.on,
 .distillery-group:nth-child(even) { background: color-mix(in srgb, var(--chip) 22%, var(--bg)); }
 
 .distillery-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px 16px;
   margin: 0 0 12px;
+  padding: 8px 0;
+  background: var(--bg);
 }
 
 .distillery-head h2 { margin: 0; font-size: 20px; line-height: 1.2; }
 .distillery-head span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+.back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 30;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.back-to-top.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top { transition: none; }
+}
 
 .library-grid {
   display: grid;

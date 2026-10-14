@@ -81,6 +81,8 @@ describe("DramResults", () => {
     expect(html.match(/aria-expanded="false"/g)).toHaveLength(2);
     expect(html).toContain("view-transition-name:card-ardbeg_3a__3a_10");
     expect(html).toContain("view-transition-class:dram-card");
+    expect(html.indexOf(">Ardbeg</h2>")).toBeGreaterThan(-1);
+    expect(html.indexOf(">Ardbeg</h2>")).toBeLessThan(html.indexOf(">Hakushu</h2>"));
   });
 
   it("puts age, strength, and place above the notes, and keeps distillery and bottling in the header", () => {
@@ -244,7 +246,13 @@ describe("PickADram persistence", () => {
       <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
     );
     expect(html).toContain("Randomizer · house");
+    expect(html).toContain("Switch to apartment");
     expect(html).not.toContain("Are you at the apartment or the house?");
+    saveDramSelection({ filters: emptyFilters(), place: "apartment", includeOpen: true, includeClosed: false });
+    const apartment = renderToStaticMarkup(
+      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
+    );
+    expect(apartment).toContain("Switch to house");
   });
 
   it("asks where you are when nothing is saved", () => {

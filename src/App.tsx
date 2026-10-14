@@ -11,6 +11,7 @@ import { MergeImportPanel } from "./components/MergeImportPanel";
 import { OwnerForm } from "./components/OwnerForm";
 import { OwnerLock } from "./components/OwnerLock";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { BackToTop } from "./components/BackToTop";
 import { applyMerge } from "./lib/merge";
 import {
   addBottles,
@@ -296,6 +297,7 @@ export default function App() {
           onCancel={() => settle(false)}
         />
       ) : null}
+      <BackToTop />
     </div>
   );
 }
