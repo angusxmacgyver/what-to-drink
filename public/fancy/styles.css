@@ -265,6 +265,7 @@ body.can-pour #gl {
 .r-eyebrow {
   margin: 0 0 14px;
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--amber);
@@ -273,7 +274,7 @@ body.can-pour #gl {
 .r-name {
   margin: 0;
   font-family: var(--serif);
-  font-weight: 500;
+  font-weight: 600;
   font-size: clamp(46px, 7.4vw, 96px);
   line-height: 0.98;
   letter-spacing: -0.005em;
@@ -290,6 +291,7 @@ body.can-pour #gl {
   margin: 10px 0 0;
   font-family: var(--serif);
   font-style: italic;
+  font-weight: 500;
   font-size: clamp(20px, 2.6vw, 28px);
   color: rgba(242, 232, 216, 0.82);
   text-wrap: balance;
@@ -298,6 +300,7 @@ body.can-pour #gl {
 .r-meta {
   margin: 22px 0 0;
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--muted);
@@ -313,6 +316,7 @@ body.can-pour #gl {
   margin: 18px 0 0;
   font-family: var(--serif);
   font-style: italic;
+  font-weight: 500;
   font-size: 19px;
   color: var(--amber);
 }
@@ -329,7 +333,7 @@ body.can-pour #gl {
   margin: 12px auto 0;
   max-width: 540px;
   font-size: 14px;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.7;
   color: rgba(242, 232, 216, 0.72);
   text-wrap: pretty;
@@ -367,6 +371,7 @@ body.can-pour #gl {
   border: 1px solid var(--faint);
   border-radius: 999px;
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -374,6 +379,7 @@ body.can-pour #gl {
 .r-find {
   margin: 20px 0 0;
   font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -424,7 +430,7 @@ body.immersive .top {
   margin: 0;
   font-family: var(--serif);
   font-style: italic;
-  font-weight: 400;
+  font-weight: 500;
   font-size: clamp(64px, 11vw, 140px);
   line-height: 1;
   color: var(--ink);
@@ -443,6 +449,7 @@ body.immersive .top {
 .enjoy-sub {
   margin: 26px 0 0;
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--amber);
@@ -455,6 +462,7 @@ body.immersive .top {
   bottom: max(36px, env(safe-area-inset-bottom));
   margin: 0;
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba(242, 232, 216, 0.32);
@@ -480,6 +488,7 @@ body.immersive .top {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--muted);
