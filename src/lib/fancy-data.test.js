@@ -34,6 +34,7 @@ describe("fancy picker data", () => {
     };
     expect(consumePool(storage).map(({ id }) => id)).toEqual(["open"]);
     expect(stored).toBeNull();
+    expect(consumePool(storage)).toEqual([]);
   });
 
   it("groups wheel labels by expression while preserving physical-bottle picks", () => {
@@ -44,7 +45,9 @@ describe("fancy picker data", () => {
 
   it("avoids the previous physical bottle when another ticket exists", () => {
     const stock = [bottle(), bottle({ id: "other", bottleKey: "lagavulin::16" })];
-    expect(pickBottle(stock, "open").id).toBe("other");
+    const first = pickBottle(stock, null);
+    expect(pickBottle(stock, first.id).id).not.toBe(first.id);
+    expect(pickBottle([stock[0]], stock[0].id).id).toBe("open");
   });
 
   it("describes a distillery pour with flavor labels and a find line", () => {

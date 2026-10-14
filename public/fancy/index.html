@@ -8,14 +8,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
         }
       }
     </script>
@@ -26,38 +27,38 @@
 
     <header class="top">
       <div class="brand">
-        <span>What to <em>drink</em></span>
-        <small id="count"></small>
+        <span class="brand-mark">What to <em>drink</em></span>
+        <span class="brand-count" id="count">&nbsp;</span>
       </div>
-      <button type="button" class="quiet" id="back">Back to Pick a Dram</button>
+      <button type="button" class="back" id="back">Back to Pick a Dram</button>
     </header>
 
-    <main class="result" id="result" aria-live="polite" hidden>
-      <p class="eyebrow">Tonight, pour</p>
-      <h1 id="name"></h1>
-      <p class="bottling" id="bottling"></p>
-      <p class="meta" id="meta"></p>
-      <p class="theme" id="theme"></p>
-      <p class="notes" id="notes"></p>
-      <ul class="flavors" id="flavors"></ul>
-      <p class="find" id="find"></p>
-      <div class="actions">
-        <button type="button" class="pill primary" id="drink">Pour</button>
-        <button type="button" class="pill" id="again">Spin again</button>
-      </div>
-    </main>
-
     <section class="empty" id="empty" hidden>
-      <p class="eyebrow">The wheel is waiting</p>
+      <p class="r-eyebrow">The wheel is waiting</p>
       <h1>No fancy pour was staged.</h1>
       <p>Return to Pick a Dram, choose your filters, and check “I feel fancy.”</p>
       <button type="button" class="pill primary" data-back>Back to Pick a Dram</button>
     </section>
 
+    <main class="result" id="result" aria-live="polite" hidden>
+      <p class="r-eyebrow" id="rEyebrow">Tonight, pour</p>
+      <h1 class="r-name"><span id="rName"></span></h1>
+      <p class="r-bottling" id="rBottling"></p>
+      <p class="r-meta" id="rMeta"></p>
+      <p class="r-theme" id="rTheme"></p>
+      <p class="r-notes" id="rNotes"></p>
+      <ul class="r-flavors" id="rFlavors"></ul>
+      <p class="r-find" id="rFind"></p>
+      <div class="r-actions">
+        <button type="button" class="pill primary" id="drink">Pour</button>
+        <button type="button" class="pill" id="again">Spin again</button>
+      </div>
+    </main>
+
     <div class="enjoy" id="enjoy" hidden>
-      <p>Enjoy.</p>
-      <small id="enjoyName"></small>
-      <button type="button" class="quiet" data-back>Return to Pick a Dram</button>
+      <p class="enjoy-word">Enjoy.</p>
+      <p class="enjoy-sub" id="enjoySub"></p>
+      <p class="enjoy-hint">Tap to return</p>
     </div>
 
     <script type="module" src="./js/main.js"></script>

@@ -267,6 +267,13 @@ export function PickADram({
   const [announce, setAnnounce] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [fancyArmed, setFancyArmed] = useState(false);
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setFancyArmed(false);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
   const filtersButton = useRef<HTMLButtonElement>(null);
   const pourGeneration = useRef(0);
   const pauseTimer = useRef<number | null>(null);
@@ -352,7 +359,7 @@ export function PickADram({
     }
     if (fancyArmed) {
       stageFancyPool(pool);
-      setFancyArmed(false);
+      flushSync(() => setFancyArmed(false));
       window.location.assign(FANCY_PICKER_URL);
       return;
     }
