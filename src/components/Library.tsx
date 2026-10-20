@@ -24,6 +24,8 @@ type Props = {
   bottles: Bottle[];
   filters: FilterState;
   onFilters: (next: FilterState) => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
   owner: boolean;
   onEdit?: (bottle: Bottle) => void;
   onKill?: (id: string) => void;
@@ -248,13 +250,25 @@ function DistillerySection({
   );
 }
 
-export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, onOpen }: Props) {
+export function Library({
+  bottles,
+  filters,
+  onFilters,
+  onUndo: onUndoVisit,
+  canUndo: canUndoVisit = false,
+  owner,
+  onEdit,
+  onKill,
+  onOpen,
+}: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
   const history = useRef<FilterState[]>([]);
-  const [canUndo, setCanUndo] = useState(false);
+  const [canUndoLocal, setCanUndoLocal] = useState(false);
+  const visitUndo = onUndoVisit != null;
+  const canUndo = visitUndo ? canUndoVisit : canUndoLocal;
   const filtered = bottles.filter(
     (b) => matchesStatus(b, filters.statuses) && matchesFilters(b, { ...filters, flavorMatch: "all" }),
   );
@@ -264,15 +278,21 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
   const filterCount = activeFilterCount(filters);
 
   const changeFilters = (next: FilterState) => {
-    history.current = pushHistory(history.current, filters);
-    setCanUndo(true);
+    if (!visitUndo) {
+      history.current = pushHistory(history.current, filters);
+      setCanUndoLocal(true);
+    }
     onFilters(next);
   };
 
   const undo = () => {
+    if (visitUndo) {
+      onUndoVisit?.();
+      return;
+    }
     const popped = popHistory(history.current);
     history.current = popped.stack;
-    setCanUndo(popped.stack.length > 0);
+    setCanUndoLocal(popped.stack.length > 0);
     if (popped.previous) onFilters(popped.previous);
   };
 

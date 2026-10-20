@@ -247,18 +247,42 @@ export function FancyModeControl({ armed, onChange }: { armed: boolean; onChange
   );
 }
 
+type PickADramProps = {
+  bottles: Bottle[];
+  filters: FilterState;
+  onFilters: (next: FilterState) => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
+  place?: Place;
+  onPlaceChange?: (place: Place) => void;
+  includeOpen?: boolean;
+  onIncludeOpenChange?: (next: boolean) => void;
+  includeClosed?: boolean;
+  onIncludeClosedChange?: (next: boolean) => void;
+};
+
 export function PickADram({
   bottles,
   filters,
   onFilters,
-}: {
-  bottles: Bottle[];
-  filters: FilterState;
-  onFilters: (next: FilterState) => void;
-}) {
-  const [place, setPlace] = useState<Place>("house");
-  const [includeOpen, setIncludeOpen] = useState(true);
-  const [includeClosed, setIncludeClosed] = useState(false);
+  onUndo: onUndoVisit,
+  canUndo: canUndoVisit = false,
+  place: placeProp,
+  onPlaceChange,
+  includeOpen: includeOpenProp,
+  onIncludeOpenChange,
+  includeClosed: includeClosedProp,
+  onIncludeClosedChange,
+}: PickADramProps) {
+  const [placeLocal, setPlaceLocal] = useState<Place>("house");
+  const [includeOpenLocal, setIncludeOpenLocal] = useState(true);
+  const [includeClosedLocal, setIncludeClosedLocal] = useState(false);
+  const place = placeProp ?? placeLocal;
+  const setPlace = onPlaceChange ?? setPlaceLocal;
+  const includeOpen = includeOpenProp ?? includeOpenLocal;
+  const setIncludeOpen = onIncludeOpenChange ?? setIncludeOpenLocal;
+  const includeClosed = includeClosedProp ?? includeClosedLocal;
+  const setIncludeClosed = onIncludeClosedChange ?? setIncludeClosedLocal;
   const [pick, setPick] = useState<Bottle | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [growFrom, setGrowFrom] = useState<string | null>(null);
@@ -278,7 +302,9 @@ export function PickADram({
   const pauseTimer = useRef<number | null>(null);
   const pendingId = useRef<string | null>(null);
   const history = useRef<FilterState[]>([]);
-  const [canUndo, setCanUndo] = useState(false);
+  const [canUndoLocal, setCanUndoLocal] = useState(false);
+  const visitUndo = onUndoVisit != null;
+  const canUndo = visitUndo ? canUndoVisit : canUndoLocal;
 
   const pool = useMemo(() => {
     if (!place) return [];
@@ -300,15 +326,21 @@ export function PickADram({
   }, [bottles, place, includeClosed, includeOpen, filters, pool.length]);
 
   const changeFilters = (next: FilterState) => {
-    history.current = pushHistory(history.current, filters);
-    setCanUndo(true);
+    if (!visitUndo) {
+      history.current = pushHistory(history.current, filters);
+      setCanUndoLocal(true);
+    }
     onFilters(next);
   };
 
   const undo = () => {
+    if (visitUndo) {
+      onUndoVisit?.();
+      return;
+    }
     const popped = popHistory(history.current);
     history.current = popped.stack;
-    setCanUndo(popped.stack.length > 0);
+    setCanUndoLocal(popped.stack.length > 0);
     if (popped.previous) onFilters(popped.previous);
   };
 
