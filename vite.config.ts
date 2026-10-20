@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -8,5 +8,9 @@ export default defineConfig({
       usePolling: true,
       interval: 300,
     },
+  },
+  test: {
+    environment: "happy-dom",
+    setupFiles: ["src/test/setup.ts"],
   },
 });
