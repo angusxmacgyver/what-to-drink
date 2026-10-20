@@ -238,7 +238,7 @@ Commit the docs, the filter redesign, and the light/dark theme as separate commi
 - Flavor fingerprint radar: share of tagged bottles per family, open bottles drawn over the whole cellar.
 - Palate: sub-characteristics sized by count, grouped under the family they appear with most (`subFamily`). Milestone 5 tried reusing this for sub-characteristic colors and found it had no real signal (bottles average 5.9 of 11 families tagged, so co-occurrence is near-uniform); it ended up with a curated map instead (`subOwnerFamily` in `src/lib/library.ts`). The palate cloud still uses the original statistical `subFamily` for its own grouping, unchanged.
 
-Calculations live in tested helpers in `src/lib/analytics.ts`. Deferred: flavor-by-region heatmap, click-through from a bar to a filtered Library, Graveyard trends.
+Calculations live in tested helpers in `src/lib/analytics.ts`. Deferred: flavor-by-region heatmap, click-through from a bar to a filtered Library, Graveyard trends, and, once pour tracking exists, dram counts, kill shots, and a Just poured chart.
 
 ### Milestone 5 — Color-coded flavor families
 
@@ -294,7 +294,7 @@ Not scheduled yet.
 - **Pick a Dram refactor.** Filters move into a drawer, options become grids with live counts, and results become a card grid with a picked state. Comes after the range histogram filters, which it consumes (full requirement below).
 - **Quick Pours.** Curated starting points (e.g. Heavily Peated, Sweet & Mellow, Spicy & Dry) applied as presets the user can then refine. The Pick a Dram prototype showed these replacing Themes; that is a taxonomy change, so it is not part of the refactor, where Theme stays a normal facet.
 - **Origin imagery.** A visual mapping for each bottle, showing its region of Scotland or its country of origin.
-- **Analytics improvements.** More robust and interesting facts about the collection.
+- **Analytics improvements.** More robust and interesting facts about the collection. Dram counts, kill shots, and a Just poured chart are later expansions, not part of pour tracking.
 - **Whisky Draft.** To be scoped later. Data does not need to be in D1: either read it from the sheet import or keep it as a static JSON file. If it uses the workbook's Draft Participants sheet, decide how participant contact data is handled first: today that sheet is skipped and must stay out of the app and git.
 
 ### Requirement: Range histogram filters (ABV and Age)
