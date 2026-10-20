@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -48,6 +48,19 @@ async function openFilters(user: ReturnType<typeof userEvent.setup>) {
 
 async function pickFlavorFamily(user: ReturnType<typeof userEvent.setup>, family: string) {
   await user.click(filterDrawer().getByRole("button", { name: new RegExp(`^${family}`) }));
+}
+
+async function closeFilters(user: ReturnType<typeof userEvent.setup>) {
+  await user.keyboard("{Escape}");
+}
+
+async function typeSearch(user: ReturnType<typeof userEvent.setup>, text: string) {
+  await user.type(filterDrawer().getByPlaceholderText("Distillery, expression, code…"), text);
+}
+
+function filtersBadgeCount(panel: ReturnType<typeof within>) {
+  const button = panel.getByRole("button", { name: /^Filters/ });
+  return button.querySelector(".filters-badge")?.textContent ?? null;
 }
 
 function libraryCountsText() {
@@ -256,6 +269,79 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(pickAvailableText()).toBe("3 available");
     await openFilters(user);
     expect(filterDrawer().getByRole("button", { name: "Undo last" })).toBeDisabled();
+  });
+
+  // House and Apartment pools are disjoint in the fixture, so only the closing case is covered here.
+  it("closes an open Pick when a place switch drops its bottle from the pool", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goPick(user);
+    await openFilters(user);
+    await typeSearch(user, "Ardbeg");
+    await closeFilters(user);
+    expect(pickAvailableText()).toBe("1 available");
+
+    await user.click(pickPanel().getByRole("button", { name: "Pour one" }));
+    await waitFor(() => expect(pickPanel().getByRole("dialog")).toBeTruthy(), { timeout: 2000 });
+
+    await user.click(screen.getByRole("button", { name: "Switch to apartment" }));
+    expect(pickPanel().queryByRole("dialog")).toBeNull();
+  });
+
+  it("keeps Library search off Pick criteria and Pick search off Library filters", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await typeSearch(user, "Ardbeg");
+    await closeFilters(user);
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+
+    await goPick(user);
+    expect(pickAvailableText()).toBe("3 available");
+    await openFilters(user);
+    expect(filterDrawer().getByPlaceholderText("Distillery, expression, code…")).toHaveValue("");
+    await closeFilters(user);
+
+    await openFilters(user);
+    await typeSearch(user, "Glendronach");
+    await closeFilters(user);
+    expect(pickAvailableText()).toBe("1 available");
+
+    await goLibrary(user);
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    await openFilters(user);
+    expect(filterDrawer().getByPlaceholderText("Distillery, expression, code…")).toHaveValue("Ardbeg");
+  });
+
+  it("counts only each screen's own choices on the Filters badge", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await pickFlavorFamily(user, "Smoke");
+    await closeFilters(user);
+    expect(filtersBadgeCount(libraryPanel())).toBe("1");
+
+    await goPick(user);
+    await openFilters(user);
+    await pickFlavorFamily(user, "Sweet");
+    await closeFilters(user);
+    expect(filtersBadgeCount(pickPanel())).toBe("1");
+
+    await goLibrary(user);
+    expect(filtersBadgeCount(libraryPanel())).toBe("1");
   });
 
   it("ignores a saved Pick selection but restores theme, Library layout, and collapsed sections", async () => {
