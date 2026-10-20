@@ -1,8 +1,8 @@
 # What To Drink — project brief
 
-**How to use this document.** Product and architecture context for the app. Work that is ready to build is a GitHub issue. Work that is named but not specified is under **Undeveloped**. Milestones 1–6 below are the record of what shipped.
+**How to use this document.** Product and architecture context for the app. Work that is ready to build is a GitHub issue. Work that is named but not specified is under **Undeveloped**. The milestones under **To spec** are in the order to specify them. Milestones 1–6 below are the record of what shipped.
 
-**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. Issue #9 owns the catalog export. Other work that is not built, and not in GitHub, is under **Undeveloped**. Milestones 1–5 are done. The first version of the app is listed under **Done**.
+**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The next build is #8, then #9. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
 
 **Side quest:** Fancy Picker Easter Egg is done.
 
@@ -278,32 +278,34 @@ The D1 database `what-to-drink` exists, is bound as `DB` in `wrangler.toml`, and
 
 ## Undeveloped
 
-GitHub issues are the spec for work that is ready to build. This list is everything else the project has named that is not built and has no issue. Add an issue before building one of these. A finished milestone is a record, not a prompt to build it again.
+GitHub issues are the spec for work that is ready to build. **In GitHub** is that queue. **To spec** is the later milestones, in the order to specify them. Each one needs a spec, and then an issue, before it is built. **Not tracked yet** is a name only. A finished milestone is a record, not a prompt to build it again.
 
 ### In GitHub
 
 - **#8 Separate Library filters from Pick criteria.** The spec is #7. The Library and Pick a Dram still share one saved selection.
 - **#9 Record drams against each bottle and round-trip that history.** No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
 
+### To spec
+
+1. **Cask type and secondary cask.** Ingest reads `Cask Type` and `Secondary Cask` onto the bottle, and both can be used as filters. Society bottles already keep `SMWS Cask` and `Secondary Maturation` as detail fields (`smws` on the bottle), and a blank Notes field is filled from them. Open and Closed rows do not store cask type or a secondary cask. The spec still has to decide how `Cask Type` relates to `SMWS Cask`, how `Secondary Cask` relates to `Secondary Maturation`, and how the filters behave.
+2. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
+3. **Search inside a filter section.** Pick a Dram has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
+4. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, and Graveyard trends. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
+5. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from #8.
+6. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
+
 ### Not tracked yet
 
 - **R2 backups.** A weekly Worker cron, and the same write when an owner exports by hand. Each run stores a timestamped snapshot in Cloudflare R2 and keeps the last 10. A scheduled commit to `main` would redeploy the app for no code change. This is not the export in #9.
-- **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from #8.
-- **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
-- **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, and Graveyard trends. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
 - **Whisky Draft.** Not scoped. The data need not live in D1. If it uses the workbook's Draft Participants sheet, decide what happens to contact data first. That sheet stays out of the app and git.
-- **Sheet hygiene.** Theme spelling, SMWS location, and status case, fixed in Excel. The next import picks them up. Society and distillery codes still sit on the bottle; cards already hide them. Removing those codes from the stored fields belongs here. It does not block the open issues.
-- **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
-- **Search inside a filter section.** Pick a Dram has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
 
-Already in the app, and so not listed above: the Age and ABV range histograms, the Pick a Dram drawer and card grid, the fancy wheel, guest-visible owner edits, and apartment bottles tagged from a location of `Apartment` (39 in the bundled catalog). Pick a Dram opens a bottle's detail in a dialog. The Library opens it under the row.
+Already in the app, and so not listed above: the Age and ABV range histograms, the Pick a Dram drawer and card grid, the fancy wheel, guest-visible owner edits, and apartment bottles tagged from a location of `Apartment` (39 in the bundled catalog). Pick a Dram opens a bottle's detail in a dialog. The Library opens it under the row. Sheet hygiene (theme spelling, SMWS location, and status case) was finished in the workbook. It is not app work.
 
 ---
 
 ## Conventions for later chats
 
-- Unbuilt work is an open GitHub issue, or a line under **Undeveloped**. Phrase status that way.
-- Sheet cleanup (Theme spelling, SMWS Location, status case) can happen in Excel in parallel. It does not block the open issues.
+- Unbuilt work is an open GitHub issue, a milestone under **To spec**, or a line under **Not tracked yet**. Phrase status that way.
 - Theme aliases may be normalized at ingest so filters match.
 - First-screen choice: **The Library** or **Pick a Dram**.
 - Sub-characteristic family ownership is a curated lookup (`SUB_FAMILY` / `subOwnerFamily` in `src/lib/library.ts`), not computed: bottles typically carry 5+ flavor families at once, so co-occurrence has no real signal (every sub-characteristic touches every family at a near-uniform rate). It drives both the sub-characteristic color (`subFamilyClass` in `src/lib/colors.ts`) and which subs show under a picked family (`subsForFamilies`). If ingest introduces a new sub-characteristic, add it to `SUB_FAMILY` so it gets color-coded and scoped correctly; until then it's treated as unowned (neutral color, always visible).
