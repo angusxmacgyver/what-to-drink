@@ -255,7 +255,9 @@ export function Library({ bottles, filters, onFilters, owner, onEdit, onKill, on
   const filtersButton = useRef<HTMLButtonElement>(null);
   const history = useRef<FilterState[]>([]);
   const [canUndo, setCanUndo] = useState(false);
-  const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, filters));
+  const filtered = bottles.filter(
+    (b) => matchesStatus(b, filters.statuses) && matchesFilters(b, { ...filters, flavorMatch: "all" }),
+  );
   const rows = groupLibrary(filtered);
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };

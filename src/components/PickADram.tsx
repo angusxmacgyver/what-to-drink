@@ -4,7 +4,6 @@ import { emptyFilters, type Bottle, type FilterState } from "../types";
 import { dramPool, groupDistilleries, groupLibrary, type LibraryRow } from "../lib/library";
 import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
-import { loadDramSelection, saveDramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton, trapTab } from "./FilterDrawer";
@@ -257,9 +256,9 @@ export function PickADram({
   filters: FilterState;
   onFilters: (next: FilterState) => void;
 }) {
-  const [place, setPlace] = useState<Place | null>(() => loadDramSelection()?.place ?? null);
-  const [includeOpen, setIncludeOpen] = useState(() => loadDramSelection()?.includeOpen ?? true);
-  const [includeClosed, setIncludeClosed] = useState(() => loadDramSelection()?.includeClosed ?? false);
+  const [place, setPlace] = useState<Place>("house");
+  const [includeOpen, setIncludeOpen] = useState(true);
+  const [includeClosed, setIncludeClosed] = useState(false);
   const [pick, setPick] = useState<Bottle | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [growFrom, setGrowFrom] = useState<string | null>(null);
@@ -313,10 +312,6 @@ export function PickADram({
     if (popped.previous) onFilters(popped.previous);
   };
 
-  useEffect(() => {
-    saveDramScope({ place, includeOpen, includeClosed });
-  }, [place, includeOpen, includeClosed]);
-
   const cancelPour = () => {
     pourGeneration.current += 1;
     if (pauseTimer.current != null) {
@@ -348,7 +343,6 @@ export function PickADram({
   }, [pool, pick]);
 
   const pour = () => {
-    if (!place) return;
     cancelPour();
     if (pool.length === 0) {
       pendingId.current = null;
@@ -411,23 +405,6 @@ export function PickADram({
       void revealCard(fresh).then(borderThenOpen);
     });
   };
-
-  if (!place) {
-    return (
-      <section className="panel dram-start">
-        <h1>Pick a Dram</h1>
-        <p className="lede">Are you at the apartment or the house?</p>
-        <div className="place">
-          <button type="button" onClick={() => setPlace("house")}>
-            House
-          </button>
-          <button type="button" onClick={() => setPlace("apartment")}>
-            Apartment
-          </button>
-        </div>
-      </section>
-    );
-  }
 
   const emptyApartment = place === "apartment" && bottles.every((b) => !b.atApartment);
 

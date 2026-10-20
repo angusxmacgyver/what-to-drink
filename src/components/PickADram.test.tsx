@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { emptyFilters, type Bottle } from "../types";
-import { saveDramSelection } from "../lib/store";
 import { DramResults, DramSummary, FancyModeControl, PickADram } from "./PickADram";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
@@ -239,37 +238,16 @@ describe("FancyModeControl", () => {
   });
 });
 
-describe("PickADram persistence", () => {
-  beforeEach(() => {
-    const store = new Map<string, string>();
-    vi.stubGlobal("localStorage", {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => store.set(key, value),
-      removeItem: (key: string) => store.delete(key),
-    });
-  });
-
-  afterEach(() => vi.unstubAllGlobals());
-
-  it("opens on the saved place", () => {
-    saveDramSelection({ filters: emptyFilters(), place: "house", includeOpen: true, includeClosed: false });
+describe("PickADram place", () => {
+  it("opens on the House with opened bottles in the pool and no place question", () => {
+    const open = bottle({ id: "open", status: "Open" });
+    const closed = bottle({ id: "closed", status: "Closed" });
     const html = renderToStaticMarkup(
-      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
+      <PickADram bottles={[open, closed]} filters={emptyFilters()} onFilters={() => {}} />,
     );
     expect(html).toContain("Randomizer · house");
     expect(html).toContain("Switch to apartment");
     expect(html).not.toContain("Are you at the apartment or the house?");
-    saveDramSelection({ filters: emptyFilters(), place: "apartment", includeOpen: true, includeClosed: false });
-    const apartment = renderToStaticMarkup(
-      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
-    );
-    expect(apartment).toContain("Switch to house");
-  });
-
-  it("asks where you are when nothing is saved", () => {
-    const html = renderToStaticMarkup(
-      <PickADram bottles={[]} filters={emptyFilters()} onFilters={() => {}} />,
-    );
-    expect(html).toContain("Are you at the apartment or the house?");
+    expect(html).toContain("1 available");
   });
 });

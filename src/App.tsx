@@ -19,10 +19,8 @@ import {
   fetchRemoteCatalog,
   isOwner,
   killBottle,
-  loadDramSelection,
   loadStoredCatalog,
   loadTheme,
-  saveDramFilters,
   replaceCatalog,
   saveBottle,
   saveCatalog,
@@ -40,7 +38,8 @@ const seed = seeded as Catalog;
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [catalog, setCatalog] = useState<Catalog>(seed);
-  const [filters, setFilters] = useState(() => loadDramSelection()?.filters ?? emptyFilters());
+  const [libraryFilters, setLibraryFilters] = useState(emptyFilters);
+  const [pickCriteria, setPickCriteria] = useState(emptyFilters);
   const [owner, setOwnerState] = useState(false);
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [notice, setNotice] = useState("");
@@ -65,10 +64,6 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     saveTheme(theme);
   }, [theme]);
-
-  useEffect(() => {
-    saveDramFilters(filters);
-  }, [filters]);
 
   useEffect(() => {
     setOwnerState(isOwner());
@@ -182,8 +177,8 @@ export default function App() {
       {view === "library" ? (
         <Library
           bottles={catalog.bottles}
-          filters={filters}
-          onFilters={setFilters}
+          filters={libraryFilters}
+          onFilters={setLibraryFilters}
           owner={owner}
           onEdit={(b) => {
             setEditing(b);
@@ -210,7 +205,7 @@ export default function App() {
       ) : null}
 
       {view === "dram" ? (
-        <PickADram bottles={catalog.bottles} filters={filters} onFilters={setFilters} />
+        <PickADram bottles={catalog.bottles} filters={pickCriteria} onFilters={setPickCriteria} />
       ) : null}
 
       {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} /> : null}
