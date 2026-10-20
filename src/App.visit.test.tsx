@@ -195,6 +195,69 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(pickAvailableText()).toBe("2 available");
   });
 
+  it("keeps the Apartment and closed-bottle choices after leaving Pick a Dram", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goPick(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "Closed", pressed: false }));
+    expect(pickAvailableText()).toBe("4 available");
+
+    await user.click(screen.getByRole("button", { name: "Switch to apartment" }));
+    expect(screen.getByText(/Randomizer · apartment/i)).toBeTruthy();
+
+    await goLibrary(user);
+    await user.click(screen.getByRole("button", { name: "What To Drink" }));
+    await goPick(user);
+
+    expect(screen.getByText(/Randomizer · apartment/i)).toBeTruthy();
+    expect(pickAvailableText()).toBe("1 available");
+    await openFilters(user);
+    expect(filterDrawer().getByRole("button", { name: "Closed", pressed: true })).toBeTruthy();
+  });
+
+  it("keeps Library and Pick undo history for the visit until a reload", async () => {
+    const user = userEvent.setup();
+    const mounted = render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await pickFlavorFamily(user, "Smoke");
+    await pickFlavorFamily(user, "Sweet");
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+
+    await user.click(screen.getByRole("button", { name: "What To Drink" }));
+    await goLibrary(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+
+    await goPick(user);
+    await openFilters(user);
+    await pickFlavorFamily(user, "Smoke");
+    await pickFlavorFamily(user, "Sweet");
+    expect(pickAvailableText()).toBe("1 available");
+
+    await goLibrary(user);
+    await goPick(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
+    expect(pickAvailableText()).toBe("2 available");
+
+    await goLibrary(user);
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+
+    mounted.unmount();
+    render(<App />);
+    await goLibrary(user);
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+    await goPick(user);
+    expect(pickAvailableText()).toBe("3 available");
+    await openFilters(user);
+    expect(filterDrawer().getByRole("button", { name: "Undo last" })).toBeDisabled();
+  });
+
   it("ignores a saved Pick selection but restores theme, Library layout, and collapsed sections", async () => {
     saveTheme("light");
     saveLibraryLayout("grid");
