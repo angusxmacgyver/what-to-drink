@@ -2,7 +2,7 @@
 
 **How to use this document.** Product and architecture context for the app. Work that is ready to build is a GitHub issue. Work that is named but not specified is under **Undeveloped**. The milestones under **To spec** are in the order to specify them. Milestones 1–6 below are the record of what shipped.
 
-**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The next build is #8, then #9. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
+**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The next build is #8, then the cask issues (#11, then #12 and #13), then #9. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
 
 **Side quest:** Fancy Picker Easter Egg is done.
 
@@ -45,15 +45,15 @@ The workbook tab named SMWS is only how Society bottles are captured in Excel. A
 
 ## Source data
 
-Ingest file (current snapshot): [`/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 7 .xlsx`](/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky%20Inventory-%20Oct%207%20.xlsx)
+Ingest file (current snapshot): [`/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 19.xlsx`](/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky%20Inventory-%20Oct%2019.xlsx)
 
 Workbook sheets to read:
 
-- **Open Bottles** — 190 rows (as of 7 Oct 2026)
-- **Closed Bottles** — 173 rows
-- **SMWS** — 176 rows (same cellar; different columns). The expression is in **Name (Bottling)**
-- **Fallen soldiers** — 7 rows → Graveyard
-- **Apartment** — empty; keep the mapper ready
+- **Open Bottles** — 231 rows (as of 19 Oct 2026). Already has **Primary Cask** and **Secondary Cask** columns
+- **Closed Bottles** — 201 rows
+- **SMWS** — 165 rows (same cellar; different columns). The expression is in **Bottling**
+- **Fallen soldiers** — 8 rows → Graveyard
+- **Apartment** — 39 rows. Its headers follow the SMWS sheet, with **Theme** in place of **SMWS Theme**
 - Skip **Draft Participants** (contacts). Do not copy that sheet into the app or git.
 
 Flavor Families and Sub-Characteristics in the sheet use ` | ` as the delimiter.
@@ -283,16 +283,16 @@ GitHub issues are the spec for work that is ready to build. **In GitHub** is tha
 ### In GitHub
 
 - **#8 Separate Library filters from Pick criteria.** The spec is #7. The Library and Pick a Dram still share one saved selection.
+- **#10 Primary cask and secondary cask.** The spec. Every bottle gets primary-cask and secondary-cask tags from new workbook columns. They show on the detail, and both screens get them as color-coded filters. Built as #11 (cask data), then #12 (cask chips, also after #8) and #13 (cask search). Loading the casks takes a full replace, which must run before #9 records a dram.
 - **#9 Record drams against each bottle and round-trip that history.** No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
 
 ### To spec
 
-1. **Cask type and secondary cask.** Ingest reads `Cask Type` and `Secondary Cask` onto the bottle, and both can be used as filters. Society bottles already keep `SMWS Cask` and `Secondary Maturation` as detail fields (`smws` on the bottle), and a blank Notes field is filled from them. Open and Closed rows do not store cask type or a secondary cask. The spec still has to decide how `Cask Type` relates to `SMWS Cask`, how `Secondary Cask` relates to `Secondary Maturation`, and how the filters behave.
-2. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
-3. **Search inside a filter section.** Pick a Dram has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
-4. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, and Graveyard trends. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
-5. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from #8.
-6. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
+1. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
+2. **Search inside a filter section.** Pick a Dram has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
+3. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, Graveyard trends, and a cask breakdown. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
+4. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from #8.
+5. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
 
 ### Not tracked yet
 

@@ -24,6 +24,24 @@ _Avoid_: Home
 The other place a bottle can be kept.
 _Avoid_: Flat
 
+## Casks
+
+**Primary cask**:
+The kind of cask or casks a bottle's whisky matured in for most of its time, written as short tags such as Ex-bourbon or Oloroso sherry. A bottle with none recorded has no primary cask.
+_Avoid_: Cask type, SMWS cask, main cask
+
+**Secondary cask**:
+The kind of cask or casks the whisky was moved into to finish, written as short tags such as Rum or PX sherry. A bottle with none recorded has no secondary cask.
+_Avoid_: Finish, secondary maturation
+
+**SMWS cask**:
+The Society's own description of the cask a Society bottle came from. It is shown with the bottle and is not a primary cask.
+_Avoid_: Primary cask, cask type
+
+**Secondary maturation**:
+The Society's own account of how a Society bottle moved between casks. It is shown with the bottle and is not a secondary cask.
+_Avoid_: Secondary cask, finish
+
 ## Choosing bottles
 
 **Library filters**:
