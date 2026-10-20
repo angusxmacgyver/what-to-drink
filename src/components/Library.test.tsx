@@ -70,7 +70,7 @@ beforeEach(() => {
 describe("Library layout", () => {
   it("defaults to a list grouped by distillery with section counts", () => {
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} owner={false} />,
+      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">List');
     expect(html).toContain('aria-pressed="false">Grid');
@@ -92,7 +92,7 @@ describe("Library layout", () => {
 
   it("shows a shared filter on the page and keeps the controls in the drawer", () => {
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={{ ...emptyFilters(), countries: ["USA"] }} onFilters={() => {}} owner={false} />,
+      <Library bottles={bottles} filters={{ ...emptyFilters(), countries: ["USA"] }} onFilters={() => {}} onUndo={() => {}} canUndo={false} owner={false} />,
     );
     expect(html).toContain("filters-badge");
     expect(html).toContain(">1<");
@@ -110,7 +110,7 @@ describe("Library layout", () => {
       subFamilies: { Honey: "Smoke" },
     };
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={filters} onFilters={() => {}} owner={false} />,
+      <Library bottles={bottles} filters={filters} onFilters={() => {}} onUndo={() => {}} canUndo={false} owner={false} />,
     );
     const list = html.slice(html.indexOf("distillery-groups"));
     expect(list).not.toContain(">Families<");
@@ -122,7 +122,7 @@ describe("Library layout", () => {
   it("opens a grouped grid with full accessible names and no repeated maker labels", () => {
     localStorage.setItem("what-to-drink-library-layout", "grid");
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} owner={false} />,
+      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">Grid');
     expect(html).not.toContain('class="list"');

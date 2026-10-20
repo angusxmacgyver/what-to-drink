@@ -17,6 +17,15 @@ export type DramSelection = {
   includeClosed: boolean;
 };
 
+/** Pick pool place and opened/closed eligibility for one visit (not persisted). */
+export type DramScope = Pick<DramSelection, "includeOpen" | "includeClosed"> & {
+  place: Exclude<DramPlaceChoice, null>;
+};
+
+export function defaultDramScope(): DramScope {
+  return { place: "house", includeOpen: true, includeClosed: false };
+}
+
 function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { emptyFilters, type Bottle } from "../types";
+import { defaultDramScope } from "../lib/store";
 import { DramResults, DramSummary, FancyModeControl, PickADram } from "./PickADram";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
@@ -243,7 +244,15 @@ describe("PickADram place", () => {
     const open = bottle({ id: "open", status: "Open" });
     const closed = bottle({ id: "closed", status: "Closed" });
     const html = renderToStaticMarkup(
-      <PickADram bottles={[open, closed]} filters={emptyFilters()} onFilters={() => {}} />,
+      <PickADram
+        bottles={[open, closed]}
+        filters={emptyFilters()}
+        onFilters={() => {}}
+        onUndo={() => {}}
+        canUndo={false}
+        scope={defaultDramScope()}
+        onScopeChange={() => {}}
+      />,
     );
     expect(html).toContain("Randomizer · house");
     expect(html).toContain("Switch to apartment");

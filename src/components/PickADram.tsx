@@ -3,7 +3,8 @@ import { flushSync } from "react-dom";
 import { emptyFilters, type Bottle, type FilterState } from "../types";
 import { dramPool, groupDistilleries, groupLibrary, type LibraryRow } from "../lib/library";
 import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
-import { mostConstraining, popHistory, pushHistory } from "../lib/recovery";
+import { mostConstraining } from "../lib/recovery";
+import type { DramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { DramFacets } from "./DramFacets";
 import { activeFilterCount, FilterDrawer, FiltersButton, trapTab } from "./FilterDrawer";
@@ -251,38 +252,25 @@ type PickADramProps = {
   bottles: Bottle[];
   filters: FilterState;
   onFilters: (next: FilterState) => void;
-  onUndo?: () => void;
-  canUndo?: boolean;
-  place?: Place;
-  onPlaceChange?: (place: Place) => void;
-  includeOpen?: boolean;
-  onIncludeOpenChange?: (next: boolean) => void;
-  includeClosed?: boolean;
-  onIncludeClosedChange?: (next: boolean) => void;
+  onUndo: () => void;
+  canUndo: boolean;
+  scope: DramScope;
+  onScopeChange: (next: DramScope) => void;
 };
 
 export function PickADram({
   bottles,
   filters,
   onFilters,
-  onUndo: onUndoVisit,
-  canUndo: canUndoVisit = false,
-  place: placeProp,
-  onPlaceChange,
-  includeOpen: includeOpenProp,
-  onIncludeOpenChange,
-  includeClosed: includeClosedProp,
-  onIncludeClosedChange,
+  onUndo,
+  canUndo,
+  scope,
+  onScopeChange,
 }: PickADramProps) {
-  const [placeLocal, setPlaceLocal] = useState<Place>("house");
-  const [includeOpenLocal, setIncludeOpenLocal] = useState(true);
-  const [includeClosedLocal, setIncludeClosedLocal] = useState(false);
-  const place = placeProp ?? placeLocal;
-  const setPlace = onPlaceChange ?? setPlaceLocal;
-  const includeOpen = includeOpenProp ?? includeOpenLocal;
-  const setIncludeOpen = onIncludeOpenChange ?? setIncludeOpenLocal;
-  const includeClosed = includeClosedProp ?? includeClosedLocal;
-  const setIncludeClosed = onIncludeClosedChange ?? setIncludeClosedLocal;
+  const { place, includeOpen, includeClosed } = scope;
+  const setPlace = (next: Place) => onScopeChange({ ...scope, place: next });
+  const setIncludeOpen = (next: boolean) => onScopeChange({ ...scope, includeOpen: next });
+  const setIncludeClosed = (next: boolean) => onScopeChange({ ...scope, includeClosed: next });
   const [pick, setPick] = useState<Bottle | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [growFrom, setGrowFrom] = useState<string | null>(null);
@@ -301,11 +289,6 @@ export function PickADram({
   const pourGeneration = useRef(0);
   const pauseTimer = useRef<number | null>(null);
   const pendingId = useRef<string | null>(null);
-  const history = useRef<FilterState[]>([]);
-  const [canUndoLocal, setCanUndoLocal] = useState(false);
-  const visitUndo = onUndoVisit != null;
-  const canUndo = visitUndo ? canUndoVisit : canUndoLocal;
-
   const pool = useMemo(() => {
     if (!place) return [];
     return dramPool(bottles, place, includeClosed, filters, includeOpen);
@@ -324,25 +307,6 @@ export function PickADram({
     if (!place || pool.length > 0) return null;
     return mostConstraining(bottles, place, includeClosed, filters, includeOpen);
   }, [bottles, place, includeClosed, includeOpen, filters, pool.length]);
-
-  const changeFilters = (next: FilterState) => {
-    if (!visitUndo) {
-      history.current = pushHistory(history.current, filters);
-      setCanUndoLocal(true);
-    }
-    onFilters(next);
-  };
-
-  const undo = () => {
-    if (visitUndo) {
-      onUndoVisit?.();
-      return;
-    }
-    const popped = popHistory(history.current);
-    history.current = popped.stack;
-    setCanUndoLocal(popped.stack.length > 0);
-    if (popped.previous) onFilters(popped.previous);
-  };
 
   const cancelPour = () => {
     pourGeneration.current += 1;
@@ -370,6 +334,9 @@ export function PickADram({
     }
     if (settlePick(pick, pool) !== pick) {
       setPick(null);
+      setOpenKey(null);
+      setGrowFrom(null);
+      setBorderedKey(null);
       setAnnounce("");
     }
   }, [pool, pick]);
@@ -461,11 +428,6 @@ export function PickADram({
               cancelPour();
               pendingId.current = null;
               setPlace(place === "house" ? "apartment" : "house");
-              setPick(null);
-              setOpenKey(null);
-              setGrowFrom(null);
-              setBorderedKey(null);
-              setAnnounce("");
               setFiltersOpen(false);
             }}
           >
@@ -479,8 +441,8 @@ export function PickADram({
         <DramSummary
           available={pool.length}
           filters={filters}
-          onFilters={changeFilters}
-          onUndo={undo}
+          onFilters={onFilters}
+          onUndo={onUndo}
           canUndo={canUndo}
           flagId={flagId}
           onPour={pour}
@@ -505,9 +467,9 @@ export function PickADram({
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
-          onChange={changeFilters}
+          onChange={onFilters}
           available={pool.length}
-          onUndo={undo}
+          onUndo={onUndo}
           canUndo={canUndo}
           flagId={flagId}
           onClose={() => {
@@ -524,7 +486,7 @@ export function PickADram({
             includeClosed={includeClosed}
             onIncludeClosed={setIncludeClosed}
             filters={filters}
-            onChange={changeFilters}
+            onChange={onFilters}
           />
         </FilterDrawer>
       ) : null}

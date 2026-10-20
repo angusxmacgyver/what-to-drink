@@ -12,7 +12,6 @@ import {
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
-import { popHistory, pushHistory } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { BottleFields } from "./BottleFields";
@@ -24,8 +23,8 @@ type Props = {
   bottles: Bottle[];
   filters: FilterState;
   onFilters: (next: FilterState) => void;
-  onUndo?: () => void;
-  canUndo?: boolean;
+  onUndo: () => void;
+  canUndo: boolean;
   owner: boolean;
   onEdit?: (bottle: Bottle) => void;
   onKill?: (id: string) => void;
@@ -254,8 +253,8 @@ export function Library({
   bottles,
   filters,
   onFilters,
-  onUndo: onUndoVisit,
-  canUndo: canUndoVisit = false,
+  onUndo,
+  canUndo,
   owner,
   onEdit,
   onKill,
@@ -265,10 +264,6 @@ export function Library({
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
-  const history = useRef<FilterState[]>([]);
-  const [canUndoLocal, setCanUndoLocal] = useState(false);
-  const visitUndo = onUndoVisit != null;
-  const canUndo = visitUndo ? canUndoVisit : canUndoLocal;
   const filtered = bottles.filter(
     (b) => matchesStatus(b, filters.statuses) && matchesFilters(b, { ...filters, flavorMatch: "all" }),
   );
@@ -276,25 +271,6 @@ export function Library({
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
   const filterCount = activeFilterCount(filters);
-
-  const changeFilters = (next: FilterState) => {
-    if (!visitUndo) {
-      history.current = pushHistory(history.current, filters);
-      setCanUndoLocal(true);
-    }
-    onFilters(next);
-  };
-
-  const undo = () => {
-    if (visitUndo) {
-      onUndoVisit?.();
-      return;
-    }
-    const popped = popHistory(history.current);
-    history.current = popped.stack;
-    setCanUndoLocal(popped.stack.length > 0);
-    if (popped.previous) onFilters(popped.previous);
-  };
 
   useEffect(() => {
     saveLibraryLayout(layout);
@@ -337,7 +313,7 @@ export function Library({
       </header>
       {filterCount > 0 ? (
         <div className="library-applied">
-          <AppliedTray filters={filters} onChange={changeFilters} />
+          <AppliedTray filters={filters} onChange={onFilters} />
         </div>
       ) : null}
       <div className="distillery-groups">
@@ -356,9 +332,9 @@ export function Library({
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
-          onChange={changeFilters}
+          onChange={onFilters}
           available={filtered.length}
-          onUndo={undo}
+          onUndo={onUndo}
           canUndo={canUndo}
           trayTitle="Applied"
           onClose={() => {
@@ -366,7 +342,7 @@ export function Library({
             filtersButton.current?.focus();
           }}
         >
-          <Filters bottles={bottles} filters={filters} onChange={changeFilters} showStatus showGeo />
+          <Filters bottles={bottles} filters={filters} onChange={onFilters} showStatus showGeo />
         </FilterDrawer>
       ) : null}
     </section>

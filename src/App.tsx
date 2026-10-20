@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Bottle, Catalog, FilterState } from "./types";
-import { emptyFilters } from "./types";
-import { popHistory, pushHistory } from "./lib/recovery";
+import { useEffect, useMemo, useState } from "react";
+import type { Bottle, Catalog } from "./types";
+import { useUndoableFilters } from "./lib/useUndoableFilters";
 import seeded from "../data/bottles.json";
 import { Library } from "./components/Library";
 import { PickADram } from "./components/PickADram";
@@ -16,6 +15,7 @@ import { BackToTop } from "./components/BackToTop";
 import { applyMerge } from "./lib/merge";
 import {
   addBottles,
+  defaultDramScope,
   downloadCatalog,
   fetchRemoteCatalog,
   isOwner,
@@ -29,52 +29,20 @@ import {
   setOwner,
   unlockOwner,
   upsertBottle,
+  type DramScope,
+  type Theme,
 } from "./lib/store";
-import type { Theme } from "./lib/store";
 
 type View = "home" | "library" | "dram" | "graveyard" | "analytics" | "owner";
-type PickPlace = "house" | "apartment";
 
 const seed = seeded as Catalog;
 
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [catalog, setCatalog] = useState<Catalog>(seed);
-  const [libraryFilters, setLibraryFilters] = useState(emptyFilters);
-  const [pickCriteria, setPickCriteria] = useState(emptyFilters);
-  const [pickPlace, setPickPlace] = useState<PickPlace>("house");
-  const [pickIncludeOpen, setPickIncludeOpen] = useState(true);
-  const [pickIncludeClosed, setPickIncludeClosed] = useState(false);
-  const libraryFilterUndo = useRef<FilterState[]>([]);
-  const pickCriteriaUndo = useRef<FilterState[]>([]);
-  const [libraryCanUndo, setLibraryCanUndo] = useState(false);
-  const [pickCanUndo, setPickCanUndo] = useState(false);
-
-  const changeLibraryFilters = (next: FilterState) => {
-    libraryFilterUndo.current = pushHistory(libraryFilterUndo.current, libraryFilters);
-    setLibraryCanUndo(true);
-    setLibraryFilters(next);
-  };
-
-  const undoLibraryFilters = () => {
-    const popped = popHistory(libraryFilterUndo.current);
-    libraryFilterUndo.current = popped.stack;
-    setLibraryCanUndo(popped.stack.length > 0);
-    if (popped.previous) setLibraryFilters(popped.previous);
-  };
-
-  const changePickCriteria = (next: FilterState) => {
-    pickCriteriaUndo.current = pushHistory(pickCriteriaUndo.current, pickCriteria);
-    setPickCanUndo(true);
-    setPickCriteria(next);
-  };
-
-  const undoPickCriteria = () => {
-    const popped = popHistory(pickCriteriaUndo.current);
-    pickCriteriaUndo.current = popped.stack;
-    setPickCanUndo(popped.stack.length > 0);
-    if (popped.previous) setPickCriteria(popped.previous);
-  };
+  const libraryVisit = useUndoableFilters();
+  const pickVisit = useUndoableFilters();
+  const [pickScope, setPickScope] = useState<DramScope>(defaultDramScope);
   const [owner, setOwnerState] = useState(false);
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [notice, setNotice] = useState("");
@@ -212,10 +180,10 @@ export default function App() {
       {view === "library" ? (
         <Library
           bottles={catalog.bottles}
-          filters={libraryFilters}
-          onFilters={changeLibraryFilters}
-          onUndo={undoLibraryFilters}
-          canUndo={libraryCanUndo}
+          filters={libraryVisit.filters}
+          onFilters={libraryVisit.change}
+          onUndo={libraryVisit.undo}
+          canUndo={libraryVisit.canUndo}
           owner={owner}
           onEdit={(b) => {
             setEditing(b);
@@ -244,16 +212,12 @@ export default function App() {
       {view === "dram" ? (
         <PickADram
           bottles={catalog.bottles}
-          filters={pickCriteria}
-          onFilters={changePickCriteria}
-          onUndo={undoPickCriteria}
-          canUndo={pickCanUndo}
-          place={pickPlace}
-          onPlaceChange={setPickPlace}
-          includeOpen={pickIncludeOpen}
-          onIncludeOpenChange={setPickIncludeOpen}
-          includeClosed={pickIncludeClosed}
-          onIncludeClosedChange={setPickIncludeClosed}
+          filters={pickVisit.filters}
+          onFilters={pickVisit.change}
+          onUndo={pickVisit.undo}
+          canUndo={pickVisit.canUndo}
+          scope={pickScope}
+          onScopeChange={setPickScope}
         />
       ) : null}
 
