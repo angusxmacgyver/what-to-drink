@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Bottle } from "../types";
 import { countryFromRegion } from "../lib/normalize";
+import { ChipSelect } from "./ChipSelect";
 
 function slugKey(distillery: string, bottling: string): string {
   const slug = (v: string) =>
@@ -37,10 +38,13 @@ const blank = (): Bottle => ({
 
 export function OwnerForm({
   initial,
+  caskTags,
   onSave,
   onCancel,
 }: {
   initial?: Bottle;
+  /** Every cask tag already in the cellar, offered for both cask fields. */
+  caskTags: string[];
   onSave: (bottle: Bottle) => void;
   onCancel: () => void;
 }) {
@@ -127,6 +131,20 @@ export function OwnerForm({
         SMWS Theme
         <input value={form.theme} onChange={(e) => set({ theme: e.target.value })} />
       </label>
+      <ChipSelect
+        label="Primary cask"
+        options={caskTags}
+        value={form.primaryCask}
+        onChange={(primaryCask) => set({ primaryCask })}
+        emptyHint="No cask tags yet. Add them in the workbook."
+      />
+      <ChipSelect
+        label="Secondary cask"
+        options={caskTags}
+        value={form.secondaryCask}
+        onChange={(secondaryCask) => set({ secondaryCask })}
+        emptyHint="No cask tags yet. Add them in the workbook."
+      />
       <label>
         Notes
         <textarea value={form.notes} onChange={(e) => set({ notes: e.target.value })} />

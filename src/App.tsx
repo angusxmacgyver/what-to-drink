@@ -13,6 +13,7 @@ import { OwnerLock } from "./components/OwnerLock";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { BackToTop } from "./components/BackToTop";
 import { applyMerge } from "./lib/merge";
+import { uniqueTags } from "./lib/library";
 import {
   addBottles,
   defaultDramScope,
@@ -90,6 +91,14 @@ export default function App() {
     setEditing(null);
     if (view === "owner") setView("home");
   };
+
+  const caskTags = useMemo(
+    () =>
+      uniqueTags(
+        [...catalog.bottles, ...catalog.graveyard].flatMap((b) => [...b.primaryCask, ...b.secondaryCask]),
+      ).sort((a, b) => a.localeCompare(b)),
+    [catalog],
+  );
 
   const importedLabel = useMemo(() => {
     if (!catalog.importedAt) return "Not imported yet";
@@ -278,6 +287,7 @@ export default function App() {
           {editing ? (
             <OwnerForm
               initial={editing === "new" ? undefined : editing}
+              caskTags={caskTags}
               onSave={(bottle) => {
                 const save = () => {
                   void persist(upsertBottle(catalog, bottle), saveBottle(bottle));
