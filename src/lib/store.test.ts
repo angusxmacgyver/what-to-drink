@@ -34,6 +34,8 @@ const bottle = (id: string): Bottle => ({
   theme: "",
   flavorFamilies: [],
   subCharacteristics: [],
+  primaryCask: [],
+  secondaryCask: [],
   atApartment: false,
   country: "Scotland",
   dateEmptied: "",

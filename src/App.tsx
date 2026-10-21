@@ -35,7 +35,7 @@ import {
 
 type View = "home" | "library" | "dram" | "graveyard" | "analytics" | "owner";
 
-const seed = seeded as Catalog;
+const seed = seeded as unknown as Catalog;
 
 export default function App() {
   const [view, setView] = useState<View>("home");

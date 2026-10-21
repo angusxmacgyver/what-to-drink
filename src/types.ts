@@ -29,6 +29,8 @@ export type Bottle = {
   theme: string;
   flavorFamilies: string[];
   subCharacteristics: string[];
+  primaryCask: string[];
+  secondaryCask: string[];
   atApartment: boolean;
   country: string;
   dateEmptied: string;

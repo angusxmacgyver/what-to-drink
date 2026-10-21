@@ -15,6 +15,8 @@ export function visitBottle(overrides: Partial<Bottle> & Pick<Bottle, "id">): Bo
     theme: "",
     flavorFamilies: [],
     subCharacteristics: [],
+    primaryCask: [],
+    secondaryCask: [],
     atApartment: false,
     country: "Scotland",
     dateEmptied: "",

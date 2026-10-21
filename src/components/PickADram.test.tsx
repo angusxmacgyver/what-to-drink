@@ -20,6 +20,8 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     theme: "",
     flavorFamilies: ["Smoke"],
     subCharacteristics: ["Woodsmoke & Campfire"],
+    primaryCask: [],
+    secondaryCask: [],
     atApartment: false,
     country: "Scotland",
     dateEmptied: "",
@@ -52,6 +54,8 @@ describe("DramResults", () => {
     country: "Japan",
     flavorFamilies: [],
     subCharacteristics: [],
+    primaryCask: [],
+    secondaryCask: [],
     smws: {
       fullCode: "99.9",
       distilleryNo: "99",

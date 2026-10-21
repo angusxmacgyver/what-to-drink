@@ -27,6 +27,8 @@ const blank = (): Bottle => ({
   theme: "",
   flavorFamilies: [],
   subCharacteristics: [],
+  primaryCask: [],
+  secondaryCask: [],
   atApartment: false,
   country: "",
   dateEmptied: "",

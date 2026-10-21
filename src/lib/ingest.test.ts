@@ -8,6 +8,71 @@ function sheet(name: string, rows: Record<string, string>[]): XLSX.WorkBook {
   return workbook;
 }
 
+function workbook(sheets: Record<string, Record<string, string>[]>): XLSX.WorkBook {
+  const book = XLSX.utils.book_new();
+  for (const [name, rows] of Object.entries(sheets)) {
+    XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(rows), name);
+  }
+  return book;
+}
+
+describe("cask import", () => {
+  const casks = { "Primary Cask": "Ex-bourbon | Oloroso sherry", "Secondary Cask": "Rum" };
+
+  it("reads primary and secondary cask on every bottle sheet, in the order written", () => {
+    const catalog = catalogFromWorkbook(
+      workbook({
+        "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "Drum", ...casks }],
+        "Closed Bottles": [{ Distillery: "Ardbeg", Bottling: "10", ...casks }],
+        SMWS: [{ Distillery: "Ardbeg", "Full Code": "33.1", ...casks }],
+        Apartment: [{ Distillery: "Ardbeg", Bottling: "An Oa", ...casks }],
+        "Fallen soldiers": [{ Distillery: "Ardbeg", Bottling: "Wee Beastie", ...casks }],
+      }),
+    );
+    const all = [...catalog.bottles, ...catalog.graveyard];
+    expect(all).toHaveLength(5);
+    for (const bottle of all) {
+      expect(bottle.primaryCask).toEqual(["Ex-bourbon", "Oloroso sherry"]);
+      expect(bottle.secondaryCask).toEqual(["Rum"]);
+    }
+  });
+
+  it("gives blank cells no casks, keeps a lone secondary cask, and keeps tags as typed", () => {
+    const catalog = catalogFromWorkbook(
+      workbook({
+        "Open Bottles": [
+          { Distillery: "Ardbeg", Bottling: "10", "Primary Cask": "", "Secondary Cask": "" },
+          { Distillery: "Ardbeg", Bottling: "Drum", "Primary Cask": "", "Secondary Cask": " PX sherry |  | ex-Bourbon " },
+        ],
+      }),
+    );
+    const [blank, lone] = catalog.bottles;
+    expect(blank.primaryCask).toEqual([]);
+    expect(blank.secondaryCask).toEqual([]);
+    expect(lone.primaryCask).toEqual([]);
+    expect(lone.secondaryCask).toEqual(["PX sherry", "ex-Bourbon"]);
+  });
+
+  it("leaves a Society bottle's SMWS cask and secondary maturation as before", () => {
+    const catalog = catalogFromWorkbook(
+      sheet("SMWS", [
+        {
+          Distillery: "Glenfarclas",
+          "Full Code": "1.246",
+          "SMWS Cask": "Second-fill barrel",
+          "Secondary Maturation": "Oloroso hogshead",
+        },
+      ]),
+    );
+    const [bottle] = catalog.bottles;
+    expect(bottle.smws?.smwsCask).toBe("Second-fill barrel");
+    expect(bottle.smws?.secondaryMaturation).toBe("Oloroso hogshead");
+    expect(bottle.notes).toBe("Second-fill barrel — Oloroso hogshead");
+    expect(bottle.primaryCask).toEqual([]);
+    expect(bottle.secondaryCask).toEqual([]);
+  });
+});
+
 describe("Society import", () => {
   it("accepts the SMWS Theme header while retaining the legacy Theme header", () => {
     const modern = catalogFromWorkbook(

@@ -21,6 +21,8 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     theme: "",
     flavorFamilies: [],
     subCharacteristics: [],
+    primaryCask: [],
+    secondaryCask: [],
     atApartment: false,
     country: "Scotland",
     dateEmptied: "",
