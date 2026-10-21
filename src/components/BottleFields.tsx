@@ -36,6 +36,8 @@ function pertinentFields(bottle: Bottle) {
 function hasExtraFields(bottle: Bottle, flavorText: boolean) {
   return (
     (flavorText && (bottle.flavorFamilies.length > 0 || bottle.subCharacteristics.length > 0)) ||
+    bottle.primaryCask.length > 0 ||
+    bottle.secondaryCask.length > 0 ||
     Boolean(bottle.smws) ||
     Boolean(bottle.dateEmptied)
   );
@@ -67,6 +69,8 @@ export function BottleFields({
           <Field label="Sub-characteristics" value={bottle.subCharacteristics.join(" · ")} />
         </>
       ) : null}
+      <Field label="Primary cask" value={bottle.primaryCask.join(" · ")} />
+      <Field label="Secondary cask" value={bottle.secondaryCask.join(" · ")} />
       {bottle.smws ? (
         <>
           <Field label="Full code" value={bottle.smws.fullCode} />

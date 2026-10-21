@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Bottle } from "../types";
 import { emptyFilters } from "../types";
 import { groupLibrary } from "../lib/library";
+import { BottleFields } from "./BottleFields";
 import { ExpressionDetail, Library, LibraryCard } from "./Library";
 
 function bottle(overrides: Partial<Bottle>): Bottle {
@@ -178,6 +179,21 @@ describe("expression detail", () => {
     expect(html).not.toContain('class="tag family');
   });
 
+  it("shows primary cask and secondary cask in the Library and Pick a Dram detail", () => {
+    const drum = bottle({ primaryCask: ["Ex-bourbon", "Oloroso sherry"], secondaryCask: ["Rum"] });
+    for (const factsFirst of [false, true]) {
+      const html = renderToStaticMarkup(<ExpressionDetail bottles={[drum]} owner={false} factsFirst={factsFirst} />);
+      expect(html).toContain("<dt>Primary cask</dt><dd>Ex-bourbon · Oloroso sherry</dd>");
+      expect(html).toContain("<dt>Secondary cask</dt><dd>Rum</dd>");
+    }
+  });
+
+  it("leaves out cask fields for a bottle with no casks recorded", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} owner={false} factsFirst />);
+    expect(html).not.toContain("Primary cask");
+    expect(html).not.toContain("Secondary cask");
+  });
+
   it("puts Mark open, Edit, and Kill on each physical bottle", () => {
     const html = renderToStaticMarkup(
       <ExpressionDetail bottles={[closedBottle, openBottle]} owner {...actions} />,
@@ -191,6 +207,32 @@ describe("expression detail", () => {
     expect(closed).toContain("Mark open");
     expect(closed).toContain("Edit");
     expect(closed).toContain("Kill → Graveyard");
+  });
+});
+
+describe("graveyard bottle fields", () => {
+  it("shows a Society bottle's cask tags beside the Society's own descriptions", () => {
+    const society = bottle({
+      status: "Killed",
+      primaryCask: ["Refill ex-bourbon"],
+      secondaryCask: ["PX sherry"],
+      smws: {
+        fullCode: "33.1",
+        distilleryNo: "33",
+        caskNo: "1",
+        flavorProfile: "",
+        smwsCask: "Second-fill barrel",
+        secondaryMaturation: "Pedro Ximénez hogshead",
+        nameIntl: "",
+        vintage: "",
+        smwsUrl: "",
+      },
+    });
+    const html = renderToStaticMarkup(<BottleFields bottle={society} />);
+    expect(html).toContain("<dt>Primary cask</dt><dd>Refill ex-bourbon</dd>");
+    expect(html).toContain("<dt>Secondary cask</dt><dd>PX sherry</dd>");
+    expect(html).toContain("<dt>SMWS cask</dt><dd>Second-fill barrel</dd>");
+    expect(html).toContain("<dt>Secondary maturation</dt><dd>Pedro Ximénez hogshead</dd>");
   });
 });
 
