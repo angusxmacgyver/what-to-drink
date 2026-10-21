@@ -22,6 +22,7 @@ import {
   killBottle,
   loadStoredCatalog,
   loadTheme,
+  readCatalog,
   replaceCatalog,
   saveBottle,
   saveCatalog,
@@ -35,7 +36,7 @@ import {
 
 type View = "home" | "library" | "dram" | "graveyard" | "analytics" | "owner";
 
-const seed = seeded as unknown as Catalog;
+const seed = readCatalog(seeded);
 
 export default function App() {
   const [view, setView] = useState<View>("home");

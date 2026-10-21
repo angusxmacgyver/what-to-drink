@@ -139,11 +139,27 @@ export function saveTheme(theme: Theme): void {
   localStorage.setItem(THEME_KEY, theme);
 }
 
+const readBottle = (bottle: Bottle): Bottle => ({
+  ...bottle,
+  primaryCask: stringList(bottle.primaryCask),
+  secondaryCask: stringList(bottle.secondaryCask),
+});
+
+/** A catalog from D1, this device, or the bundled file. Bottles saved before casks read as having none. */
+export function readCatalog(raw: unknown): Catalog {
+  const catalog = raw as Catalog;
+  return {
+    ...catalog,
+    bottles: (catalog.bottles ?? []).map(readBottle),
+    graveyard: (catalog.graveyard ?? []).map(readBottle),
+  };
+}
+
 export function loadStoredCatalog(): Catalog | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as Catalog;
+    return readCatalog(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -190,7 +206,7 @@ export async function fetchRemoteCatalog(): Promise<Catalog | null> {
   try {
     const res = await fetch("/api/catalog");
     if (!res.ok) return null;
-    const catalog = (await res.json()) as Catalog;
+    const catalog = readCatalog(await res.json());
     if (!catalog.bottles?.length) return null;
     saveCatalog(catalog);
     return catalog;

@@ -172,6 +172,36 @@ describe("fetchRemoteCatalog", () => {
   });
 });
 
+describe("bottles saved before casks", () => {
+  const { primaryCask: _p, secondaryCask: _s, ...older } = bottle("old");
+  const olderCatalog = { schemaVersion: 1, importedAt: "t", bottles: [older], graveyard: [{ ...older, id: "dead", status: "Killed" }] };
+  const casksOf = (b: Bottle) => ({ primaryCask: b.primaryCask, secondaryCask: b.secondaryCask });
+
+  it("read as having no casks when they come from the server", async () => {
+    respondWith(200, olderCatalog);
+    const remote = await fetchRemoteCatalog();
+    expect([...remote!.bottles, ...remote!.graveyard].map(casksOf)).toEqual([
+      { primaryCask: [], secondaryCask: [] },
+      { primaryCask: [], secondaryCask: [] },
+    ]);
+  });
+
+  it("read as having no casks when they come from this device", () => {
+    localStorage.setItem("what-to-drink-catalog", JSON.stringify(olderCatalog));
+    const local = loadStoredCatalog();
+    expect([...local!.bottles, ...local!.graveyard].map(casksOf)).toEqual([
+      { primaryCask: [], secondaryCask: [] },
+      { primaryCask: [], secondaryCask: [] },
+    ]);
+  });
+
+  it("keep casks they already have", async () => {
+    const tagged = { ...bottle("tagged"), primaryCask: ["Ex-bourbon"], secondaryCask: ["Rum"] };
+    respondWith(200, catalog([tagged]));
+    expect((await fetchRemoteCatalog())!.bottles).toEqual([tagged]);
+  });
+});
+
 describe("writes", () => {
   it("saveBottle PUTs one bottle to its own path", async () => {
     respondWith(204);
