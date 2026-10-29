@@ -1,5 +1,51 @@
-import { describe, expect, it } from "vitest";
-import { cardTransitionName, choosePour, leadBottle, settlePick } from "./pour";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cardTransitionName, choosePour, leadBottle, revealCard, settlePick } from "./pour";
+
+describe("revealCard", () => {
+  function card(top: number) {
+    const element = document.createElement("div");
+    element.getBoundingClientRect = () => ({ top, bottom: top + 100 }) as DOMRect;
+    element.scrollIntoView = vi.fn();
+    return element;
+  }
+
+  function reducedMotion(on: boolean) {
+    vi.stubGlobal("matchMedia", vi.fn().mockImplementation(() => ({ matches: on })));
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("jumps straight to the card under reduced motion", async () => {
+    reducedMotion(true);
+    const target = card(5000);
+    await revealCard(target);
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "auto" });
+  });
+
+  it("leaves a card that is already in view where it is", async () => {
+    reducedMotion(false);
+    const target = card(200);
+    await revealCard(target);
+    expect(target.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("smooth-scrolls to a card out of view and waits for the scroll to end", async () => {
+    reducedMotion(false);
+    const target = card(5000);
+    let done = false;
+    const revealed = revealCard(target).then(() => {
+      done = true;
+    });
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "smooth" });
+    await Promise.resolve();
+    expect(done).toBe(false);
+    document.dispatchEvent(new Event("scrollend"));
+    await revealed;
+    expect(done).toBe(true);
+  });
+});
 
 describe("cardTransitionName", () => {
   it("makes a valid ident and keeps distinct keys distinct", () => {

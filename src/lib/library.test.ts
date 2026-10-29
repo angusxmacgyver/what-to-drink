@@ -9,6 +9,7 @@ import {
   groupLibrary,
   matchesFilters,
   matchesStatus,
+  optionCounts,
   originLabel,
   subOwnerFamily,
   subsForFamilies,
@@ -346,6 +347,31 @@ describe("facetCounts", () => {
     ]);
     expect(performance.now() - started).toBeLessThan(100);
     expect(counts).toEqual({ Ardbeg: 1000, Lagavulin: 1000, Bowmore: 0 });
+  });
+});
+
+describe("optionCounts", () => {
+  it("counts any bottles it is given, whatever their place or status", () => {
+    const house = bottle({ distillery: "Ardbeg", region: "Islay", theme: "Peated" });
+    const apartment = bottle({ distillery: "Lagavulin", region: "Islay", theme: "Peated", atApartment: true });
+    const closed = bottle({ distillery: "Bowmore", region: "Islay", theme: "Peated", status: "Closed" });
+    const killed = bottle({ distillery: "Laphroaig", region: "Islay", theme: "Peated", status: "Killed" });
+    const sweet = bottle({ distillery: "Glenfiddich", region: "Speyside", theme: "Sweet" });
+    const filters = { ...emptyFilters(), regions: ["Speyside"], themes: ["Peated"] };
+    expect(
+      optionCounts([house, apartment, closed, killed, sweet], filters, "region", ["Islay", "Speyside"]),
+    ).toEqual({ Islay: 4, Speyside: 0 });
+  });
+
+  it("matches the place-scoped counts when given that place's candidates", () => {
+    const islay = bottle({ region: "Islay" });
+    const away = bottle({ region: "Islay", atApartment: true });
+    const closed = bottle({ region: "Islay", status: "Closed" });
+    const all = [islay, away, closed];
+    const filters = emptyFilters();
+    expect(optionCounts(dramCandidates(all, "house", false), filters, "region", ["Islay"])).toEqual(
+      facetCounts(all, "house", false, filters, "region", ["Islay"]),
+    );
   });
 });
 

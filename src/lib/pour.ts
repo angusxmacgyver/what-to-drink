@@ -50,3 +50,26 @@ export function withViewTransition(update: () => void): void {
 export function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 }
+
+/** Resolves once the card has scrolled into view. Already-visible cards resolve immediately. */
+export function revealCard(card: HTMLElement): Promise<void> {
+  if (prefersReducedMotion()) {
+    card.scrollIntoView({ block: "center", behavior: "auto" });
+    return Promise.resolve();
+  }
+  const rect = card.getBoundingClientRect();
+  if (rect.top >= 64 && rect.bottom <= window.innerHeight - 24) return Promise.resolve();
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("scrollend", finish);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, 700);
+    document.addEventListener("scrollend", finish);
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+}

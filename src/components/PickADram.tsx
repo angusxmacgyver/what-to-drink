@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { flushSync } from "react-dom";
 import { emptyFilters, type Bottle, type FilterState } from "../types";
 import { dramPool, groupDistilleries, groupLibrary, type LibraryRow } from "../lib/library";
-import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, settlePick, withViewTransition } from "../lib/pour";
+import { cardTransitionName, choosePour, leadBottle, prefersReducedMotion, revealCard, settlePick, withViewTransition } from "../lib/pour";
 import { mostConstraining } from "../lib/recovery";
 import type { DramScope } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -14,29 +14,6 @@ import { FANCY_PICKER_URL, stageFancyPool } from "../lib/fancy";
 type Place = "house" | "apartment";
 
 const FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled])";
-
-/** Resolves once the card has scrolled into view. Already-visible cards resolve immediately. */
-function revealCard(card: HTMLElement): Promise<void> {
-  if (prefersReducedMotion()) {
-    card.scrollIntoView({ block: "center", behavior: "auto" });
-    return Promise.resolve();
-  }
-  const rect = card.getBoundingClientRect();
-  if (rect.top >= 64 && rect.bottom <= window.innerHeight - 24) return Promise.resolve();
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timer);
-      document.removeEventListener("scrollend", finish);
-      resolve();
-    };
-    const timer = window.setTimeout(finish, 700);
-    document.addEventListener("scrollend", finish);
-    card.scrollIntoView({ block: "center", behavior: "smooth" });
-  });
-}
 
 function growFromCard(dialog: HTMLElement, card: HTMLElement) {
   const from = card.getBoundingClientRect();

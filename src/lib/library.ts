@@ -263,7 +263,27 @@ function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
   return [bottle.region];
 }
 
-/** How many candidates would show each option if that option were the facet's only pick. */
+/** How many of the given bottles would show each option if that option were the facet's only pick. */
+export function optionCounts(
+  candidates: Bottle[],
+  filters: FilterState,
+  facet: CountFacet,
+  options: readonly string[],
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const option of options) counts[option] = 0;
+  const wanted = new Set(options);
+  const narrowed = withoutFacet(filters, facet);
+  for (const bottle of candidates) {
+    if (!matchesFilters(bottle, narrowed)) continue;
+    for (const value of valuesForFacet(bottle, facet)) {
+      if (wanted.has(value)) counts[value] += 1;
+    }
+  }
+  return counts;
+}
+
+/** How many candidates at a place would show each option if that option were the facet's only pick. */
 export function facetCounts(
   bottles: Bottle[],
   place: DramPlace,
@@ -273,17 +293,7 @@ export function facetCounts(
   options: readonly string[],
   includeOpen = true,
 ): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const option of options) counts[option] = 0;
-  const wanted = new Set(options);
-  const narrowed = withoutFacet(filters, facet);
-  for (const bottle of dramCandidates(bottles, place, includeClosed, includeOpen)) {
-    if (!matchesFilters(bottle, narrowed)) continue;
-    for (const value of valuesForFacet(bottle, facet)) {
-      if (wanted.has(value)) counts[value] += 1;
-    }
-  }
-  return counts;
+  return optionCounts(dramCandidates(bottles, place, includeClosed, includeOpen), filters, facet, options);
 }
 
 export function dramPool(
