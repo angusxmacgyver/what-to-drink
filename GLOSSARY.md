@@ -45,18 +45,18 @@ _Avoid_: Secondary cask, finish
 ## Choosing bottles
 
 **Library filters**:
-Choices that narrow which bottles are shown while browsing the Library. Choosing them does not change Pick criteria.
+Choices that narrow which bottles the Library shows. A Pick is chosen from the bottles they leave showing.
 _Avoid_: Pick criteria, facets
 
-**Pick criteria**:
-Choices that narrow the pool of bottles from which a Pick can be chosen. Choosing them does not change Library filters.
-_Avoid_: Library filters, filters
+**Match exactly**:
+A way of applying Library filters in which every selected choice must be true of a bottle, even two choices within one category. With it off, choices within one category are alternatives.
+_Avoid_: Match all, any/all, strict
 
 ## Taking a dram
 
 **Pick**:
-One bottle chosen to walk to. Choosing it does not record a taking.
-_Avoid_: Pour, dram
+One bottle chosen at random, from the bottles the Library is showing, to walk to. It is chosen at the House unless the Apartment is chosen. Choosing it does not record a taking.
+_Avoid_: Pour, dram, Pick criteria
 
 **Dram**:
 A recorded taking from one live bottle. It stays with that bottle until the bottle is killed, and it is not removed one at a time.
@@ -83,7 +83,7 @@ A bottle whose remaining whisky is in its last third.
 _Avoid_: Low, nearly empty, running out
 
 **Graveyard**:
-A killed bottle, kept as its details, the day it was finished, and whether a kill shot finished it. It is no longer in the Library or in Pick a Dram.
+A killed bottle, kept as its details, the day it was finished, and whether a kill shot finished it. It is no longer in the Library and cannot be picked.
 _Avoid_: Empty, fallen
 
 **Date finished**:
