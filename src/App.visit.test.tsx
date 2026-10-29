@@ -2,6 +2,8 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { emptyFilters } from "./types";
+import { stageFancyVisit } from "./lib/fancy";
 import { saveLibraryLayout } from "./lib/store";
 import { visitBottle, visitCatalog } from "./test/visitCatalog";
 
@@ -511,6 +513,85 @@ describe("Pick from the Library drawer", () => {
       expect(pickedRow()).not.toHaveClass("pick-pulse");
       expect(scroll.mock.contexts).toContain(pickedRow());
       expect(scroll).toHaveBeenCalledWith({ block: "center" });
+    });
+  });
+
+  describe("the fancy wheel round trip", () => {
+    it("with I feel fancy, Pick stages its own pool and the visit, then opens the wheel", async () => {
+      const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+      const user = userEvent.setup();
+      render(<App />);
+
+      await openFilters(user);
+      await pickFlavorFamily(user, "Smoke");
+      await user.click(filterDrawer().getByRole("checkbox", { name: "Match exactly" }));
+      await user.click(filterDrawer().getByRole("checkbox", { name: "I feel fancy" }));
+      await user.click(filterDrawer().getByRole("button", { name: "Pick from 3" }));
+
+      expect(assign).toHaveBeenCalledWith("/fancy/index.html");
+      const pool = JSON.parse(sessionStorage.getItem("what-to-drink-fancy-pool")!);
+      expect(pool.bottles.map((b: { id: string }) => b.id)).toEqual(["house-smoke", "house-both", "house-closed"]);
+      const visit = JSON.parse(sessionStorage.getItem("what-to-drink-fancy-visit")!);
+      expect(visit.filters.families).toEqual(["Smoke"]);
+      expect(visit.exact).toBe(true);
+      expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+    });
+
+    function returnFromWheel(landedId: string | null) {
+      stageFancyVisit({ filters: { ...emptyFilters(), place: "apartment", families: ["Smoke"] }, exact: true });
+      if (landedId) sessionStorage.setItem("what-to-drink-fancy-result", JSON.stringify({ version: 1, bottleId: landedId }));
+    }
+
+    it("comes back to the same visit with the landed bottle revealed as the Pick", async () => {
+      returnFromWheel("apt-smoke");
+      const user = userEvent.setup();
+      render(<App />);
+
+      expect(await screen.findByText("Your dram: Apartment Smoke Flat. Bottle is at: Apartment.")).toBeTruthy();
+      expect(pickedRow()).toHaveClass("open");
+      expect(libraryPanel().getByRole("button", { name: "Remove Smoke" })).toBeTruthy();
+      await openFilters(user);
+      expect(filterDrawer().getByRole("button", { name: /^Apartment/, pressed: true })).toBeTruthy();
+      expect(filterDrawer().getByRole("checkbox", { name: "Match exactly" })).toBeChecked();
+    });
+
+    it("leads a landed closed bottle to the opened bottle of the same expression", async () => {
+      localStorage.setItem(
+        "what-to-drink-catalog",
+        JSON.stringify({
+          ...visitCatalog,
+          bottles: [
+            ...visitCatalog.bottles,
+            visitBottle({ id: "pair-closed", bottleKey: "pair::12", distillery: "Pair", bottling: "12", status: "Closed", location: "Crate" }),
+            visitBottle({ id: "pair-open", bottleKey: "pair::12", distillery: "Pair", bottling: "12", location: "Bar" }),
+          ],
+        }),
+      );
+      stageFancyVisit({ filters: { ...emptyFilters(), search: "Pair" }, exact: false });
+      sessionStorage.setItem("what-to-drink-fancy-result", JSON.stringify({ version: 1, bottleId: "pair-closed" }));
+      render(<App />);
+
+      expect(await screen.findByText("Your dram: Pair 12. Bottle is at: Bar.")).toBeTruthy();
+    });
+
+    it("comes back to the same visit with no new Pick when the wheel was left before it landed", async () => {
+      returnFromWheel(null);
+      render(<App />);
+
+      expect(await libraryPanel().findByRole("button", { name: "Remove Smoke" })).toBeTruthy();
+      expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+      expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+    });
+
+    it("does not reveal the result again on a later load", async () => {
+      returnFromWheel("apt-smoke");
+      const first = render(<App />);
+      await screen.findByText("Your dram: Apartment Smoke Flat. Bottle is at: Apartment.");
+      first.unmount();
+      render(<App />);
+
+      expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+      expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
     });
   });
 

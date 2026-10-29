@@ -1,5 +1,5 @@
 import { Stage } from "./scene.js";
-import { buildEntries, consumePool, describe, entryForBottle, pickBottle } from "./data.js";
+import { buildEntries, consumePool, describe, entryForBottle, pickBottle, saveResult } from "./data.js";
 import { Sound } from "./audio.js";
 
 const N = 144;
@@ -224,6 +224,7 @@ const enter = {
     navigator.vibrate?.(12);
   },
   result() {
+    saveResult(S.winner.primary);
     nameEl.style.clipPath = "none";
     nameEl.style.filter = "none";
     resultEl.classList.add("show", "interactive");

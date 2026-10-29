@@ -1498,6 +1498,8 @@ nav button.on,
 .drawer-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
 .fancy-mode { display: flex; align-items: center; gap: 10px; flex: none; padding: 10px 2px 0; cursor: pointer; font-family: var(--serif); font-size: 17px; }
 .fancy-mode input { width: 18px; height: 18px; margin: 0; accent-color: var(--gold); }
+.pick-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: none; }
+.pick-foot .fancy-mode { padding-top: 0; }
 .drawer .filters { margin-bottom: 0; }
 .drawer .hist-pair { grid-template-columns: 1fr; }
 .drawer .option-section,

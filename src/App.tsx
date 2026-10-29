@@ -13,6 +13,7 @@ import { OwnerLock } from "./components/OwnerLock";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { BackToTop } from "./components/BackToTop";
 import { applyMerge } from "./lib/merge";
+import { consumeFancyReturn } from "./lib/fancy";
 import { uniqueTags } from "./lib/library";
 import {
   addBottles,
@@ -45,6 +46,7 @@ export default function App() {
   const libraryVisit = useUndoableFilters();
   const [matchExactly, setMatchExactly] = useState(false);
   const [libraryPick, setLibraryPick] = useState<Bottle | null>(null);
+  const [landedId, setLandedId] = useState<string | null>(null);
   const pickVisit = useUndoableFilters();
   const [pickScope, setPickScope] = useState<DramScope>(defaultDramScope);
   const [owner, setOwnerState] = useState(false);
@@ -71,6 +73,23 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     saveTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    const takeFancyReturn = () => {
+      const trip = consumeFancyReturn();
+      if (!trip) return;
+      libraryVisit.setFilters(trip.visit.filters);
+      setMatchExactly(trip.visit.exact);
+      setLandedId(trip.bottleId);
+      setView("library");
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) takeFancyReturn();
+    };
+    takeFancyReturn();
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   useEffect(() => {
     setOwnerState(isOwner());
@@ -177,6 +196,8 @@ export default function App() {
           onExact={setMatchExactly}
           pick={libraryPick}
           onPick={setLibraryPick}
+          landedId={landedId}
+          onLanded={() => setLandedId(null)}
           owner={owner}
           onEdit={(b) => {
             setEditing(b);

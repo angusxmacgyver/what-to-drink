@@ -5,6 +5,7 @@ import {
   describe as reveal,
   entryForBottle,
   pickBottle,
+  saveResult,
 } from "../../public/fancy/js/data.js";
 
 const bottle = (overrides = {}) => ({
@@ -35,6 +36,14 @@ describe("fancy picker data", () => {
     expect(consumePool(storage).map(({ id }) => id)).toEqual(["open"]);
     expect(stored).toBeNull();
     expect(consumePool(storage)).toEqual([]);
+  });
+
+  it("saves the landed bottle as the result for the Library, replacing any earlier landing", () => {
+    const stored = new Map();
+    const storage = { setItem: (key, value) => stored.set(key, value) };
+    saveResult(bottle({ id: "first" }), storage);
+    saveResult(bottle({ id: "second" }), storage);
+    expect([...stored]).toEqual([["what-to-drink-fancy-result", '{"version":1,"bottleId":"second"}']]);
   });
 
   it("groups wheel labels by expression while preserving physical-bottle picks", () => {

@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import type { Bottle, FilterState } from "../types";
 import { familyClass, smwsThemeClass } from "../lib/colors";
+import { FANCY_PICKER_URL, stageFancyPool, stageFancyVisit } from "../lib/fancy";
 import {
   detailBottle,
   groupDistilleries,
@@ -30,6 +32,9 @@ type Props = {
   onExact: (next: boolean) => void;
   pick: Bottle | null;
   onPick: (next: Bottle | null) => void;
+  /** A bottle the fancy wheel landed on, to reveal as the Pick. */
+  landedId?: string | null;
+  onLanded?: () => void;
   owner: boolean;
   onEdit?: (bottle: Bottle) => void;
   onKill?: (id: string) => void;
@@ -298,6 +303,8 @@ export function Library({
   onExact,
   pick,
   onPick,
+  landedId = null,
+  onLanded,
   owner,
   onEdit,
   onKill,
@@ -339,10 +346,35 @@ export function Library({
     };
   }, []);
 
+  const [fancyArmed, setFancyArmed] = useState(false);
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setFancyArmed(false);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   const makePick = () => {
+    if (fancyArmed) {
+      stageFancyPool(pool);
+      stageFancyVisit({ filters, exact });
+      flushSync(() => setFancyArmed(false));
+      window.location.assign(FANCY_PICKER_URL);
+      return;
+    }
     const next = choosePour(pool, pick?.id ?? null);
-    if (!next) return;
-    const lead = leadBottle(pool, next);
+    if (next) reveal(leadBottle(pool, next));
+  };
+
+  useEffect(() => {
+    if (!landedId) return;
+    onLanded?.();
+    const landed = pool.find((b) => b.id === landedId);
+    if (landed) reveal(leadBottle(pool, landed));
+  }, [landedId]);
+
+  function reveal(lead: Bottle) {
     const generation = ++pickGeneration.current;
     const current = () => generation === pickGeneration.current;
     const target = () => document.getElementById(rowId(lead.bottleKey));
@@ -379,7 +411,7 @@ export function Library({
         }, 1100);
       });
     });
-  };
+  }
 
   useEffect(() => {
     saveLibraryLayout(layout);
@@ -460,9 +492,19 @@ export function Library({
           flagId={flagId}
           trayTitle="Applied"
           foot={
-            <button type="button" className="roll" onClick={makePick} disabled={pool.length === 0}>
-              {pool.length ? `Pick from ${pool.length}` : "No pours available"}
-            </button>
+            <div className="pick-foot">
+              <label className="fancy-mode">
+                <input
+                  type="checkbox"
+                  checked={fancyArmed}
+                  onChange={(event) => setFancyArmed(event.currentTarget.checked)}
+                />
+                <span>I feel fancy</span>
+              </label>
+              <button type="button" className="roll" onClick={makePick} disabled={pool.length === 0}>
+                {pool.length ? `Pick from ${pool.length}` : "No pours available"}
+              </button>
+            </div>
           }
           onClose={() => {
             setFiltersOpen(false);

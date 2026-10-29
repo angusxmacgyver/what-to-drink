@@ -13,6 +13,11 @@ const MOOD_LABELS = {
 };
 
 export const FANCY_POOL_KEY = "what-to-drink-fancy-pool";
+export const FANCY_RESULT_KEY = "what-to-drink-fancy-result";
+
+export function saveResult(bottle, storage = sessionStorage) {
+  storage.setItem(FANCY_RESULT_KEY, JSON.stringify({ version: 1, bottleId: bottle.id }));
+}
 
 export function consumePool(storage = sessionStorage) {
   try {
