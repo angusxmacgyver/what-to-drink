@@ -187,6 +187,8 @@ function matchesAge(bottle: Bottle, filters: FilterState): boolean {
 }
 
 export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
+  if (filters.place === "apartment" && !bottle.atApartment) return false;
+  if (filters.place === "house" && bottle.atApartment) return false;
   if (!inList(filters.distilleries, bottle.distillery)) return false;
   if (!inList(filters.themes, bottle.theme)) return false;
   if (!inList(filters.countries, bottle.country)) return false;

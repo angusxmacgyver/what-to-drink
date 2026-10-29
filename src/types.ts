@@ -46,6 +46,8 @@ export type Catalog = {
 
 export type FilterState = {
   search: string;
+  /** None shows both places. */
+  place: "house" | "apartment" | null;
   distilleries: string[];
   themes: string[];
   statuses: string[];
@@ -65,6 +67,7 @@ export type FilterState = {
 
 export const emptyFilters = (): FilterState => ({
   search: "",
+  place: null,
   distilleries: [],
   themes: [],
   statuses: [],

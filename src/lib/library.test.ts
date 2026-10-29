@@ -128,6 +128,25 @@ describe("matchesStatus", () => {
   });
 });
 
+describe("matchesFilters place", () => {
+  const house = bottle({ atApartment: false });
+  const apartment = bottle({ atApartment: true });
+
+  it("keeps bottles at both places when no place is chosen", () => {
+    expect(matchesFilters(house, emptyFilters())).toBe(true);
+    expect(matchesFilters(apartment, emptyFilters())).toBe(true);
+  });
+
+  it("keeps only the chosen place's bottles", () => {
+    const atHouse = { ...emptyFilters(), place: "house" as const };
+    const atApartment = { ...emptyFilters(), place: "apartment" as const };
+    expect(matchesFilters(house, atHouse)).toBe(true);
+    expect(matchesFilters(apartment, atHouse)).toBe(false);
+    expect(matchesFilters(house, atApartment)).toBe(false);
+    expect(matchesFilters(apartment, atApartment)).toBe(true);
+  });
+});
+
 describe("matchesFilters ABV", () => {
   const filters = { ...emptyFilters(), abvMin: "40", abvMax: "50" };
 

@@ -53,6 +53,14 @@ describe("appliedChips", () => {
     expect(removeChip(filters, "missing")).toBe(filters);
   });
 
+  it("shows the chosen place, and removing it returns to both places", () => {
+    const filters = { ...emptyFilters(), place: "apartment" as const };
+    const chips = appliedChips(filters);
+    expect(chips.map((chip) => chip.label)).toEqual(["Apartment"]);
+    expect(removeChip(filters, chips[0].id).place).toBeNull();
+    expect(appliedChips({ ...emptyFilters(), place: "house" }).map((chip) => chip.label)).toEqual(["House"]);
+  });
+
   it("removes a sub-characteristic and its selected family context together", () => {
     const filters = {
       ...emptyFilters(),

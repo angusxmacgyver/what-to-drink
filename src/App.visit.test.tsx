@@ -344,6 +344,79 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(filtersBadgeCount(libraryPanel())).toBe("1");
   });
 
+  it("narrows the Library to one Place at a time, shown only in the drawer, and shows the whole cellar again when removed", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+
+    await user.click(filterDrawer().getByRole("button", { name: "Apartment", pressed: false }));
+    expect(filterDrawer().getByRole("button", { name: "House", pressed: false })).toBeTruthy();
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    await closeFilters(user);
+    expect(filtersBadgeCount(libraryPanel())).toBe("1");
+    expect(libraryPanel().queryByRole("button", { name: "Remove Apartment" })).toBeNull();
+    expect(libraryPanel().queryByRole("button", { name: "Clear all" })).toBeNull();
+
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "Remove Apartment" }));
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+  });
+
+  it("keeps Place when the Library page's Clear all clears the other filters", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
+    await pickFlavorFamily(user, "Sweet");
+    expect(libraryCountsText()).toBe("2 expressions · 2 bottles");
+    await closeFilters(user);
+
+    await user.click(libraryPanel().getByRole("button", { name: "Clear all" }));
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+  });
+
+  it("undoes a Place change and forgets Place on reload", async () => {
+    const user = userEvent.setup();
+    const mounted = render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: "Apartment", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
+    expect(filterDrawer().getByRole("button", { name: "House", pressed: true })).toBeTruthy();
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+
+    mounted.unmount();
+    render(<App />);
+    await goLibrary(user);
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+  });
+
   it("ignores a saved Pick selection but restores theme, Library layout, and collapsed sections", async () => {
     saveTheme("light");
     saveLibraryLayout("grid");

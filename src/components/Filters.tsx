@@ -73,6 +73,15 @@ export function Filters({
           />
         </label>
       ) : null}
+      <ChipSelect
+        label="Place"
+        options={["House", "Apartment"]}
+        value={filters.place === "house" ? ["House"] : filters.place === "apartment" ? ["Apartment"] : []}
+        onChange={(places) => {
+          const last = places.at(-1);
+          set({ place: last === "House" ? "house" : last === "Apartment" ? "apartment" : null });
+        }}
+      />
       {showStatus ? (
         <ChipSelect
           label="Status"

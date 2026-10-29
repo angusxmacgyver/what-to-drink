@@ -311,9 +311,9 @@ export function Library({
           </p>
         </div>
       </header>
-      {filterCount > 0 ? (
+      {activeFilterCount({ ...filters, place: null }) > 0 ? (
         <div className="library-applied">
-          <AppliedTray filters={filters} onChange={onFilters} />
+          <AppliedTray filters={filters} onChange={onFilters} hidePlace />
         </div>
       ) : null}
       <div className="distillery-groups">

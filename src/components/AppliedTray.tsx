@@ -6,10 +6,13 @@ type Props = {
   onChange: (next: FilterState) => void;
   title?: string;
   flagId?: string | null;
+  /** Place stays set, unseen, and Clear all leaves it alone. */
+  hidePlace?: boolean;
 };
 
-export function AppliedTray({ filters, onChange, title, flagId = null }: Props) {
-  const chips = appliedChips(filters);
+export function AppliedTray({ filters, onChange, title, flagId = null, hidePlace = false }: Props) {
+  const chips = appliedChips(hidePlace ? { ...filters, place: null } : filters);
+  const cleared = hidePlace ? { ...emptyFilters(), place: filters.place } : emptyFilters();
   return (
     <div className="applied-tray">
       {title ? <p className="applied-title">{title}</p> : null}
@@ -32,7 +35,7 @@ export function AppliedTray({ filters, onChange, title, flagId = null }: Props) 
               </button>
             ))}
           </div>
-          <button type="button" className="chipset-clear" onClick={() => onChange(emptyFilters())}>
+          <button type="button" className="chipset-clear" onClick={() => onChange(cleared)}>
             Clear all
           </button>
         </>

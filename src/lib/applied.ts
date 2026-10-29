@@ -26,6 +26,7 @@ export function appliedChips(filters: FilterState): AppliedChip[] {
   const chips: AppliedChip[] = [];
   const search = filters.search.trim();
   if (search) chips.push({ id: chipId("search"), label: `Search: ${search}` });
+  if (filters.place) chips.push({ id: chipId("place"), label: filters.place === "house" ? "House" : "Apartment" });
   chips.push(
     ...listed("distillery", filters.distilleries),
     ...listed("theme", filters.themes, smwsThemeClass),
@@ -52,6 +53,7 @@ export function removeChip(filters: FilterState, id: string): FilterState {
   const kind = split < 0 ? id : id.slice(0, split);
   const value = split < 0 ? "" : id.slice(split + 1);
   if (kind === "search") return { ...filters, search: "" };
+  if (kind === "place") return { ...filters, place: null };
   if (kind === "distillery") return { ...filters, distilleries: without(filters.distilleries, value) };
   if (kind === "theme") return { ...filters, themes: without(filters.themes, value) };
   if (kind === "family") {
