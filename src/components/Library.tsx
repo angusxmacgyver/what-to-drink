@@ -18,6 +18,8 @@ import { BottleFields } from "./BottleFields";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
+import { PrototypeSwitcher, useVariant } from "./PrototypeSwitcher";
+import { DockPick, DrawerPick, HeaderPick, PICK_VARIANTS, PROTOTYPE_CSS, rowId, usePrototypePick } from "./LibraryPick.prototype";
 
 type Props = {
   bottles: Bottle[];
@@ -186,6 +188,8 @@ function DistillerySection({
   filters,
   openKey,
   onToggle,
+  markFor,
+  picked,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
@@ -193,6 +197,8 @@ function DistillerySection({
   filters: FilterState;
   openKey: string | null;
   onToggle: (key: string) => void;
+  markFor: (bottleKey: string) => string;
+  picked: Bottle | null;
 }) {
   return (
     <section className="distillery-group">
@@ -207,18 +213,26 @@ function DistillerySection({
           if (layout === "grid") {
             return (
               <Fragment key={row.bottleKey}>
-                <LibraryCard
-                  row={row}
-                  expanded={expanded}
-                  showDistillery={false}
-                  onToggle={() => onToggle(row.bottleKey)}
-                />
+                <div id={rowId(row.bottleKey)} className={markFor(row.bottleKey)}>
+                  <LibraryCard
+                    row={row}
+                    expanded={expanded}
+                    showDistillery={false}
+                    picked={picked?.bottleKey === row.bottleKey}
+                    where={picked?.bottleKey === row.bottleKey ? picked.location : undefined}
+                    onToggle={() => onToggle(row.bottleKey)}
+                  />
+                </div>
                 {expanded ? <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} {...actions} /> : null}
               </Fragment>
             );
           }
           return (
-            <article key={row.bottleKey} className={expanded ? "row open" : "row"}>
+            <article
+              key={row.bottleKey}
+              id={rowId(row.bottleKey)}
+              className={[expanded ? "row open" : "row", markFor(row.bottleKey)].filter(Boolean).join(" ")}
+            >
               <button
                 type="button"
                 className="row-main"
@@ -226,6 +240,9 @@ function DistillerySection({
                 onClick={() => onToggle(row.bottleKey)}
               >
                 <span className="who">
+                  {picked?.bottleKey === row.bottleKey ? (
+                    <span className="your-dram">Your dram · Bottle is at: {picked.location || "not tagged yet"}</span>
+                  ) : null}
                   <strong><em>{row.bottling}</em></strong>
                 </span>
                 <span className="list-facts">Age: {row.ageLabel} | ABV: {row.abvLabel}</span>
@@ -271,6 +288,18 @@ export function Library({
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
   const filterCount = activeFilterCount(filters);
+  const variant = useVariant(PICK_VARIANTS.map((v) => v.key));
+  const proto = usePrototypePick(filtered, setOpenKey);
+  const affordance = {
+    count: filtered.length,
+    filters,
+    fancy: proto.fancy,
+    onFancy: proto.setFancy,
+    onPick: () => {
+      setFiltersOpen(false);
+      proto.pick();
+    },
+  };
 
   useEffect(() => {
     saveLibraryLayout(layout);
@@ -287,11 +316,13 @@ export function Library({
 
   return (
     <section className="panel">
+      <style>{PROTOTYPE_CSS}</style>
       <header className="panel-head library-head">
         <div>
           <h1>The Library</h1>
         </div>
         <div className="panel-tools">
+          {variant === "A" ? <HeaderPick {...affordance} /> : null}
           <FiltersButton
             count={filterCount}
             open={filtersOpen}
@@ -325,10 +356,14 @@ export function Library({
             filters={filters}
             openKey={openKey}
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+            markFor={proto.markFor}
+            picked={proto.picked}
             {...actions}
           />
         ))}
       </div>
+      {variant === "C" ? <DockPick {...affordance} /> : null}
+      <PrototypeSwitcher variants={PICK_VARIANTS} current={variant} />
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
@@ -337,6 +372,7 @@ export function Library({
           onUndo={onUndo}
           canUndo={canUndo}
           trayTitle="Applied"
+          foot={variant === "B" ? <DrawerPick {...affordance} /> : undefined}
           onClose={() => {
             setFiltersOpen(false);
             filtersButton.current?.focus();
