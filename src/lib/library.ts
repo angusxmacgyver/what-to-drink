@@ -190,6 +190,7 @@ function matchesAge(bottle: Bottle, filters: FilterState): boolean {
 export function matchesFilters(bottle: Bottle, filters: FilterState, exact?: boolean): boolean {
   if (filters.place === "apartment" && !bottle.atApartment) return false;
   if (filters.place === "house" && bottle.atApartment) return false;
+  if (!matchesStatus(bottle, filters.statuses, exact)) return false;
   if (!inList(filters.distilleries, bottle.distillery, exact)) return false;
   if (!inList(filters.themes, bottle.theme, exact)) return false;
   if (!inList(filters.countries, bottle.country, exact)) return false;
@@ -230,7 +231,7 @@ export function withoutRange(filters: FilterState, axis: "age" | "abv"): FilterS
 
 export type DramPlace = "house" | "apartment";
 
-export type CountFacet = "distillery" | "theme" | "family" | "sub" | "country" | "region";
+export type CountFacet = "place" | "status" | "distillery" | "theme" | "family" | "sub" | "country" | "region";
 
 /** Pourable bottles at a place. Open is on unless turned off. Closed joins only when asked. Killed and empty never do. */
 export function dramCandidates(
@@ -250,6 +251,8 @@ export function dramCandidates(
 }
 
 function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
+  if (facet === "place") return { ...filters, place: null };
+  if (facet === "status") return { ...filters, statuses: [] };
   if (facet === "distillery") return { ...filters, distilleries: [] };
   if (facet === "theme") return { ...filters, themes: [] };
   if (facet === "family") return { ...filters, families: [] };
@@ -259,6 +262,8 @@ function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
 }
 
 function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
+  if (facet === "place") return [bottle.atApartment ? "apartment" : "house"];
+  if (facet === "status") return [bottle.status];
   if (facet === "distillery") return [bottle.distillery];
   if (facet === "theme") return [bottle.theme];
   if (facet === "family") return bottle.flavorFamilies;
@@ -267,19 +272,23 @@ function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
   return [bottle.region];
 }
 
-/** How many of the given bottles would show each option if that option were the facet's only pick. */
+/**
+ * How many of the given bottles would show each option if that option were the facet's only pick.
+ * Under Match exactly an option joins the current picks instead, except Place, which holds one value.
+ */
 export function optionCounts(
   candidates: Bottle[],
   filters: FilterState,
   facet: CountFacet,
   options: readonly string[],
+  exact?: boolean,
 ): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const option of options) counts[option] = 0;
   const wanted = new Set(options);
-  const narrowed = withoutFacet(filters, facet);
+  const narrowed = exact && facet !== "place" ? filters : withoutFacet(filters, facet);
   for (const bottle of candidates) {
-    if (!matchesFilters(bottle, narrowed)) continue;
+    if (!matchesFilters(bottle, narrowed, exact)) continue;
     for (const value of valuesForFacet(bottle, facet)) {
       if (wanted.has(value)) counts[value] += 1;
     }

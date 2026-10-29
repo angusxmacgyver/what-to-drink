@@ -1,7 +1,7 @@
 import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
-import { matchesFilters, matchesStatus, subOwnerFamily, subsForFamilies, withoutRange } from "../lib/library";
+import { matchesFilters, optionCounts, subOwnerFamily, subsForFamilies, withoutRange, type CountFacet } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 
@@ -45,10 +45,10 @@ export function Filters({
     return next;
   };
 
-  const others = (axis: "age" | "abv") =>
-    bottles.filter(
-      (b) => matchesStatus(b, filters.statuses, exact) && matchesFilters(b, withoutRange(filters, axis), exact),
-    );
+  const counts = (facet: CountFacet, options: string[]) => optionCounts(bottles, filters, facet, options, exact);
+  const placeCounts = counts("place", ["house", "apartment"]);
+
+  const others = (axis: "age" | "abv") => bottles.filter((b) => matchesFilters(b, withoutRange(filters, axis), exact));
   const ageSource = others("age");
   const ages = ageSource.map((b) => b.age).filter((a): a is number => typeof a === "number");
   const abvs = abvHistogramValues(others("abv").map((b) => b.abv));
@@ -85,6 +85,7 @@ export function Filters({
           const last = places.at(-1);
           set({ place: last === "House" ? "house" : last === "Apartment" ? "apartment" : null });
         }}
+        counts={{ House: placeCounts.house, Apartment: placeCounts.apartment }}
       />
       {showStatus ? (
         <ChipSelect
@@ -92,6 +93,7 @@ export function Filters({
           options={statuses}
           value={filters.statuses}
           onChange={(statuses) => set({ statuses })}
+          counts={counts("status", statuses)}
         />
       ) : null}
       <ChipSelect
@@ -100,6 +102,7 @@ export function Filters({
         value={filters.themes}
         onChange={(themes) => set({ themes })}
         colorFor={smwsThemeClass}
+        counts={counts("theme", themes)}
       />
       {ageHistogram || abvHistogram ? (
         <div className="hist-pair">
@@ -133,12 +136,14 @@ export function Filters({
             options={countries}
             value={filters.countries}
             onChange={(countries) => set({ countries })}
+            counts={counts("country", countries)}
           />
           <ChipSelect
             label="Region"
             options={regions}
             value={filters.regions}
             onChange={(regions) => set({ regions })}
+            counts={counts("region", regions)}
           />
         </>
       ) : null}
@@ -152,6 +157,7 @@ export function Filters({
         }}
         colorFor={familyClass}
         minSecondRow={3}
+        counts={counts("family", families)}
       />
       <ChipSelect
         label="Sub-characteristics"
@@ -160,6 +166,7 @@ export function Filters({
         onChange={(nextSubs) => set({ subs: nextSubs, subFamilies: subFamiliesFor(nextSubs) })}
         emptyHint="Pick a flavor family to narrow by sub-characteristic."
         colorFor={(sub) => subFamilyClass(sub, filters.subFamilies[sub])}
+        counts={counts("sub", subs)}
       />
     </div>
   );

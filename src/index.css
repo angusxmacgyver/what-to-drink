@@ -1522,6 +1522,9 @@ nav button.on,
   border-color: var(--gold);
 }
 
+.chip .option-count { margin-left: 6px; }
+.chip.quiet:not(.on) { opacity: 0.45; }
+
 .chip.on {
   background: var(--gold);
   border-color: var(--gold);

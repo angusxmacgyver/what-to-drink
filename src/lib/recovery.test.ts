@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { emptyFilters, type Bottle } from "../types";
-import { mostConstraining, popHistory, pushHistory } from "./recovery";
+import { emptyFilters, type Bottle, type FilterState } from "../types";
+import { matchesFilters } from "./library";
+import { mostConstraining, mostConstrainingChip, popHistory, pushHistory } from "./recovery";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
   return {
@@ -46,6 +47,19 @@ describe("mostConstraining", () => {
     const bottles = [bottle({ flavorFamilies: ["Smoke"] })];
     expect(mostConstraining(bottles, "house", false, filters)).toBe("distillery\nArdbeg");
     expect(mostConstraining(bottles, "house", false, emptyFilters())).toBeNull();
+  });
+});
+
+describe("mostConstrainingChip", () => {
+  it("flags the chip whose removal brings back the most of what the caller counts", () => {
+    const bottles = [
+      ...Array.from({ length: 3 }, (_, index) => bottle({ id: `house-${index}`, flavorFamilies: ["Smoke"] })),
+      bottle({ id: "apartment-smoke", atApartment: true, flavorFamilies: ["Smoke"] }),
+    ];
+    const showing = (filters: FilterState) => bottles.filter((b) => matchesFilters(b, filters, true)).length;
+    const filters = { ...emptyFilters(), place: "apartment" as const, families: ["Smoke", "Sweet"] };
+    expect(mostConstrainingChip(filters, showing)).toBe("family\nSweet");
+    expect(mostConstrainingChip(emptyFilters(), showing)).toBeNull();
   });
 });
 

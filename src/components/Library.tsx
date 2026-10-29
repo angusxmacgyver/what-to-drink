@@ -6,12 +6,12 @@ import {
   groupDistilleries,
   groupLibrary,
   matchesFilters,
-  matchesStatus,
   originLabel,
   uniqueTags,
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
+import { mostConstrainingChip } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { BottleFields } from "./BottleFields";
@@ -268,11 +268,14 @@ export function Library({
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
-  const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses, exact) && matchesFilters(b, filters, exact));
+  const showing = (next: FilterState) => bottles.filter((b) => matchesFilters(b, next, exact));
+  const filtered = showing(filters);
   const rows = groupLibrary(filtered);
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
   const filterCount = activeFilterCount(filters);
+  const nothingMatches = filtered.length === 0 && filterCount > 0;
+  const flagId = nothingMatches ? mostConstrainingChip(filters, (next) => showing(next).length) : null;
 
   useEffect(() => {
     saveLibraryLayout(layout);
@@ -315,7 +318,15 @@ export function Library({
       </header>
       {activeFilterCount({ ...filters, place: null }) > 0 ? (
         <div className="library-applied">
-          <AppliedTray filters={filters} onChange={onFilters} hidePlace />
+          <AppliedTray filters={filters} onChange={onFilters} flagId={flagId} hidePlace />
+        </div>
+      ) : null}
+      {nothingMatches ? (
+        <div className="recovery">
+          <p className="empty">No bottles match this combination.</p>
+          <button type="button" onClick={onUndo} disabled={!canUndo}>
+            Undo last
+          </button>
         </div>
       ) : null}
       <div className="distillery-groups">
@@ -338,6 +349,7 @@ export function Library({
           available={filtered.length}
           onUndo={onUndo}
           canUndo={canUndo}
+          flagId={flagId}
           trayTitle="Applied"
           onClose={() => {
             setFiltersOpen(false);

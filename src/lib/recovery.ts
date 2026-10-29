@@ -19,10 +19,15 @@ export function mostConstraining(
   filters: FilterState,
   includeOpen = true,
 ): string | null {
+  return mostConstrainingChip(filters, (next) => dramPool(bottles, place, includeClosed, next, includeOpen).length);
+}
+
+/** Chip whose removal brings back the most bottles by the caller's count. The earlier chip wins a tie. */
+export function mostConstrainingChip(filters: FilterState, countShowing: (filters: FilterState) => number): string | null {
   let bestId: string | null = null;
   let best = -1;
   for (const chip of appliedChips(filters)) {
-    const count = dramPool(bottles, place, includeClosed, removeChip(filters, chip.id), includeOpen).length;
+    const count = countShowing(removeChip(filters, chip.id));
     if (count > best) {
       best = count;
       bestId = chip.id;

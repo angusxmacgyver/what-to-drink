@@ -8,9 +8,10 @@ type Props = {
   emptyHint?: string;
   colorFor?: (option: string) => string;
   minSecondRow?: number;
+  counts?: Record<string, number>;
 };
 
-export function ChipSelect({ label, options, value, onChange, emptyHint, colorFor, minSecondRow = 0 }: Props) {
+export function ChipSelect({ label, options, value, onChange, emptyHint, colorFor, minSecondRow = 0, counts }: Props) {
   const toggle = (option: string) => {
     onChange(value.includes(option) ? value.filter((item) => item !== option) : [...value, option]);
   };
@@ -18,10 +19,14 @@ export function ChipSelect({ label, options, value, onChange, emptyHint, colorFo
   const chips = (group: string[]) =>
     group.map((option) => {
       const on = value.includes(option);
-      const classes = ["chip", on ? "on" : "", colorFor?.(option) ?? ""].filter(Boolean).join(" ");
+      const count = counts?.[option] ?? 0;
+      const classes = ["chip", on ? "on" : "", counts && count === 0 ? "quiet" : "", colorFor?.(option) ?? ""]
+        .filter(Boolean)
+        .join(" ");
       return (
         <button key={option} type="button" className={classes} aria-pressed={on} onClick={() => toggle(option)}>
           {option}
+          {counts ? <span className="option-count">{count}</span> : null}
         </button>
       );
     });

@@ -361,11 +361,11 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
 
     await openFilters(user);
-    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^House/, pressed: false }));
     expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
 
-    await user.click(filterDrawer().getByRole("button", { name: "Apartment", pressed: false }));
-    expect(filterDrawer().getByRole("button", { name: "House", pressed: false })).toBeTruthy();
+    await user.click(filterDrawer().getByRole("button", { name: /^Apartment/, pressed: false }));
+    expect(filterDrawer().getByRole("button", { name: /^House/, pressed: false })).toBeTruthy();
     expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
     await closeFilters(user);
     expect(filtersBadgeCount(libraryPanel())).toBe("1");
@@ -391,7 +391,7 @@ describe("one visit: Library filters and Pick criteria", () => {
 
     await goLibrary(user);
     await openFilters(user);
-    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^House/, pressed: false }));
     await pickFlavorFamily(user, "Sweet");
     expect(libraryCountsText()).toBe("2 expressions · 2 bottles");
     await closeFilters(user);
@@ -406,10 +406,10 @@ describe("one visit: Library filters and Pick criteria", () => {
 
     await goLibrary(user);
     await openFilters(user);
-    await user.click(filterDrawer().getByRole("button", { name: "House", pressed: false }));
-    await user.click(filterDrawer().getByRole("button", { name: "Apartment", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^House/, pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^Apartment/, pressed: false }));
     await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
-    expect(filterDrawer().getByRole("button", { name: "House", pressed: true })).toBeTruthy();
+    expect(filterDrawer().getByRole("button", { name: /^House/, pressed: true })).toBeTruthy();
     expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
 
     mounted.unmount();
@@ -448,8 +448,8 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
     expect(exactly()).toBeChecked();
 
-    await user.click(filterDrawer().getByRole("button", { name: "Open", pressed: false }));
-    await user.click(filterDrawer().getByRole("button", { name: "Closed", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^Open/, pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: /^Closed/, pressed: false }));
     expect(libraryCountsText()).toBe("0 expressions · 0 bottles");
     await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
     expect(libraryCountsText()).toBe("3 expressions · 3 bottles");
@@ -467,6 +467,60 @@ describe("one visit: Library filters and Pick criteria", () => {
     await goLibrary(user);
     await openFilters(user);
     expect(exactly()).not.toBeChecked();
+  });
+
+  it("counts each Library drawer option, dropping as filters are added and following Match exactly", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const count = (name: string) =>
+      filterDrawer().getByRole("button", { name: new RegExp(`^${name}`) }).querySelector(".option-count")?.textContent;
+
+    await goLibrary(user);
+    await openFilters(user);
+    expect(count("House")).toBe("4");
+    expect(count("Apartment")).toBe("1");
+    expect(count("Sweet")).toBe("2");
+
+    await pickFlavorFamily(user, "Smoke");
+    expect(count("House")).toBe("3");
+    await user.click(filterDrawer().getByRole("button", { name: /^House/ }));
+    expect(libraryCountsText()).toBe("3 expressions · 3 bottles");
+    expect(count("Sweet")).toBe("2");
+    expect(count("Closed")).toBe("1");
+
+    await user.click(filterDrawer().getByRole("checkbox", { name: "Match exactly" }));
+    expect(count("Sweet")).toBe("1");
+    expect(count("Open")).toBe("2");
+    expect(count("Smoke")).toBe("3");
+  });
+
+  it("says when nothing matches, flags the most constraining filter, and offers Undo last on the Library page", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("checkbox", { name: "Match exactly" }));
+    await user.click(filterDrawer().getByRole("button", { name: /^Closed/ }));
+    await pickFlavorFamily(user, "Sweet");
+    expect(filterDrawer().getByRole("button", { name: "Remove Closed" })).toHaveTextContent("Most constraining");
+    await closeFilters(user);
+
+    expect(libraryCountsText()).toBe("0 expressions · 0 bottles");
+    expect(libraryPanel().getByText("No bottles match this combination.")).toBeTruthy();
+    expect(libraryPanel().getByRole("button", { name: "Remove Closed" })).toHaveTextContent("Most constraining");
+
+    await user.click(libraryPanel().getByRole("button", { name: "Undo last" }));
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    expect(libraryPanel().queryByText("No bottles match this combination.")).toBeNull();
   });
 
   it("ignores a saved Pick selection but restores theme, Library layout, and collapsed sections", async () => {

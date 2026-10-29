@@ -417,6 +417,42 @@ describe("optionCounts", () => {
     ).toEqual({ Islay: 4, Speyside: 0 });
   });
 
+  it("counts what adding an option would leave under Match exactly", () => {
+    const smoky = bottle({ distillery: "Ardbeg", region: "Islay", flavorFamilies: ["Smoke"] });
+    const both = bottle({ distillery: "Ardbeg", region: "Islay", flavorFamilies: ["Smoke", "Sweet"] });
+    const sweet = bottle({ distillery: "Glenfiddich", region: "Speyside", flavorFamilies: ["Sweet"] });
+    const all = [smoky, both, sweet];
+    const smoke = { ...emptyFilters(), families: ["Smoke"] };
+    expect(optionCounts(all, smoke, "family", ["Smoke", "Sweet"], true)).toEqual({ Smoke: 2, Sweet: 1 });
+    expect(optionCounts(all, smoke, "family", ["Smoke", "Sweet"], false)).toEqual({ Smoke: 2, Sweet: 2 });
+
+    const twoDistilleries = { ...emptyFilters(), distilleries: ["Ardbeg", "Glenfiddich"] };
+    expect(optionCounts(all, twoDistilleries, "distillery", ["Ardbeg", "Glenfiddich"], true)).toEqual({
+      Ardbeg: 0,
+      Glenfiddich: 0,
+    });
+    expect(optionCounts(all, twoDistilleries, "region", ["Islay", "Speyside"], true)).toEqual({ Islay: 0, Speyside: 0 });
+  });
+
+  it("counts within the chosen Place, and counts each Place as a replacement", () => {
+    const house = bottle({ region: "Islay" });
+    const apartment = bottle({ region: "Islay", atApartment: true });
+    const atHouse = { ...emptyFilters(), place: "house" as const };
+    expect(optionCounts([house, apartment], atHouse, "region", ["Islay"], false)).toEqual({ Islay: 1 });
+    expect(optionCounts([house, apartment], atHouse, "place", ["house", "apartment"], true)).toEqual({
+      house: 1,
+      apartment: 1,
+    });
+  });
+
+  it("counts statuses, which a bottle has only one of", () => {
+    const open = bottle({ status: "Open" });
+    const closed = bottle({ status: "Closed" });
+    const onlyOpen = { ...emptyFilters(), statuses: ["Open"] };
+    expect(optionCounts([open, closed], onlyOpen, "status", ["Open", "Closed"], false)).toEqual({ Open: 1, Closed: 1 });
+    expect(optionCounts([open, closed], onlyOpen, "status", ["Open", "Closed"], true)).toEqual({ Open: 1, Closed: 0 });
+  });
+
   it("matches the place-scoped counts when given that place's candidates", () => {
     const islay = bottle({ region: "Islay" });
     const away = bottle({ region: "Islay", atApartment: true });
