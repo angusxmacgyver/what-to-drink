@@ -11,7 +11,7 @@ import {
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
-import { choosePour, leadBottle, revealCard, settlePick } from "../lib/pour";
+import { choosePour, leadBottle, prefersReducedMotion, revealCard, settlePick } from "../lib/pour";
 import { mostConstrainingChip } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -65,6 +65,7 @@ export function LibraryCard({
   onToggle,
   picked = false,
   bordered = false,
+  pulsing = false,
   where,
   cardId,
   transitionName,
@@ -75,6 +76,7 @@ export function LibraryCard({
   onToggle: () => void;
   picked?: boolean;
   bordered?: boolean;
+  pulsing?: boolean;
   where?: string;
   cardId?: string;
   transitionName?: string;
@@ -84,7 +86,7 @@ export function LibraryCard({
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
-  const classes = ["library-card", expanded ? "open" : "", picked || bordered ? "picked" : ""]
+  const classes = ["library-card", expanded ? "open" : "", picked || bordered ? "picked" : "", pulsing ? "pick-pulse" : ""]
     .filter(Boolean)
     .join(" ");
   return (
@@ -192,6 +194,7 @@ function DistillerySection({
   openKey,
   onToggle,
   picked,
+  pulseKey,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
@@ -200,6 +203,7 @@ function DistillerySection({
   openKey: string | null;
   onToggle: (key: string) => void;
   picked: Bottle | null;
+  pulseKey: string | null;
 }) {
   return (
     <section className="distillery-group">
@@ -212,6 +216,7 @@ function DistillerySection({
         {group.rows.map((row) => {
           const expanded = openKey === row.bottleKey;
           const isPicked = picked?.bottleKey === row.bottleKey;
+          const pulsing = pulseKey === row.bottleKey;
           if (layout === "grid") {
             return (
               <Fragment key={row.bottleKey}>
@@ -220,6 +225,7 @@ function DistillerySection({
                   expanded={expanded}
                   showDistillery={false}
                   picked={isPicked}
+                  pulsing={pulsing}
                   where={isPicked ? picked?.location : undefined}
                   cardId={rowId(row.bottleKey)}
                   onToggle={() => onToggle(row.bottleKey)}
@@ -229,7 +235,11 @@ function DistillerySection({
             );
           }
           return (
-            <article key={row.bottleKey} id={rowId(row.bottleKey)} className={expanded ? "row open" : "row"}>
+            <article
+              key={row.bottleKey}
+              id={rowId(row.bottleKey)}
+              className={["row", expanded ? "open" : "", pulsing ? "pick-pulse" : ""].filter(Boolean).join(" ")}
+            >
               <button
                 type="button"
                 className="row-main"
@@ -300,19 +310,57 @@ export function Library({
     }
   }, [pick, settled]);
 
-  useEffect(() => {
-    const target = pick ? document.getElementById(rowId(pick.bottleKey)) : null;
-    if (target) void revealCard(target);
-  }, [pick]);
+  const [pulseKey, setPulseKey] = useState<string | null>(null);
+  const pickGeneration = useRef(0);
+  const pulseTimer = useRef<number | undefined>(undefined);
+
+  useEffect(
+    () => () => {
+      pickGeneration.current += 1;
+      window.clearTimeout(pulseTimer.current);
+    },
+    [],
+  );
 
   const makePick = () => {
     const next = choosePour(pool, pick?.id ?? null);
     if (!next) return;
     const lead = leadBottle(pool, next);
+    const generation = ++pickGeneration.current;
+    const current = () => generation === pickGeneration.current;
+    const target = () => document.getElementById(rowId(lead.bottleKey));
+    const land = () => {
+      setPulseKey(null);
+      setPick(lead);
+      setOpenKey(lead.bottleKey);
+      setAnnounce(`Your dram: ${lead.distillery} ${lead.bottling}. Bottle is at: ${lead.location || "not tagged yet"}.`);
+    };
+    window.clearTimeout(pulseTimer.current);
     setFiltersOpen(false);
-    setPick(lead);
-    setOpenKey(lead.bottleKey);
-    setAnnounce(`Your dram: ${lead.distillery} ${lead.bottling}. Bottle is at: ${lead.location || "not tagged yet"}.`);
+    if (prefersReducedMotion()) {
+      land();
+      window.requestAnimationFrame(() => {
+        const el = target();
+        if (current() && el) void revealCard(el);
+      });
+      return;
+    }
+    setPulseKey(null);
+    setPick(null);
+    setOpenKey(null);
+    setAnnounce("");
+    window.requestAnimationFrame(() => {
+      if (!current()) return;
+      const el = target();
+      if (!el) return land();
+      void revealCard(el).then(() => {
+        if (!current()) return;
+        setPulseKey(lead.bottleKey);
+        pulseTimer.current = window.setTimeout(() => {
+          if (current()) land();
+        }, 750);
+      });
+    });
   };
 
   useEffect(() => {
@@ -377,6 +425,7 @@ export function Library({
             openKey={openKey}
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
             picked={settled}
+            pulseKey={pulseKey}
             {...actions}
           />
         ))}

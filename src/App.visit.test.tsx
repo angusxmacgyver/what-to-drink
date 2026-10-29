@@ -701,4 +701,28 @@ describe("Pick from the Library drawer", () => {
     await user.click(filterDrawer().getByRole("button", { name: "Remove Sweet" }));
     expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
   });
+
+  it("with motion, scrolls to the Pick and pulses it before expanding and marking it", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation(() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await pickFromDrawer(user);
+    const ardbeg = screen.getByRole("heading", { name: "Ardbeg" }).closest("section")!.querySelector("article")!;
+    expect(screen.queryByRole("dialog", { name: "Filters" })).toBeNull();
+    expect(ardbeg).not.toHaveClass("open");
+
+    await waitFor(() => expect(ardbeg).toHaveClass("pick-pulse"), { timeout: 1500 });
+    expect(ardbeg).not.toHaveClass("open");
+    expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+
+    await waitFor(() => expect(ardbeg).toHaveClass("open"), { timeout: 1500 });
+    expect(ardbeg).not.toHaveClass("pick-pulse");
+    expect(ardbeg).toHaveTextContent("Your dram · Bottle is at: House shelf");
+    expect(screen.getByText("Your dram: Ardbeg 10. Bottle is at: House shelf.")).toBeTruthy();
+  });
 });
