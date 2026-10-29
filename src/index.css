@@ -141,7 +141,6 @@ nav {
 }
 
 nav button,
-.place button,
 .roll,
 .owner-actions button,
 .owner-form button,
@@ -155,7 +154,6 @@ nav button,
 }
 
 nav button.on,
-.place button:hover,
 .roll {
   background: var(--gold);
   color: var(--on-gold);
@@ -170,14 +168,12 @@ nav button.on,
   margin: 0 0 8px;
 }
 
-.hero h1,
 .panel h1 {
   font-size: clamp(40px, 7vw, 72px);
   margin: 0 0 12px;
   line-height: 0.95;
 }
 
-.hero h1 em,
 .result h2 em {
   font-style: italic;
   font-weight: 500;
@@ -194,17 +190,6 @@ nav button.on,
 .count,
 .empty {
   color: var(--muted);
-}
-
-.place {
-  display: flex;
-  gap: 12px;
-  margin: 28px 0 18px;
-}
-
-.place button {
-  padding: 14px 22px;
-  font-size: 18px;
 }
 
 .panel-head {

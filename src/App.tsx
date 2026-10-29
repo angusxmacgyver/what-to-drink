@@ -35,12 +35,12 @@ import {
   type Theme,
 } from "./lib/store";
 
-type View = "home" | "library" | "dram" | "graveyard" | "analytics" | "owner";
+type View = "library" | "dram" | "graveyard" | "analytics" | "owner";
 
 const seed = readCatalog(seeded);
 
 export default function App() {
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>("library");
   const [catalog, setCatalog] = useState<Catalog>(seed);
   const libraryVisit = useUndoableFilters();
   const [matchExactly, setMatchExactly] = useState(false);
@@ -91,7 +91,7 @@ export default function App() {
     setOwner(false);
     setOwnerState(false);
     setEditing(null);
-    if (view === "owner") setView("home");
+    if (view === "owner") setView("library");
   };
 
   const caskTags = useMemo(
@@ -110,16 +110,13 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        <button type="button" className="brand" onClick={() => setView("home")}>
+        <button type="button" className="brand" onClick={() => setView("library")}>
           What To Drink
         </button>
         <div className="top-right">
           <nav>
             <button type="button" className={view === "library" ? "on" : ""} onClick={() => setView("library")}>
               The Library
-            </button>
-            <button type="button" className={view === "dram" ? "on" : ""} onClick={() => setView("dram")}>
-              Pick a Dram
             </button>
             <button
               type="button"
@@ -168,26 +165,6 @@ export default function App() {
       </header>
 
       {notice ? <p className="notice">{notice}</p> : null}
-
-      {view === "home" ? (
-        <section className="hero">
-          <h1>
-            What to drink
-            <em> tonight.</em>
-          </h1>
-          <div className="place">
-            <button type="button" onClick={() => setView("library")}>
-              The Library
-            </button>
-            <button type="button" onClick={() => setView("dram")}>
-              Pick a Dram
-            </button>
-          </div>
-          <p className="meta">
-            {catalog.bottles.length} bottles · {importedLabel}
-          </p>
-        </section>
-      ) : null}
 
       {view === "library" ? (
         <Library
@@ -252,7 +229,9 @@ export default function App() {
               Lock
             </button>
           </header>
-          <p className="meta">{importedLabel}</p>
+          <p className="meta">
+            {catalog.bottles.length} bottles · {importedLabel}
+          </p>
           <ImportPanel
             onCatalog={(next, filename) => {
               void ask(`Replace the whole cellar from ${filename}?`, "Replace").then((ok) => {
