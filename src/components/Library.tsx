@@ -28,6 +28,8 @@ type Props = {
   canUndo: boolean;
   exact: boolean;
   onExact: (next: boolean) => void;
+  pick: Bottle | null;
+  onPick: (next: Bottle | null) => void;
   owner: boolean;
   onEdit?: (bottle: Bottle) => void;
   onKill?: (id: string) => void;
@@ -151,11 +153,19 @@ export function ExpressionDetail({
   factsFirst = false,
   groupedFlavors = false,
   filters,
+  landed = false,
   ...actions
-}: Actions & { bottles: Bottle[]; trail?: ReactNode; factsFirst?: boolean; groupedFlavors?: boolean; filters?: FilterState }) {
+}: Actions & {
+  bottles: Bottle[];
+  trail?: ReactNode;
+  factsFirst?: boolean;
+  groupedFlavors?: boolean;
+  filters?: FilterState;
+  landed?: boolean;
+}) {
   const shown = detailBottle(bottles);
   return (
-    <div className="detail">
+    <div className={landed ? "detail landed" : "detail"}>
       <BottleFields bottle={shown} flavorText={false} factsFirst={factsFirst} />
       <FlavorTags
         families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
@@ -195,6 +205,7 @@ function DistillerySection({
   onToggle,
   picked,
   pulseKey,
+  landedKey,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
@@ -204,6 +215,7 @@ function DistillerySection({
   onToggle: (key: string) => void;
   picked: Bottle | null;
   pulseKey: string | null;
+  landedKey: string | null;
 }) {
   return (
     <section className="distillery-group">
@@ -217,6 +229,7 @@ function DistillerySection({
           const expanded = openKey === row.bottleKey;
           const isPicked = picked?.bottleKey === row.bottleKey;
           const pulsing = pulseKey === row.bottleKey;
+          const landed = isPicked && landedKey === row.bottleKey;
           if (layout === "grid") {
             return (
               <Fragment key={row.bottleKey}>
@@ -230,7 +243,9 @@ function DistillerySection({
                   cardId={rowId(row.bottleKey)}
                   onToggle={() => onToggle(row.bottleKey)}
                 />
-                {expanded ? <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} {...actions} /> : null}
+                {expanded ? (
+                  <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} landed={landed} {...actions} />
+                ) : null}
               </Fragment>
             );
           }
@@ -238,9 +253,7 @@ function DistillerySection({
             <article
               key={row.bottleKey}
               id={rowId(row.bottleKey)}
-              className={["row", expanded ? "open" : "", isPicked ? "picked" : "", pulsing ? "pick-pulse" : ""]
-                .filter(Boolean)
-                .join(" ")}
+              className={["row", expanded ? "open" : "", pulsing ? "pick-pulse" : ""].filter(Boolean).join(" ")}
             >
               <button
                 type="button"
@@ -266,7 +279,7 @@ function DistillerySection({
                   subFamilies={filters.subFamilies}
                 />
               </button>
-              {expanded ? <ExpressionDetail bottles={row.bottles} {...actions} /> : null}
+              {expanded ? <ExpressionDetail bottles={row.bottles} landed={landed} {...actions} /> : null}
             </article>
           );
         })}
@@ -283,12 +296,14 @@ export function Library({
   canUndo,
   exact,
   onExact,
+  pick,
+  onPick,
   owner,
   onEdit,
   onKill,
   onOpen,
 }: Props) {
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [openKey, setOpenKey] = useState<string | null>(() => pick?.bottleKey ?? null);
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
@@ -301,28 +316,28 @@ export function Library({
   const nothingMatches = filtered.length === 0 && filterCount > 0;
   const flagId = nothingMatches ? mostConstrainingChip(filters, (next) => showing(next).length) : null;
   const pool = filtered.filter((b) => b.atApartment === (filters.place === "apartment"));
-  const [pick, setPick] = useState<Bottle | null>(null);
   const [announce, setAnnounce] = useState("");
   const settled = settlePick(pick, pool);
 
   useEffect(() => {
     if (pick && !settled) {
-      setPick(null);
+      onPick(null);
       setAnnounce("");
     }
-  }, [pick, settled]);
+  }, [pick, settled, onPick]);
 
   const [pulseKey, setPulseKey] = useState<string | null>(null);
+  const [landedKey, setLandedKey] = useState<string | null>(null);
   const pickGeneration = useRef(0);
   const pulseTimer = useRef<number | undefined>(undefined);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    if (settled) document.getElementById(rowId(settled.bottleKey))?.scrollIntoView({ block: "center" });
+    return () => {
       pickGeneration.current += 1;
       window.clearTimeout(pulseTimer.current);
-    },
-    [],
-  );
+    };
+  }, []);
 
   const makePick = () => {
     const next = choosePour(pool, pick?.id ?? null);
@@ -333,7 +348,8 @@ export function Library({
     const target = () => document.getElementById(rowId(lead.bottleKey));
     const land = () => {
       setPulseKey(null);
-      setPick(lead);
+      setLandedKey(lead.bottleKey);
+      onPick(lead);
       setOpenKey(lead.bottleKey);
       setAnnounce(`Your dram: ${lead.distillery} ${lead.bottling}. Bottle is at: ${lead.location || "not tagged yet"}.`);
     };
@@ -348,7 +364,7 @@ export function Library({
       return;
     }
     setPulseKey(null);
-    setPick(null);
+    onPick(null);
     setOpenKey(null);
     setAnnounce("");
     window.requestAnimationFrame(() => {
@@ -428,6 +444,7 @@ export function Library({
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
             picked={settled}
             pulseKey={pulseKey}
+            landedKey={landedKey}
             {...actions}
           />
         ))}

@@ -725,4 +725,80 @@ describe("Pick from the Library drawer", () => {
     expect(ardbeg).toHaveTextContent("Your dram · Bottle is at: House shelf");
     expect(screen.getByText("Your dram: Ardbeg 10. Bottle is at: House shelf.")).toBeTruthy();
   });
+
+  describe("a Pick lasts for the visit", () => {
+    it("is still marked and expanded after going to the Graveyard and Analytics and back", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await goLibrary(user);
+      await pickFromDrawer(user);
+      await user.click(topNav().getByRole("button", { name: "Graveyard" }));
+      await user.click(topNav().getByRole("button", { name: "Analytics" }));
+      await goLibrary(user);
+
+      expect(pickedRow()).toHaveClass("open");
+      expect(pickedRow()).toHaveTextContent("Your dram · Bottle is at: House shelf");
+      expect(screen.getByRole("heading", { name: "Ardbeg" }).closest("section")).toContainElement(pickedRow());
+    });
+
+    it("stays marked and expanded when switching to Grid", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await goLibrary(user);
+      await pickFromDrawer(user);
+      await user.click(libraryPanel().getByRole("button", { name: "Grid" }));
+
+      const card = libraryPanel().getByRole("button", { name: "Ardbeg 10. Your dram. Bottle is at: House shelf." });
+      expect(card).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("stays marked after the picked bottle is collapsed", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await goLibrary(user);
+      await pickFromDrawer(user);
+      await user.click(within(pickedRow()!).getByRole("button", { expanded: true }));
+
+      expect(pickedRow()).not.toHaveClass("open");
+      expect(pickedRow()).toHaveTextContent("Your dram · Bottle is at: House shelf");
+    });
+
+    it("is gone after a reload", async () => {
+      const user = userEvent.setup();
+      const first = render(<App />);
+
+      await goLibrary(user);
+      await pickFromDrawer(user);
+      first.unmount();
+      render(<App />);
+      await goLibrary(user);
+
+      expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+    });
+
+    it("with motion, returning scrolls straight to the Pick without replaying the pulse", async () => {
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn().mockImplementation(() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })),
+      );
+      const user = userEvent.setup();
+      render(<App />);
+
+      await goLibrary(user);
+      await pickFromDrawer(user);
+      await waitFor(() => expect(pickedRow()).toHaveClass("open"), { timeout: 2500 });
+
+      await user.click(topNav().getByRole("button", { name: "Graveyard" }));
+      const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+      await goLibrary(user);
+
+      expect(pickedRow()).toHaveClass("open");
+      expect(pickedRow()).not.toHaveClass("pick-pulse");
+      expect(scroll.mock.contexts).toContain(pickedRow());
+      expect(scroll).toHaveBeenCalledWith({ block: "center" });
+    });
+  });
 });

@@ -1013,8 +1013,7 @@ nav button.on,
 }
 .pick-pulse { --pulse-rest: 0 0 0 3px var(--gold); animation: pick-pulse 1100ms ease-in-out both; border-radius: 12px; }
 .row.pick-pulse { --pulse-rest: 0 0 0 0 transparent; }
-.row.picked > .detail,
-.library-card.picked + .detail {
+.detail.landed {
   interpolate-size: allow-keywords;
   overflow: clip;
   transition: height 450ms cubic-bezier(0.22, 1, 0.36, 1), opacity 350ms ease-out;
@@ -1022,8 +1021,7 @@ nav button.on,
 }
 @media (prefers-reduced-motion: reduce) {
   .pick-pulse { animation: none; }
-  .row.picked > .detail,
-  .library-card.picked + .detail { transition: none; }
+  .detail.landed { transition: none; }
 }
 .your-dram { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
 .card-where { font-weight: 700; color: var(--amber); }
