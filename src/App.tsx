@@ -43,6 +43,7 @@ export default function App() {
   const [view, setView] = useState<View>("home");
   const [catalog, setCatalog] = useState<Catalog>(seed);
   const libraryVisit = useUndoableFilters();
+  const [matchExactly, setMatchExactly] = useState(false);
   const pickVisit = useUndoableFilters();
   const [pickScope, setPickScope] = useState<DramScope>(defaultDramScope);
   const [owner, setOwnerState] = useState(false);
@@ -194,6 +195,8 @@ export default function App() {
           onFilters={libraryVisit.change}
           onUndo={libraryVisit.undo}
           canUndo={libraryVisit.canUndo}
+          exact={matchExactly}
+          onExact={setMatchExactly}
           owner={owner}
           onEdit={(b) => {
             setEditing(b);

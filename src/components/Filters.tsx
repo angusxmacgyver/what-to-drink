@@ -9,6 +9,7 @@ type Props = {
   bottles: Bottle[];
   filters: FilterState;
   onChange: (next: FilterState) => void;
+  exact: boolean;
   showGeo?: boolean;
   showSearch?: boolean;
   showStatus?: boolean;
@@ -22,6 +23,7 @@ export function Filters({
   bottles,
   filters,
   onChange,
+  exact,
   showGeo = false,
   showSearch = true,
   showStatus = false,
@@ -44,7 +46,9 @@ export function Filters({
   };
 
   const others = (axis: "age" | "abv") =>
-    bottles.filter((b) => matchesStatus(b, filters.statuses) && matchesFilters(b, withoutRange(filters, axis)));
+    bottles.filter(
+      (b) => matchesStatus(b, filters.statuses, exact) && matchesFilters(b, withoutRange(filters, axis), exact),
+    );
   const ageSource = others("age");
   const ages = ageSource.map((b) => b.age).filter((a): a is number => typeof a === "number");
   const abvs = abvHistogramValues(others("abv").map((b) => b.abv));

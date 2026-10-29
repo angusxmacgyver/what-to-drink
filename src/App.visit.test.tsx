@@ -145,7 +145,7 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(pickAvailableText()).toBe("2 available");
   });
 
-  it("matches every selected Library flavor family and keeps Any/All only on Pick a Dram", async () => {
+  it("treats Library flavor families as alternatives and keeps Any/All only on Pick a Dram", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -153,7 +153,8 @@ describe("one visit: Library filters and Pick criteria", () => {
     await openFilters(user);
     await pickFlavorFamily(user, "Smoke");
     await pickFlavorFamily(user, "Sweet");
-    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+    expect(filterDrawer().queryByRole("button", { name: "Any" })).toBeNull();
 
     await goPick(user);
     await openFilters(user);
@@ -238,7 +239,7 @@ describe("one visit: Library filters and Pick criteria", () => {
     await openFilters(user);
     await pickFlavorFamily(user, "Smoke");
     await pickFlavorFamily(user, "Sweet");
-    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
 
     await user.click(screen.getByRole("button", { name: "What To Drink" }));
     await goLibrary(user);
@@ -415,6 +416,57 @@ describe("one visit: Library filters and Pick criteria", () => {
     render(<App />);
     await goLibrary(user);
     expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+  });
+
+  it("Match exactly requires every Library choice, stays out of Undo last and off the page, and resets on reload", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    const user = userEvent.setup();
+    const mounted = render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    const exactly = () => filterDrawer().getByRole("checkbox", { name: "Match exactly" });
+    expect(exactly()).not.toBeChecked();
+    await user.click(exactly());
+    expect(exactly()).toBeChecked();
+    expect(filterDrawer().getByRole("button", { name: "Undo last" })).toBeDisabled();
+
+    await pickFlavorFamily(user, "Smoke");
+    await pickFlavorFamily(user, "Sweet");
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    await user.click(exactly());
+    await user.click(exactly());
+
+    await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
+    expect(libraryCountsText()).toBe("4 expressions · 4 bottles");
+    expect(exactly()).toBeChecked();
+
+    await user.click(filterDrawer().getByRole("button", { name: "Open", pressed: false }));
+    await user.click(filterDrawer().getByRole("button", { name: "Closed", pressed: false }));
+    expect(libraryCountsText()).toBe("0 expressions · 0 bottles");
+    await user.click(filterDrawer().getByRole("button", { name: "Undo last" }));
+    expect(libraryCountsText()).toBe("3 expressions · 3 bottles");
+
+    await closeFilters(user);
+    expect(libraryPanel().queryByText(/Match exactly/)).toBeNull();
+
+    await user.click(topNav().getByRole("button", { name: "Graveyard" }));
+    await goLibrary(user);
+    await openFilters(user);
+    expect(exactly()).toBeChecked();
+
+    mounted.unmount();
+    render(<App />);
+    await goLibrary(user);
+    await openFilters(user);
+    expect(exactly()).not.toBeChecked();
   });
 
   it("ignores a saved Pick selection but restores theme, Library layout, and collapsed sections", async () => {

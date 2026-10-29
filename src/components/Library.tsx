@@ -25,6 +25,8 @@ type Props = {
   onFilters: (next: FilterState) => void;
   onUndo: () => void;
   canUndo: boolean;
+  exact: boolean;
+  onExact: (next: boolean) => void;
   owner: boolean;
   onEdit?: (bottle: Bottle) => void;
   onKill?: (id: string) => void;
@@ -255,6 +257,8 @@ export function Library({
   onFilters,
   onUndo,
   canUndo,
+  exact,
+  onExact,
   owner,
   onEdit,
   onKill,
@@ -264,9 +268,7 @@ export function Library({
   const [layout, setLayout] = useState<LibraryLayout>(() => loadLibraryLayout());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersButton = useRef<HTMLButtonElement>(null);
-  const filtered = bottles.filter(
-    (b) => matchesStatus(b, filters.statuses) && matchesFilters(b, { ...filters, flavorMatch: "all" }),
-  );
+  const filtered = bottles.filter((b) => matchesStatus(b, filters.statuses, exact) && matchesFilters(b, filters, exact));
   const rows = groupLibrary(filtered);
   const groups = groupDistilleries(rows);
   const actions = { owner, onEdit, onKill, onOpen };
@@ -342,7 +344,11 @@ export function Library({
             filtersButton.current?.focus();
           }}
         >
-          <Filters bottles={bottles} filters={filters} onChange={onFilters} showStatus showGeo />
+          <label className="fancy-mode">
+            <input type="checkbox" checked={exact} onChange={(event) => onExact(event.currentTarget.checked)} />
+            <span>Match exactly</span>
+          </label>
+          <Filters bottles={bottles} filters={filters} onChange={onFilters} exact={exact} showStatus showGeo />
         </FilterDrawer>
       ) : null}
     </section>

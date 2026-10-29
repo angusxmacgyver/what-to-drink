@@ -166,18 +166,18 @@ export function groupDistilleries(rows: LibraryRow[]): DistilleryGroup[] {
   return groups;
 }
 
-function inList(selected: string[], value: string): boolean {
-  return selected.length === 0 || selected.includes(value);
-}
-
 function matchesTags(selected: string[], tags: string[], mode: FilterState["flavorMatch"]): boolean {
   if (selected.length === 0) return true;
   if (mode === "any") return selected.some((tag) => tags.includes(tag));
   return selected.every((tag) => tags.includes(tag));
 }
 
-export function matchesStatus(bottle: Bottle, statuses: string[]): boolean {
-  return inList(statuses, bottle.status);
+function inList(selected: string[], value: string, exact = false): boolean {
+  return matchesTags(selected, [value], exact ? "all" : "any");
+}
+
+export function matchesStatus(bottle: Bottle, statuses: string[], exact = false): boolean {
+  return inList(statuses, bottle.status, exact);
 }
 
 function matchesAge(bottle: Bottle, filters: FilterState): boolean {
@@ -186,13 +186,14 @@ function matchesAge(bottle: Bottle, filters: FilterState): boolean {
   return matchesAgeRange(bottle.age, from, to, filters.includeNas);
 }
 
-export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
+/** Without `exact`, flavor families and sub-characteristics follow `flavorMatch`, as Pick a Dram expects. */
+export function matchesFilters(bottle: Bottle, filters: FilterState, exact?: boolean): boolean {
   if (filters.place === "apartment" && !bottle.atApartment) return false;
   if (filters.place === "house" && bottle.atApartment) return false;
-  if (!inList(filters.distilleries, bottle.distillery)) return false;
-  if (!inList(filters.themes, bottle.theme)) return false;
-  if (!inList(filters.countries, bottle.country)) return false;
-  if (!inList(filters.regions, bottle.region)) return false;
+  if (!inList(filters.distilleries, bottle.distillery, exact)) return false;
+  if (!inList(filters.themes, bottle.theme, exact)) return false;
+  if (!inList(filters.countries, bottle.country, exact)) return false;
+  if (!inList(filters.regions, bottle.region, exact)) return false;
   if (!matchesAge(bottle, filters)) return false;
 
   if (filters.abvMin || filters.abvMax) {
@@ -201,8 +202,9 @@ export function matchesFilters(bottle: Bottle, filters: FilterState): boolean {
     if (!matchesAbvRange(bottle.abv, from, to)) return false;
   }
 
-  if (!matchesTags(filters.families, bottle.flavorFamilies, filters.flavorMatch)) return false;
-  if (!matchesTags(filters.subs, bottle.subCharacteristics, filters.flavorMatch)) return false;
+  const tagMode = exact === undefined ? filters.flavorMatch : exact ? "all" : "any";
+  if (!matchesTags(filters.families, bottle.flavorFamilies, tagMode)) return false;
+  if (!matchesTags(filters.subs, bottle.subCharacteristics, tagMode)) return false;
 
   if (filters.search.trim()) {
     const q = filters.search.trim().toLowerCase();

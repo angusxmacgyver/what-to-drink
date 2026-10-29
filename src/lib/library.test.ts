@@ -126,6 +126,11 @@ describe("matchesStatus", () => {
     expect(matchesStatus(bottle({ status: "Closed" }), ["Open"])).toBe(false);
     expect(matchesStatus(bottle({ status: "Closed" }), ["Open", "Closed"])).toBe(true);
   });
+
+  it("matches nothing for two statuses under Match exactly", () => {
+    expect(matchesStatus(bottle({ status: "Open" }), ["Open", "Closed"], true)).toBe(false);
+    expect(matchesStatus(bottle({ status: "Open" }), ["Open"], true)).toBe(true);
+  });
 });
 
 describe("matchesFilters place", () => {
@@ -278,6 +283,36 @@ describe("matchesFilters flavor match", () => {
     expect(matchesFilters(peat, filters)).toBe(false);
     expect(matchesFilters(sweet, filters)).toBe(true);
     expect(matchesFilters(both, filters)).toBe(true);
+  });
+});
+
+describe("matchesFilters exact", () => {
+  const smoky = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Smoke"] });
+  const fruity = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Fruit (Fresh)"] });
+  const both = bottle({ distillery: "Ardbeg", abv: 46, flavorFamilies: ["Smoke", "Fruit (Fresh)"] });
+  const other = bottle({ distillery: "Lagavulin", abv: 55, flavorFamilies: ["Smoke"] });
+
+  it("treats choices within a category as alternatives when off", () => {
+    const filters = { ...emptyFilters(), families: ["Smoke", "Fruit (Fresh)"], distilleries: ["Ardbeg", "Lagavulin"] };
+    expect([smoky, fruity, both, other].filter((b) => matchesFilters(b, filters, false))).toEqual([
+      smoky,
+      fruity,
+      both,
+      other,
+    ]);
+  });
+
+  it("requires every selected choice when on", () => {
+    const families = { ...emptyFilters(), families: ["Smoke", "Fruit (Fresh)"] };
+    expect([smoky, fruity, both, other].filter((b) => matchesFilters(b, families, true))).toEqual([both]);
+
+    const combined = { ...emptyFilters(), distilleries: ["Ardbeg"], families: ["Smoke"], abvMin: "48" };
+    expect([smoky, fruity, both, other].filter((b) => matchesFilters(b, combined, true))).toEqual([smoky]);
+  });
+
+  it("matches nothing for two choices in a one-value category when on", () => {
+    const filters = { ...emptyFilters(), distilleries: ["Ardbeg", "Lagavulin"] };
+    expect([smoky, other].filter((b) => matchesFilters(b, filters, true))).toEqual([]);
   });
 });
 
