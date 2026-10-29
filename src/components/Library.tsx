@@ -238,7 +238,9 @@ function DistillerySection({
             <article
               key={row.bottleKey}
               id={rowId(row.bottleKey)}
-              className={["row", expanded ? "open" : "", pulsing ? "pick-pulse" : ""].filter(Boolean).join(" ")}
+              className={["row", expanded ? "open" : "", isPicked ? "picked" : "", pulsing ? "pick-pulse" : ""]
+                .filter(Boolean)
+                .join(" ")}
             >
               <button
                 type="button"
@@ -358,7 +360,7 @@ export function Library({
         setPulseKey(lead.bottleKey);
         pulseTimer.current = window.setTimeout(() => {
           if (current()) land();
-        }, 750);
+        }, 1100);
       });
     });
   };
