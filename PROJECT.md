@@ -282,9 +282,16 @@ GitHub issues are the spec for work that is ready to build. **In GitHub** is tha
 
 ### In GitHub
 
-- **#8 Separate Library filters from Pick criteria.** The spec is #7. The Library and Pick a Dram still share one saved selection.
-- **#10 Primary cask and secondary cask.** The spec. Every bottle gets primary-cask and secondary-cask tags from new workbook columns. They show on the detail, and both screens get them as color-coded filters. Built as #11 (cask data), then #12 (cask chips, also after #8) and #13 (cask search). Loading the casks takes a full replace, which must run before #9 records a dram.
-- **#9 Record drams against each bottle and round-trip that history.** No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
+Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 28 Oct 2026:
+
+- **#18 Pick a dram from the Library, and retire Pick a Dram.** The spec, built next. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. Tickets #19–#27 are listed in order in a comment on #18. #19, #20, and #21 can start now. #27 deletes Pick a Dram and finishes cleaning up this file.
+- **#10 Primary cask and secondary cask.** The spec.
+  - #11 (cask data) is closed. The code is done.
+  - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
+  - #13 (cask search) can be built at any time.
+  - #12 (cask chips) is on hold. It was written for two drawers. #29 rewrites it for the one Library drawer after #27.
+- **#9 Record drams against each bottle and round-trip that history.** On hold. #30 re-grills its Pick a Dram stories after #27, and #28 must load the casks first. No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
+- **#8 Separate Library filters from Pick criteria.** Closed, and superseded by #18.
 
 ### To spec
 
