@@ -11,6 +11,7 @@ import {
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
+import { choosePour, leadBottle, revealCard, settlePick } from "../lib/pour";
 import { mostConstrainingChip } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -182,12 +183,15 @@ export function ExpressionDetail({
   );
 }
 
+const rowId = (bottleKey: string) => `library-${bottleKey}`;
+
 function DistillerySection({
   group,
   layout,
   filters,
   openKey,
   onToggle,
+  picked,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
@@ -195,6 +199,7 @@ function DistillerySection({
   filters: FilterState;
   openKey: string | null;
   onToggle: (key: string) => void;
+  picked: Bottle | null;
 }) {
   return (
     <section className="distillery-group">
@@ -206,6 +211,7 @@ function DistillerySection({
       <div className={layout === "grid" ? "library-grid" : "list"}>
         {group.rows.map((row) => {
           const expanded = openKey === row.bottleKey;
+          const isPicked = picked?.bottleKey === row.bottleKey;
           if (layout === "grid") {
             return (
               <Fragment key={row.bottleKey}>
@@ -213,6 +219,9 @@ function DistillerySection({
                   row={row}
                   expanded={expanded}
                   showDistillery={false}
+                  picked={isPicked}
+                  where={isPicked ? picked?.location : undefined}
+                  cardId={rowId(row.bottleKey)}
                   onToggle={() => onToggle(row.bottleKey)}
                 />
                 {expanded ? <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} {...actions} /> : null}
@@ -220,7 +229,7 @@ function DistillerySection({
             );
           }
           return (
-            <article key={row.bottleKey} className={expanded ? "row open" : "row"}>
+            <article key={row.bottleKey} id={rowId(row.bottleKey)} className={expanded ? "row open" : "row"}>
               <button
                 type="button"
                 className="row-main"
@@ -228,6 +237,9 @@ function DistillerySection({
                 onClick={() => onToggle(row.bottleKey)}
               >
                 <span className="who">
+                  {isPicked ? (
+                    <span className="your-dram">Your dram · Bottle is at: {picked?.location || "not tagged yet"}</span>
+                  ) : null}
                   <strong><em>{row.bottling}</em></strong>
                 </span>
                 <span className="list-facts">Age: {row.ageLabel} | ABV: {row.abvLabel}</span>
@@ -276,6 +288,32 @@ export function Library({
   const filterCount = activeFilterCount(filters);
   const nothingMatches = filtered.length === 0 && filterCount > 0;
   const flagId = nothingMatches ? mostConstrainingChip(filters, (next) => showing(next).length) : null;
+  const pool = filtered.filter((b) => b.atApartment === (filters.place === "apartment"));
+  const [pick, setPick] = useState<Bottle | null>(null);
+  const [announce, setAnnounce] = useState("");
+  const settled = settlePick(pick, pool);
+
+  useEffect(() => {
+    if (pick && !settled) {
+      setPick(null);
+      setAnnounce("");
+    }
+  }, [pick, settled]);
+
+  useEffect(() => {
+    const target = pick ? document.getElementById(rowId(pick.bottleKey)) : null;
+    if (target) void revealCard(target);
+  }, [pick]);
+
+  const makePick = () => {
+    const next = choosePour(pool, pick?.id ?? null);
+    if (!next) return;
+    const lead = leadBottle(pool, next);
+    setFiltersOpen(false);
+    setPick(lead);
+    setOpenKey(lead.bottleKey);
+    setAnnounce(`Your dram: ${lead.distillery} ${lead.bottling}. Bottle is at: ${lead.location || "not tagged yet"}.`);
+  };
 
   useEffect(() => {
     saveLibraryLayout(layout);
@@ -338,10 +376,12 @@ export function Library({
             filters={filters}
             openKey={openKey}
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
+            picked={settled}
             {...actions}
           />
         ))}
       </div>
+      <p className="live" aria-live="polite">{announce}</p>
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
@@ -351,6 +391,11 @@ export function Library({
           canUndo={canUndo}
           flagId={flagId}
           trayTitle="Applied"
+          foot={
+            <button type="button" className="roll" onClick={makePick} disabled={pool.length === 0}>
+              {pool.length ? `Pick from ${pool.length}` : "No pours available"}
+            </button>
+          }
           onClose={() => {
             setFiltersOpen(false);
             filtersButton.current?.focus();

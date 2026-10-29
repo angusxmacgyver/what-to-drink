@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { emptyFilters } from "./types";
 import { saveDramSelection, saveLibraryLayout, saveTheme } from "./lib/store";
-import { visitCatalog } from "./test/visitCatalog";
+import { visitBottle, visitCatalog } from "./test/visitCatalog";
 
 function mockDeviceStorage() {
   const local = new Map<string, string>();
@@ -548,5 +548,157 @@ describe("one visit: Library filters and Pick criteria", () => {
     expect(pickAvailableText()).toBe("3 available");
     await openFilters(user);
     expect(screen.getByRole("button", { name: "Flavor families", expanded: false })).toBeTruthy();
+  });
+});
+
+describe("Pick from the Library drawer", () => {
+  beforeEach(() => {
+    mockDeviceStorage();
+    seedVisitCatalog();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      })),
+    );
+    vi.spyOn(Math, "random").mockReturnValue(0);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  async function pickFromDrawer(user: ReturnType<typeof userEvent.setup>) {
+    await openFilters(user);
+    await user.click(filterDrawer().getByRole("button", { name: /^Pick from/ }));
+  }
+
+  function pickedRow() {
+    return libraryPanel().getByText(/^Your dram · Bottle is at:/).closest("article");
+  }
+
+  it("picks a House bottle, closes the drawer, expands and marks it, and re-spins to another", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    expect(filterDrawer().getByRole("button", { name: "Pick from 4" })).toBeEnabled();
+    await user.click(filterDrawer().getByRole("button", { name: "Pick from 4" }));
+
+    expect(screen.queryByRole("dialog", { name: "Filters" })).toBeNull();
+    expect(screen.getByText("Your dram: Ardbeg 10. Bottle is at: House shelf.")).toBeTruthy();
+    expect(pickedRow()).toHaveClass("open");
+    expect(pickedRow()).toHaveTextContent("Your dram · Bottle is at: House shelf");
+    expect(libraryCountsText()).toBe("5 expressions · 5 bottles");
+
+    await pickFromDrawer(user);
+    expect(screen.getByText("Your dram: Glendronach 12. Bottle is at: House shelf.")).toBeTruthy();
+    expect(libraryPanel().getAllByText(/^Your dram · Bottle is at:/)).toHaveLength(1);
+  });
+
+  it("marks and expands the Pick in Grid", async () => {
+    saveLibraryLayout("grid");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await pickFromDrawer(user);
+    const card = libraryPanel().getByRole("button", { name: "Ardbeg 10. Your dram. Bottle is at: House shelf." });
+    expect(card).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("picks at the Apartment only when Place is Apartment, and has no pours when nothing at the House is showing", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await typeSearch(user, "Apartment");
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    expect(filterDrawer().getByRole("button", { name: "No pours available" })).toBeDisabled();
+
+    await user.click(filterDrawer().getByRole("button", { name: /^Apartment/ }));
+    await user.click(filterDrawer().getByRole("button", { name: "Pick from 1" }));
+    expect(screen.getByText("Your dram: Apartment Smoke Flat. Bottle is at: Apartment.")).toBeTruthy();
+  });
+
+  it("can pick a closed bottle that is showing, and leads an expression to its opened bottle", async () => {
+    localStorage.setItem(
+      "what-to-drink-catalog",
+      JSON.stringify({
+        ...visitCatalog,
+        bottles: [
+          ...visitCatalog.bottles,
+          visitBottle({ id: "pair-closed", bottleKey: "pair::12", distillery: "Pair", bottling: "12", status: "Closed", location: "Crate" }),
+          visitBottle({ id: "pair-open", bottleKey: "pair::12", distillery: "Pair", bottling: "12", location: "Bar" }),
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await typeSearch(user, "Pair");
+    await user.click(filterDrawer().getByRole("button", { name: "Pick from 2" }));
+    expect(screen.getByText("Your dram: Pair 12. Bottle is at: Bar.")).toBeTruthy();
+
+    await openFilters(user);
+    await user.clear(filterDrawer().getByPlaceholderText("Distillery, expression, code…"));
+    await typeSearch(user, "Closed Backup");
+    await user.click(filterDrawer().getByRole("button", { name: "Pick from 1" }));
+    expect(screen.getByText("Your dram: Closed Backup Backup. Bottle is at: House shelf.")).toBeTruthy();
+  });
+
+  it("says a blank location is not tagged yet, and keeps the mark when another row is opened", async () => {
+    localStorage.setItem(
+      "what-to-drink-catalog",
+      JSON.stringify({
+        ...visitCatalog,
+        bottles: [
+          visitBottle({ id: "untagged", bottleKey: "aaa::untagged", distillery: "Aaa", bottling: "Untagged", location: "" }),
+          ...visitCatalog.bottles,
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await pickFromDrawer(user);
+    expect(pickedRow()).toHaveTextContent("Your dram · Bottle is at: not tagged yet");
+
+    const ardbeg = within(screen.getByRole("heading", { name: "Ardbeg" }).closest("section")!);
+    await user.click(ardbeg.getByRole("button", { expanded: false }));
+    expect(ardbeg.getByRole("button", { expanded: true })).toBeTruthy();
+    expect(pickedRow()).toHaveTextContent("Your dram · Bottle is at: not tagged yet");
+    expect(pickedRow()).not.toHaveClass("open");
+  });
+
+  it("clears the Pick when a filter hides it and keeps the filters after picking", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await pickFlavorFamily(user, "Smoke");
+    await user.click(filterDrawer().getByRole("button", { name: "Pick from 3" }));
+    expect(libraryPanel().getByRole("button", { name: "Remove Smoke" })).toBeTruthy();
+    expect(pickedRow()).toHaveTextContent("Your dram");
+
+    await user.click(libraryPanel().getByRole("button", { name: "Remove Smoke" }));
+    expect(pickedRow()).toHaveTextContent("Your dram");
+
+    await openFilters(user);
+    await pickFlavorFamily(user, "Sweet");
+    expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
+    await user.click(filterDrawer().getByRole("button", { name: "Remove Sweet" }));
+    expect(libraryPanel().queryByText(/^Your dram · Bottle is at:/)).toBeNull();
   });
 });
