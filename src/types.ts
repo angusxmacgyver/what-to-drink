@@ -59,8 +59,6 @@ export type FilterState = {
   families: string[];
   subs: string[];
   subFamilies: Record<string, string>;
-  /** How picked flavor families combine, and how picked sub-characteristics combine. */
-  flavorMatch: "any" | "all";
   countries: string[];
   regions: string[];
 };
@@ -79,7 +77,6 @@ export const emptyFilters = (): FilterState => ({
   families: [],
   subs: [],
   subFamilies: {},
-  flavorMatch: "all",
   countries: [],
   regions: [],
 });

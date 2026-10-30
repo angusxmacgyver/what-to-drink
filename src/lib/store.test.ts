@@ -1,21 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { emptyFilters, type Bottle, type Catalog } from "../types";
+import type { Bottle, Catalog } from "../types";
 import {
   addBottles,
   fetchRemoteCatalog,
   isOwner,
-  loadCollapsedSections,
-  loadDramSelection,
   loadLibraryLayout,
   loadStoredCatalog,
   replaceCatalog,
   saveBottle,
-  saveDramFilters,
-  saveDramScope,
-  saveDramSelection,
   saveLibraryLayout,
   setOwner,
-  setSectionCollapsed,
   unlockOwner,
 } from "./store";
 
@@ -81,72 +75,6 @@ describe("library layout", () => {
     expect(loadLibraryLayout()).toBe("grid");
     localStorage.setItem("what-to-drink-library-layout", "cards");
     expect(loadLibraryLayout()).toBe("list");
-  });
-});
-
-describe("dram selection", () => {
-  it("round-trips the tray, place, and availability on this device", () => {
-    const selection = {
-      filters: {
-        ...emptyFilters(),
-        families: ["Smoke"],
-        subs: ["Brine & Sea Air"],
-        subFamilies: { "Brine & Sea Air": "Coastal" },
-        flavorMatch: "any" as const,
-      },
-      place: "apartment" as const,
-      includeOpen: false,
-      includeClosed: true,
-    };
-    saveDramSelection(selection);
-    expect(loadDramSelection()).toEqual(selection);
-  });
-
-  it("keeps place when the tray changes, and the tray when the place changes", () => {
-    saveDramSelection({
-      filters: emptyFilters(),
-      place: "house",
-      includeOpen: true,
-      includeClosed: true,
-    });
-    saveDramFilters({ ...emptyFilters(), search: "lag" });
-    expect(loadDramSelection()).toMatchObject({ place: "house", includeClosed: true, filters: { search: "lag" } });
-    saveDramScope({ place: "apartment", includeOpen: true, includeClosed: false });
-    expect(loadDramSelection()?.filters.search).toBe("lag");
-    expect(loadDramSelection()?.place).toBe("apartment");
-  });
-
-  it("drops a broken record and fills in missing fields", () => {
-    localStorage.setItem("what-to-drink-dram-selection", "{");
-    expect(loadDramSelection()).toBeNull();
-    localStorage.setItem(
-      "what-to-drink-dram-selection",
-      JSON.stringify({ filters: { families: ["Smoke"], flavorMatch: "nope" }, place: "cellar", includeClosed: true }),
-    );
-    const loaded = loadDramSelection();
-    expect(loaded?.filters.families).toEqual(["Smoke"]);
-    expect(loaded?.filters.flavorMatch).toBe("all");
-    expect(loaded?.filters.distilleries).toEqual([]);
-    expect(loaded?.filters.subFamilies).toEqual({});
-    expect(loaded?.place).toBeNull();
-    expect(loaded?.includeOpen).toBe(true);
-    expect(loaded?.includeClosed).toBe(true);
-  });
-});
-
-describe("collapsed sections", () => {
-  it("remembers a collapsed section for this session and forgets it when opened", () => {
-    expect(loadCollapsedSections()).toEqual([]);
-    setSectionCollapsed("region", true);
-    setSectionCollapsed("theme", true);
-    expect(loadCollapsedSections()).toEqual(["region", "theme"]);
-    setSectionCollapsed("region", false);
-    expect(loadCollapsedSections()).toEqual(["theme"]);
-  });
-
-  it("ignores a stored value that is not a list of names", () => {
-    sessionStorage.setItem("what-to-drink-collapsed-sections", "{\"region\":true}");
-    expect(loadCollapsedSections()).toEqual([]);
   });
 });
 

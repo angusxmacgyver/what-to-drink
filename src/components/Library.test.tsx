@@ -179,17 +179,15 @@ describe("expression detail", () => {
     expect(html).not.toContain('class="tag family');
   });
 
-  it("shows primary cask and secondary cask in the Library and Pick a Dram detail", () => {
+  it("shows primary cask and secondary cask in the Library detail", () => {
     const drum = bottle({ primaryCask: ["Ex-bourbon", "Oloroso sherry"], secondaryCask: ["Rum"] });
-    for (const factsFirst of [false, true]) {
-      const html = renderToStaticMarkup(<ExpressionDetail bottles={[drum]} owner={false} factsFirst={factsFirst} />);
-      expect(html).toContain("<dt>Primary cask</dt><dd>Ex-bourbon · Oloroso sherry</dd>");
-      expect(html).toContain("<dt>Secondary cask</dt><dd>Rum</dd>");
-    }
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[drum]} owner={false} />);
+    expect(html).toContain("<dt>Primary cask</dt><dd>Ex-bourbon · Oloroso sherry</dd>");
+    expect(html).toContain("<dt>Secondary cask</dt><dd>Rum</dd>");
   });
 
   it("leaves out cask fields for a bottle with no casks recorded", () => {
-    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} owner={false} factsFirst />);
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} owner={false} />);
     expect(html).not.toContain("Primary cask");
     expect(html).not.toContain("Secondary cask");
   });

@@ -3,8 +3,6 @@ import { emptyFilters, type Bottle } from "../types";
 import {
   detailBottle,
   distilleryCounts,
-  dramCandidates,
-  facetCounts,
   groupDistilleries,
   groupLibrary,
   matchesFilters,
@@ -253,39 +251,6 @@ describe("originLabel", () => {
   });
 });
 
-describe("matchesFilters flavor match", () => {
-  const peat = bottle({ flavorFamilies: ["Smoke"], subCharacteristics: ["Woodsmoke & Campfire"] });
-  const sweet = bottle({ flavorFamilies: ["Sweet"], subCharacteristics: ["Honey"] });
-  const both = bottle({
-    flavorFamilies: ["Smoke", "Sweet"],
-    subCharacteristics: ["Woodsmoke & Campfire", "Honey"],
-  });
-
-  it("keeps a bottle that has every picked family and sub when the mode is all", () => {
-    const filters = {
-      ...emptyFilters(),
-      flavorMatch: "all" as const,
-      families: ["Smoke", "Sweet"],
-      subs: ["Woodsmoke & Campfire", "Honey"],
-    };
-    expect(matchesFilters(both, filters)).toBe(true);
-    expect(matchesFilters(peat, filters)).toBe(false);
-    expect(matchesFilters(sweet, filters)).toBe(false);
-  });
-
-  it("keeps a bottle that has any picked family and any picked sub when the mode is any", () => {
-    const filters = {
-      ...emptyFilters(),
-      flavorMatch: "any" as const,
-      families: ["Smoke", "Sweet"],
-      subs: ["Honey"],
-    };
-    expect(matchesFilters(peat, filters)).toBe(false);
-    expect(matchesFilters(sweet, filters)).toBe(true);
-    expect(matchesFilters(both, filters)).toBe(true);
-  });
-});
-
 describe("matchesFilters exact", () => {
   const smoky = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Smoke"] });
   const fruity = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Fruit (Fresh)"] });
@@ -316,74 +281,11 @@ describe("matchesFilters exact", () => {
   });
 });
 
-describe("dramCandidates", () => {
-  const open = bottle({ id: "open", status: "Open", atApartment: false });
-  const closed = bottle({ id: "closed", status: "Closed", atApartment: false });
-  const killed = bottle({ id: "killed", status: "Killed", atApartment: false });
-  const emptied = bottle({ id: "emptied", status: "empty", atApartment: false });
-  const apartment = bottle({ id: "apartment", status: "Open", atApartment: true });
-
-  it("keeps open house bottles and drops the apartment, killed, and empty bottles", () => {
-    expect(dramCandidates([open, closed, killed, emptied, apartment], "house", false).map((b) => b.id)).toEqual([
-      "open",
-    ]);
-  });
-
-  it("adds closed bottles only when asked, and open bottles only while opened is on", () => {
-    expect(dramCandidates([open, closed, killed, emptied], "house", true).map((b) => b.id)).toEqual([
-      "open",
-      "closed",
-    ]);
-    expect(dramCandidates([open, closed], "house", true, false).map((b) => b.id)).toEqual(["closed"]);
-    expect(dramCandidates([open, closed], "house", false, false)).toEqual([]);
-  });
-
-  it("keeps the apartment pool on its own", () => {
-    expect(dramCandidates([open, apartment], "apartment", false).map((b) => b.id)).toEqual(["apartment"]);
-  });
-});
-
-describe("facetCounts", () => {
-  const islay = bottle({ id: "islay", distillery: "Ardbeg", region: "Islay", theme: "Peated" });
-  const speyside = bottle({ id: "speyside", distillery: "Glenfiddich", region: "Speyside", theme: "Sweet" });
-  const secondIslay = bottle({ id: "second-islay", distillery: "Lagavulin", region: "Islay", theme: "Peated" });
-
-  it("counts an option from the other active facets, ignoring picks in its own facet", () => {
-    const filters = { ...emptyFilters(), regions: ["Speyside"], themes: ["Peated"] };
-    expect(facetCounts([islay, speyside, secondIslay], "house", false, filters, "region", ["Islay", "Speyside"])).toEqual(
-      { Islay: 2, Speyside: 0 },
-    );
-  });
-
-  it("drops bottles outside the candidate set", () => {
-    const killed = bottle({ id: "killed", status: "Killed", region: "Islay", theme: "Peated" });
-    const closed = bottle({ id: "closed", status: "Closed", region: "Islay", theme: "Peated" });
-    const away = bottle({ id: "away", atApartment: true, region: "Islay", theme: "Peated" });
-    const filters = { ...emptyFilters(), themes: ["Peated"] };
-    expect(
-      facetCounts([islay, killed, closed, away], "house", false, filters, "region", ["Islay"]).Islay,
-    ).toBe(1);
-    expect(
-      facetCounts([islay, closed], "house", true, filters, "region", ["Islay"]).Islay,
-    ).toBe(2);
-  });
-
-  it("applies flavor any or all on the facets that stay active", () => {
-    const peat = bottle({ region: "Islay", flavorFamilies: ["Smoke"] });
-    const sweet = bottle({ region: "Islay", flavorFamilies: ["Sweet"] });
-    const both = bottle({ region: "Speyside", flavorFamilies: ["Smoke", "Sweet"] });
-    const families = ["Smoke", "Sweet"];
-    const options = ["Islay", "Speyside"];
-    expect(
-      facetCounts([peat, sweet, both], "house", false, { ...emptyFilters(), flavorMatch: "all", families }, "region", options),
-    ).toEqual({ Islay: 0, Speyside: 1 });
-    expect(
-      facetCounts([peat, sweet, both], "house", false, { ...emptyFilters(), flavorMatch: "any", families }, "region", options),
-    ).toEqual({ Islay: 2, Speyside: 1 });
-  });
-
-  it("returns zero for an option no candidate has", () => {
-    expect(facetCounts([islay], "house", false, emptyFilters(), "distillery", ["Bowmore"])).toEqual({ Bowmore: 0 });
+describe("optionCounts", () => {
+  it("returns zero for an option no bottle has", () => {
+    expect(optionCounts([bottle({ distillery: "Ardbeg" })], emptyFilters(), "distillery", ["Bowmore"])).toEqual({
+      Bowmore: 0,
+    });
   });
 
   it("counts a few thousand bottles inside the time budget", () => {
@@ -394,17 +296,11 @@ describe("facetCounts", () => {
       }),
     );
     const started = performance.now();
-    const counts = facetCounts(bottles, "house", false, emptyFilters(), "distillery", [
-      "Ardbeg",
-      "Lagavulin",
-      "Bowmore",
-    ]);
+    const counts = optionCounts(bottles, emptyFilters(), "distillery", ["Ardbeg", "Lagavulin", "Bowmore"]);
     expect(performance.now() - started).toBeLessThan(100);
     expect(counts).toEqual({ Ardbeg: 1000, Lagavulin: 1000, Bowmore: 0 });
   });
-});
 
-describe("optionCounts", () => {
   it("counts any bottles it is given, whatever their place or status", () => {
     const house = bottle({ distillery: "Ardbeg", region: "Islay", theme: "Peated" });
     const apartment = bottle({ distillery: "Lagavulin", region: "Islay", theme: "Peated", atApartment: true });
@@ -451,17 +347,6 @@ describe("optionCounts", () => {
     const onlyOpen = { ...emptyFilters(), statuses: ["Open"] };
     expect(optionCounts([open, closed], onlyOpen, "status", ["Open", "Closed"], false)).toEqual({ Open: 1, Closed: 1 });
     expect(optionCounts([open, closed], onlyOpen, "status", ["Open", "Closed"], true)).toEqual({ Open: 1, Closed: 0 });
-  });
-
-  it("matches the place-scoped counts when given that place's candidates", () => {
-    const islay = bottle({ region: "Islay" });
-    const away = bottle({ region: "Islay", atApartment: true });
-    const closed = bottle({ region: "Islay", status: "Closed" });
-    const all = [islay, away, closed];
-    const filters = emptyFilters();
-    expect(optionCounts(dramCandidates(all, "house", false), filters, "region", ["Islay"])).toEqual(
-      facetCounts(all, "house", false, filters, "region", ["Islay"]),
-    );
   });
 });
 

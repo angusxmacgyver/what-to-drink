@@ -20,7 +20,6 @@ describe("appliedChips", () => {
       ageMax: "18",
       includeNas: false,
       abvMin: "46",
-      flavorMatch: "any",
     });
     expect(chips.map((chip) => chip.label)).toEqual([
       "Search: lag",

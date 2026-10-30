@@ -3,7 +3,6 @@ import type { Bottle, Catalog } from "./types";
 import { useUndoableFilters } from "./lib/useUndoableFilters";
 import seeded from "../data/bottles.json";
 import { Library } from "./components/Library";
-import { PickADram } from "./components/PickADram";
 import { Graveyard } from "./components/Graveyard";
 import { Analytics } from "./components/Analytics";
 import { ImportPanel } from "./components/ImportPanel";
@@ -17,7 +16,6 @@ import { consumeFancyReturn } from "./lib/fancy";
 import { uniqueTags } from "./lib/library";
 import {
   addBottles,
-  defaultDramScope,
   downloadCatalog,
   fetchRemoteCatalog,
   isOwner,
@@ -32,11 +30,10 @@ import {
   setOwner,
   unlockOwner,
   upsertBottle,
-  type DramScope,
   type Theme,
 } from "./lib/store";
 
-type View = "library" | "dram" | "graveyard" | "analytics" | "owner";
+type View = "library" | "graveyard" | "analytics" | "owner";
 
 const seed = readCatalog(seeded);
 
@@ -47,8 +44,6 @@ export default function App() {
   const [matchExactly, setMatchExactly] = useState(false);
   const [libraryPick, setLibraryPick] = useState<Bottle | null>(null);
   const [landedId, setLandedId] = useState<string | null>(null);
-  const pickVisit = useUndoableFilters();
-  const [pickScope, setPickScope] = useState<DramScope>(defaultDramScope);
   const [owner, setOwnerState] = useState(false);
   const [editing, setEditing] = useState<Bottle | null | "new">(null);
   const [notice, setNotice] = useState("");
@@ -220,18 +215,6 @@ export default function App() {
             const opened = { ...bottle, status: "Open" as const };
             void persist(upsertBottle(catalog, opened), saveBottle(opened));
           }}
-        />
-      ) : null}
-
-      {view === "dram" ? (
-        <PickADram
-          bottles={catalog.bottles}
-          filters={pickVisit.filters}
-          onFilters={pickVisit.change}
-          onUndo={pickVisit.undo}
-          canUndo={pickVisit.canUndo}
-          scope={pickScope}
-          onScopeChange={setPickScope}
         />
       ) : null}
 

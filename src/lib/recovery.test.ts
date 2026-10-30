@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, type Bottle, type FilterState } from "../types";
 import { matchesFilters } from "./library";
-import { mostConstraining, mostConstrainingChip, popHistory, pushHistory } from "./recovery";
+import { mostConstrainingChip, popHistory, pushHistory } from "./recovery";
 
 function bottle(overrides: Partial<Bottle> = {}): Bottle {
   return {
@@ -29,7 +29,10 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
   };
 }
 
-describe("mostConstraining", () => {
+describe("mostConstrainingChip", () => {
+  const count = (bottles: Bottle[]) => (filters: FilterState) =>
+    bottles.filter((b) => matchesFilters(b, filters)).length;
+
   it("flags the removal that brings back the most bottles", () => {
     const filters = { ...emptyFilters(), distilleries: ["Ardbeg"], families: ["Smoke"] };
     const bottles = [
@@ -39,18 +42,14 @@ describe("mostConstraining", () => {
         bottle({ id: `lag-${index}`, distillery: "Lagavulin", flavorFamilies: ["Smoke"] }),
       ),
     ];
-    expect(mostConstraining(bottles, "house", false, filters)).toBe("distillery\nArdbeg");
+    expect(mostConstrainingChip(filters, count(bottles))).toBe("distillery\nArdbeg");
   });
 
-  it("keeps the earlier chip when two removals tie, and returns nothing with no chips", () => {
+  it("keeps the earlier chip when two removals tie", () => {
     const filters = { ...emptyFilters(), distilleries: ["Ardbeg"], families: ["Smoke"] };
-    const bottles = [bottle({ flavorFamilies: ["Smoke"] })];
-    expect(mostConstraining(bottles, "house", false, filters)).toBe("distillery\nArdbeg");
-    expect(mostConstraining(bottles, "house", false, emptyFilters())).toBeNull();
+    expect(mostConstrainingChip(filters, count([bottle({ flavorFamilies: ["Smoke"] })]))).toBe("distillery\nArdbeg");
   });
-});
 
-describe("mostConstrainingChip", () => {
   it("flags the chip whose removal brings back the most of what the caller counts", () => {
     const bottles = [
       ...Array.from({ length: 3 }, (_, index) => bottle({ id: `house-${index}`, flavorFamilies: ["Smoke"] })),

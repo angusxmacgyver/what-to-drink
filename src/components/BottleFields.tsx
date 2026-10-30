@@ -33,24 +33,12 @@ function pertinentFields(bottle: Bottle) {
   );
 }
 
-function hasExtraFields(bottle: Bottle, flavorText: boolean) {
-  return (
-    (flavorText && (bottle.flavorFamilies.length > 0 || bottle.subCharacteristics.length > 0)) ||
-    bottle.primaryCask.length > 0 ||
-    bottle.secondaryCask.length > 0 ||
-    Boolean(bottle.smws) ||
-    Boolean(bottle.dateEmptied)
-  );
-}
-
 export function BottleFields({
   bottle,
   flavorText = true,
-  factsFirst = false,
 }: {
   bottle: Bottle;
   flavorText?: boolean;
-  factsFirst?: boolean;
 }) {
   const hasNotes = Boolean(bottle.notes);
   const hasTasting = Boolean(bottle.tastingNotes);
@@ -101,16 +89,6 @@ export function BottleFields({
       ) : null}
     </>
   );
-
-  if (factsFirst) {
-    return (
-      <div className="bottle-fields">
-        <dl className="fields fields-lead">{pertinentFields(bottle)}</dl>
-        {notes}
-        {hasExtraFields(bottle, flavorText) ? <dl className="fields">{extra}</dl> : null}
-      </div>
-    );
-  }
 
   return (
     <div className="bottle-fields">

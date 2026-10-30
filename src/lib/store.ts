@@ -1,103 +1,13 @@
-import { emptyFilters, type Bottle, type Catalog, type FilterState } from "../types";
+import type { Bottle, Catalog } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
 const PIN_KEY = "what-to-drink-owner-pin";
 const THEME_KEY = "what-to-drink-theme";
 const LIBRARY_LAYOUT_KEY = "what-to-drink-library-layout";
-const COLLAPSED_SECTIONS_KEY = "what-to-drink-collapsed-sections";
-const DRAM_SELECTION_KEY = "what-to-drink-dram-selection";
-
-export type DramPlaceChoice = "house" | "apartment" | null;
-
-export type DramSelection = {
-  filters: FilterState;
-  place: DramPlaceChoice;
-  includeOpen: boolean;
-  includeClosed: boolean;
-};
-
-/** Pick pool place and opened/closed eligibility for one visit (not persisted). */
-export type DramScope = Pick<DramSelection, "includeOpen" | "includeClosed"> & {
-  place: Exclude<DramPlaceChoice, null>;
-};
-
-export function defaultDramScope(): DramScope {
-  return { place: "house", includeOpen: true, includeClosed: false };
-}
 
 function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function stringRecord(value: unknown): Record<string, string> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
-  );
-}
-
-function sanitizeFilters(value: unknown): FilterState {
-  const blank = emptyFilters();
-  if (!value || typeof value !== "object") return blank;
-  const raw = value as Partial<Record<keyof FilterState, unknown>>;
-  const subs = stringList(raw.subs);
-  const storedSubFamilies = stringRecord(raw.subFamilies);
-  return {
-    ...blank,
-    search: typeof raw.search === "string" ? raw.search : "",
-    distilleries: stringList(raw.distilleries),
-    themes: stringList(raw.themes),
-    statuses: stringList(raw.statuses),
-    ageMin: typeof raw.ageMin === "string" ? raw.ageMin : "",
-    ageMax: typeof raw.ageMax === "string" ? raw.ageMax : "",
-    includeNas: raw.includeNas !== false,
-    abvMin: typeof raw.abvMin === "string" ? raw.abvMin : "",
-    abvMax: typeof raw.abvMax === "string" ? raw.abvMax : "",
-    families: stringList(raw.families),
-    subs,
-    subFamilies: Object.fromEntries(subs.flatMap((sub) => storedSubFamilies[sub] ? [[sub, storedSubFamilies[sub]]] : [])),
-    flavorMatch: raw.flavorMatch === "any" ? "any" : "all",
-    countries: stringList(raw.countries),
-    regions: stringList(raw.regions),
-  };
-}
-
-export function loadDramSelection(): DramSelection | null {
-  try {
-    const raw = localStorage.getItem(DRAM_SELECTION_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return null;
-    const record = parsed as Partial<DramSelection>;
-    return {
-      filters: sanitizeFilters(record.filters),
-      place: record.place === "house" || record.place === "apartment" ? record.place : null,
-      includeOpen: record.includeOpen !== false,
-      includeClosed: record.includeClosed === true,
-    };
-  } catch {
-    return null;
-  }
-}
-
-export function saveDramSelection(selection: DramSelection): void {
-  localStorage.setItem(DRAM_SELECTION_KEY, JSON.stringify(selection));
-}
-
-export function saveDramFilters(filters: FilterState): void {
-  const current = loadDramSelection();
-  saveDramSelection({
-    filters,
-    place: current?.place ?? null,
-    includeOpen: current?.includeOpen ?? true,
-    includeClosed: current?.includeClosed ?? false,
-  });
-}
-
-export function saveDramScope(scope: Pick<DramSelection, "place" | "includeOpen" | "includeClosed">): void {
-  const current = loadDramSelection();
-  saveDramSelection({ filters: current?.filters ?? emptyFilters(), ...scope });
 }
 
 export type Theme = "dark" | "light";
@@ -109,22 +19,6 @@ export function loadLibraryLayout(): LibraryLayout {
 
 export function saveLibraryLayout(layout: LibraryLayout): void {
   localStorage.setItem(LIBRARY_LAYOUT_KEY, layout);
-}
-
-export function loadCollapsedSections(): string[] {
-  try {
-    const parsed = JSON.parse(sessionStorage.getItem(COLLAPSED_SECTIONS_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-export function setSectionCollapsed(id: string, collapsed: boolean): void {
-  const ids = new Set(loadCollapsedSections());
-  if (collapsed) ids.add(id);
-  else ids.delete(id);
-  sessionStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify([...ids]));
 }
 
 export function loadTheme(): Theme {

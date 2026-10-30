@@ -70,7 +70,7 @@ function libraryPanel() {
   return within(screen.getByRole("heading", { name: "The Library" }).closest("section")!);
 }
 
-describe("one visit: Library filters and Pick criteria", () => {
+describe("one visit: the Library filters", () => {
   beforeEach(() => {
     mockDeviceStorage();
     seedVisitCatalog();

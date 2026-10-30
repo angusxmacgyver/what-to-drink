@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cardTransitionName, choosePour, leadBottle, revealCard, settlePick } from "./pour";
+import { choosePour, leadBottle, revealCard, settlePick } from "./pour";
 
 describe("revealCard", () => {
   function card(top: number) {
@@ -44,15 +44,6 @@ describe("revealCard", () => {
     document.dispatchEvent(new Event("scrollend"));
     await revealed;
     expect(done).toBe(true);
-  });
-});
-
-describe("cardTransitionName", () => {
-  it("makes a valid ident and keeps distinct keys distinct", () => {
-    expect(cardTransitionName("ardbeg::cask-strength-10")).toBe("card-ardbeg_3a__3a_cask-strength-10");
-    expect(cardTransitionName("smws::1.246::a-one")).toMatch(/^card-[a-zA-Z0-9_-]+$/);
-    expect(cardTransitionName("a::b")).not.toBe(cardTransitionName("a-:b"));
-    expect(cardTransitionName("a_b")).not.toBe(cardTransitionName("a-b"));
   });
 });
 

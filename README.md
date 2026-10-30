@@ -8,11 +8,11 @@ Live at https://what-to-drink.max-krueger.workers.dev/. A push to `main` deploys
 
 ## What you can do
 
-**The Library** is every bottle that is still available. Bottles of the same expression are grouped, with a stock count. List and grid show the same groups. Search and filters narrow the list. Opening a row shows that expression in place.
+**The Library** is every bottle that is still available, and the app opens on it. Bottles of the same expression are grouped, with a stock count. List and grid show the same groups. Search and filters narrow the list. Opening a row shows that expression in place.
 
-**Pick a Dram** chooses one physical bottle to walk to. You are at the House or the Apartment, and you can narrow the pool before the pick. The pick does not change the bottle. A checkbox in the filter drawer, I feel fancy, sends the next pick through a separate wheel.
+**Pick** is a button in the Library's filter drawer. It chooses one physical bottle to walk to, from the bottles the filters leave showing: at the House, unless Place is set to the Apartment. The Library scrolls to that bottle and opens it, marked "Your dram". The pick does not change the bottle. A checkbox beside it, I feel fancy, sends the next pick through a separate wheel, which hands its bottle back to the Library.
 
-**Graveyard** is finished bottles. Browse only. They are not in the Library and not in the pick.
+**Graveyard** is finished bottles. Browse only. They are not in the Library, so they are never picked.
 
 **Analytics** is a picture of the cellar, counted by physical bottle. It follows imports and owner edits.
 

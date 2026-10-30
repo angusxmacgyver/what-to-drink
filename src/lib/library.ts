@@ -166,14 +166,14 @@ export function groupDistilleries(rows: LibraryRow[]): DistilleryGroup[] {
   return groups;
 }
 
-function matchesTags(selected: string[], tags: string[], mode: FilterState["flavorMatch"]): boolean {
+function matchesTags(selected: string[], tags: string[], exact: boolean): boolean {
   if (selected.length === 0) return true;
-  if (mode === "any") return selected.some((tag) => tags.includes(tag));
-  return selected.every((tag) => tags.includes(tag));
+  if (exact) return selected.every((tag) => tags.includes(tag));
+  return selected.some((tag) => tags.includes(tag));
 }
 
 function inList(selected: string[], value: string, exact = false): boolean {
-  return matchesTags(selected, [value], exact ? "all" : "any");
+  return matchesTags(selected, [value], exact);
 }
 
 export function matchesStatus(bottle: Bottle, statuses: string[], exact = false): boolean {
@@ -186,8 +186,7 @@ function matchesAge(bottle: Bottle, filters: FilterState): boolean {
   return matchesAgeRange(bottle.age, from, to, filters.includeNas);
 }
 
-/** Without `exact`, flavor families and sub-characteristics follow `flavorMatch`, as Pick a Dram expects. */
-export function matchesFilters(bottle: Bottle, filters: FilterState, exact?: boolean): boolean {
+export function matchesFilters(bottle: Bottle, filters: FilterState, exact = false): boolean {
   if (filters.place === "apartment" && !bottle.atApartment) return false;
   if (filters.place === "house" && bottle.atApartment) return false;
   if (!matchesStatus(bottle, filters.statuses, exact)) return false;
@@ -203,9 +202,8 @@ export function matchesFilters(bottle: Bottle, filters: FilterState, exact?: boo
     if (!matchesAbvRange(bottle.abv, from, to)) return false;
   }
 
-  const tagMode = exact === undefined ? filters.flavorMatch : exact ? "all" : "any";
-  if (!matchesTags(filters.families, bottle.flavorFamilies, tagMode)) return false;
-  if (!matchesTags(filters.subs, bottle.subCharacteristics, tagMode)) return false;
+  if (!matchesTags(filters.families, bottle.flavorFamilies, exact)) return false;
+  if (!matchesTags(filters.subs, bottle.subCharacteristics, exact)) return false;
 
   if (filters.search.trim()) {
     const q = filters.search.trim().toLowerCase();
@@ -229,26 +227,7 @@ export function withoutRange(filters: FilterState, axis: "age" | "abv"): FilterS
   return { ...filters, abvMin: "", abvMax: "" };
 }
 
-export type DramPlace = "house" | "apartment";
-
 export type CountFacet = "place" | "status" | "distillery" | "theme" | "family" | "sub" | "country" | "region";
-
-/** Pourable bottles at a place. Open is on unless turned off. Closed joins only when asked. Killed and empty never do. */
-export function dramCandidates(
-  bottles: Bottle[],
-  place: DramPlace,
-  includeClosed: boolean,
-  includeOpen = true,
-): Bottle[] {
-  return bottles.filter((bottle) => {
-    if (place === "apartment" && !bottle.atApartment) return false;
-    if (place === "house" && bottle.atApartment) return false;
-    if (bottle.status === "Killed" || bottle.status === "empty") return false;
-    if (bottle.status === "Closed") return includeClosed;
-    if (bottle.status === "Open") return includeOpen;
-    return false;
-  });
-}
 
 function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
   if (facet === "place") return { ...filters, place: null };
@@ -281,7 +260,7 @@ export function optionCounts(
   filters: FilterState,
   facet: CountFacet,
   options: readonly string[],
-  exact?: boolean,
+  exact = false,
 ): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const option of options) counts[option] = 0;
@@ -294,27 +273,4 @@ export function optionCounts(
     }
   }
   return counts;
-}
-
-/** How many candidates at a place would show each option if that option were the facet's only pick. */
-export function facetCounts(
-  bottles: Bottle[],
-  place: DramPlace,
-  includeClosed: boolean,
-  filters: FilterState,
-  facet: CountFacet,
-  options: readonly string[],
-  includeOpen = true,
-): Record<string, number> {
-  return optionCounts(dramCandidates(bottles, place, includeClosed, includeOpen), filters, facet, options);
-}
-
-export function dramPool(
-  bottles: Bottle[],
-  place: DramPlace,
-  includeClosed: boolean,
-  filters: FilterState,
-  includeOpen = true,
-): Bottle[] {
-  return dramCandidates(bottles, place, includeClosed, includeOpen).filter((bottle) => matchesFilters(bottle, filters));
 }

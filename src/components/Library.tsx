@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { Bottle, FilterState } from "../types";
 import { familyClass, smwsThemeClass } from "../lib/colors";
@@ -71,29 +71,25 @@ export function LibraryCard({
   expanded,
   onToggle,
   picked = false,
-  bordered = false,
   pulsing = false,
   where,
   cardId,
-  transitionName,
   showDistillery = true,
 }: {
   row: LibraryRow;
   expanded: boolean;
   onToggle: () => void;
   picked?: boolean;
-  bordered?: boolean;
   pulsing?: boolean;
   where?: string;
   cardId?: string;
-  transitionName?: string;
   showDistillery?: boolean;
 }) {
   const shown = detailBottle(row.bottles);
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
-  const classes = ["library-card", expanded ? "open" : "", picked || bordered ? "picked" : "", pulsing ? "pick-pulse" : ""]
+  const classes = ["library-card", expanded ? "open" : "", picked ? "picked" : "", pulsing ? "pick-pulse" : ""]
     .filter(Boolean)
     .join(" ");
   return (
@@ -101,7 +97,6 @@ export function LibraryCard({
       type="button"
       id={cardId}
       className={classes}
-      style={transitionName ? { viewTransitionName: transitionName, viewTransitionClass: "dram-card" } : undefined}
       aria-expanded={expanded}
       aria-label={picked ? `${name}. Your dram. Bottle is at: ${place}.` : name}
       title={name}
@@ -154,16 +149,12 @@ export function DistilleryHeader({
 
 export function ExpressionDetail({
   bottles,
-  trail,
-  factsFirst = false,
   groupedFlavors = false,
   filters,
   landed = false,
   ...actions
 }: Actions & {
   bottles: Bottle[];
-  trail?: ReactNode;
-  factsFirst?: boolean;
   groupedFlavors?: boolean;
   filters?: FilterState;
   landed?: boolean;
@@ -171,7 +162,7 @@ export function ExpressionDetail({
   const shown = detailBottle(bottles);
   return (
     <div className={landed ? "detail landed" : "detail"}>
-      <BottleFields bottle={shown} flavorText={false} factsFirst={factsFirst} />
+      <BottleFields bottle={shown} flavorText={false} />
       <FlavorTags
         families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
         subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}
@@ -195,7 +186,6 @@ export function ExpressionDetail({
       ) : (
         <BottleActions bottle={shown} {...actions} />
       )}
-      {trail}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 **How to use this document.** Product and architecture context for the app. Work that is ready to build is a GitHub issue. Work that is named but not specified is under **Undeveloped**. The milestones under **To spec** are in the order to specify them. Milestones 1–6 below are the record of what shipped.
 
-**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The next build is #8, then the cask issues (#11, then #12 and #13), then #9. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
+**Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The order of the next builds is under **In GitHub**. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
 
 **Side quest:** Fancy Picker Easter Egg is done.
 
@@ -14,16 +14,15 @@
 
 **What To Drink** is a laptop-first web app for a personal whisky cellar.
 
-Two jobs:
+One screen for the cellar:
 
-1. **The Library** — the book of every bottle that is still available (not killed). Searchable and filterable. Grouped by expression with a stock count.
-2. **Pick a Dram** — a randomizer for a pour. Optional filters, then one bottle and where to walk.
+**The Library** — the book of every bottle that is still available (not killed). Searchable and filterable. Grouped by expression with a stock count. It is the first screen. Its filter drawer also makes a **Pick**: one bottle, chosen at random from the bottles the filters leave showing, and where to walk (ADR 0002).
 
-A third surface, **Graveyard**, holds killed bottles. It is browse-only. Those bottles are not in The Library and not in the randomizer.
+A second surface, **Graveyard**, holds killed bottles. It is browse-only. Those bottles are not in The Library, so they are never picked.
 
-Guests get The Library and Pick a Dram (and Graveyard and Analytics). Owner-only surfaces are ingest and add/edit.
+Guests get The Library and the Pick (and Graveyard and Analytics). Owner-only surfaces are ingest and add/edit.
 
-The workbook tab named SMWS is only how Society bottles are captured in Excel. After ingest they are ordinary Library bottles and ordinary randomizer tickets. There is no SMWS-only screen or chip.
+The workbook tab named SMWS is only how Society bottles are captured in Excel. After ingest they are ordinary Library bottles that can be picked like any other. There is no SMWS-only screen or chip.
 
 ---
 
@@ -90,7 +89,7 @@ JSON envelope:
 
 - `schemaVersion` (start at `1`)
 - `importedAt`
-- `bottles` — live bottles (Library + randomizer pool)
+- `bottles` — live bottles (the Library, which the Pick draws from)
 - `graveyard` — killed bottles
 
 On each replace-import: copy current `data/bottles.json` to `data/bottles.backup.json`, then write the new file. One backup copy only. Git history is the longer record.
@@ -103,7 +102,7 @@ On each replace-import: copy current `data/bottles.json` to `data/bottles.backup
 - Notes (placeholder) → `SMWS Cask` plus `Secondary Maturation`
 - Keep on detail only: Full Code, Distillery No., Cask No., Flavor Profile, SMWS Cask, Secondary Maturation, Name (Intl), Vintage, SMWS URL
 - `bottleKey` → Full Code + US name
-- Blank Location still imports. Those bottles are in the **house** pool until Location (or an apartment flag) says otherwise. Pick a Dram may show an empty walk-to.
+- Blank Location still imports. Those bottles are at the **House** until Location (or an apartment flag) says otherwise. A Pick of one says the bottle is "not tagged yet".
 
 ### Derived fields
 
@@ -114,7 +113,7 @@ On each replace-import: copy current `data/bottles.json` to `data/bottles.backup
 
 ## UX
 
-Laptop-first, responsive web. Bottle detail stays in place (no new page). Expanding row on The Library; result card on Pick a Dram.
+Laptop-first, responsive web. Bottle detail stays in place (no new page or dialog): under the row in the list, under the card in the grid.
 
 ### The Library
 
@@ -124,39 +123,36 @@ The list row is distillery, expression, age, ABV, theme, and stock count. Five A
 
 Selecting a row or a card opens one detail under that row. Later cards move down. Selecting it again, or Escape, closes it. The detail shows one field block for the expression (the 12 canonical fields, plus SMWS extras when present): the first bottle whose status is Open, or the first bottle if none are Open, even when the others differ. When there is more than one physical bottle, each is listed as status and location only, with Mark open, Edit, and Kill on that line.
 
-### Pick a Dram
+### The Pick
 
-A randomizer, not a second list. Flow: apartment or house → optional filters → one bottle.
+A random choice from the Library, not a second list. It lives in the filter drawer's foot, beside I feel fancy.
 
-- Default pool: **Open** bottles at that place
-- Control to include Closed
-- Random among **physical bottles** (`id`), so stock of 5 is five tickets
-- Result: identity + Location (blank allowed)
-- Pool is the full live cellar, including SMWS
-- Graveyard is never in the pool
-- Apartment with no tagged bottles: explicit empty state. The bundled catalog has tagged bottles, so that state stays hidden for this file.
+- Pool: the bottles the Library is showing, at the Apartment when Place is Apartment, otherwise at the House
+- The button states the pool size, and reads "No pours available" and is disabled when the pool is empty
+- Random among **physical bottles** (`id`), so stock of 5 is five tickets. A closed pick leads to an opened bottle of the same expression. Picking again chooses a different bottle when there is one
+- Reveal: the drawer closes, the Library scrolls to the bottle, pulses it, and expands it in place, marked "Your dram · Bottle is at: …" (blank is "not tagged yet"). Reduced motion skips the scroll animation and the pulse
+- The Pick lasts for the visit, across other screens and layout switches. A filter change that hides it clears it, and so does a reload
+- I feel fancy sends the same pool through the wheel, which hands its bottle back to the Library as the Pick
 
 ### Graveyard
 
-Separate view of killed bottles. Same 12 fields as available. Not in Library scroll. Not in the randomizer.
+Separate view of killed bottles. Same 12 fields as available. Not in Library scroll, so never picked.
 
-### Shared filters
+### Library filters
 
-Reusable components, used by The Library and Pick a Dram as they apply:
+One set of filters, in one drawer, for the visit (not saved across reloads):
 
-- Distillery / Producer — reached through text search; the separate distillery typeahead was removed
+- Text search over distillery, expression, and SMWS code and name
+- Place (House or Apartment, at most one; none shows the whole cellar)
+- Status (Open, Closed)
 - Age range, snapped to whole years, with a NAS toggle beside From and To (on by default; blank ages count as NAS)
 - ABV range, snapped to whole percents (a blank ABV stays in the results)
 - Theme (multi)
 - Flavor Families (multi)
 - Sub-Characteristics (multi)
-- Text search (The Library; Pick a Dram if it stays useful)
-
-Pick a Dram also has:
-
-- Apartment vs house
-- Open default / include Closed
 - Country (derived) and Region (multi)
+
+Choices within one category are alternatives, and categories combine. **Match exactly**, a switch in the drawer outside Undo last, requires every choice instead. Each option shows how many showing bottles it would leave. When nothing matches, the Library says so, flags the most constraining filter, and offers Undo last.
 
 A filter applies only when the user sets it. Bottles missing a tag still appear when that filter is unset.
 
@@ -201,7 +197,7 @@ The first version of the app, built before the roadmap was renumbered:
 - **Ingest.** xlsx → canonical bottles from Open, Closed, and SMWS. Fallen soldiers → `graveyard`. Draft Participants skipped. Ardbeg Cask Strength 10 `bottleKey` count is 5; graveyard length is 5.
 - **The Library.** Grouped list with stock badge, shared filter bar, text search, expanding row with the 12 fields (SMWS extras on Society rows).
 - **Graveyard.** Separate view for `graveyard`. Lagavulin 16 appears only here.
-- **Pick a Dram.** Place question, Open default, include-Closed, shared filters plus derived Country. Never rolls a graveyard bottle; empty apartment has an explicit empty state.
+- **Pick a Dram.** Place question, Open default, include-Closed, shared filters plus derived Country. Never rolls a graveyard bottle; empty apartment has an explicit empty state. Retired by #18: the Pick now lives in the Library.
 - **Replace import and backup.** Replace JSON after writing `bottles.backup.json`. Shows `importedAt`.
 - **Import UI.** In-app upload of xlsx/csv. Open/Closed headers are the default map; SMWS mapping is built in.
 - **Owner edit.** PIN-gated add (sparse fields allowed), edit, mark Open, kill → Graveyard.
@@ -282,23 +278,22 @@ GitHub issues are the spec for work that is ready to build. **In GitHub** is tha
 
 ### In GitHub
 
-Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 28 Oct 2026:
+Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 30 Oct 2026:
 
-- **#18 Pick a dram from the Library, and retire Pick a Dram.** The spec, built next. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. Tickets #19–#27 are listed in order in a comment on #18. #19, #20, and #21 can start now. #27 deletes Pick a Dram and finishes cleaning up this file.
+- **#18 Pick a dram from the Library, and retire Pick a Dram.** The spec. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. Tickets #19–#27 are listed in order in a comment on #18. With #27, Pick a Dram is deleted and the Library is the only screen for the cellar.
 - **#10 Primary cask and secondary cask.** The spec.
   - #11 (cask data) is closed. The code is done.
   - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
   - #13 (cask search) can be built at any time.
   - #12 (cask chips) is on hold. It was written for two drawers. #29 rewrites it for the one Library drawer after #27.
 - **#9 Record drams against each bottle and round-trip that history.** On hold. #30 re-grills its Pick a Dram stories after #27, and #28 must load the casks first. No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
-- **#8 Separate Library filters from Pick criteria.** Closed, and superseded by #18.
 
 ### To spec
 
 1. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
-2. **Search inside a filter section.** Pick a Dram has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
+2. **Search inside a filter section.** The Library's filter drawer has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
 3. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, Graveyard trends, and a cask breakdown. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
-4. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from #8.
+4. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from the Library filters.
 5. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
 
 ### Not tracked yet
@@ -306,7 +301,7 @@ Blocking links on GitHub are the source of truth for order. Work any open issue 
 - **R2 backups.** A weekly Worker cron, and the same write when an owner exports by hand. Each run stores a timestamped snapshot in Cloudflare R2 and keeps the last 10. A scheduled commit to `main` would redeploy the app for no code change. This is not the export in #9.
 - **Whisky Draft.** Not scoped. The data need not live in D1. If it uses the workbook's Draft Participants sheet, decide what happens to contact data first. That sheet stays out of the app and git.
 
-Already in the app, and so not listed above: the Age and ABV range histograms, the Pick a Dram drawer and card grid, the fancy wheel, guest-visible owner edits, and apartment bottles tagged from a location of `Apartment` (39 in the bundled catalog). Pick a Dram opens a bottle's detail in a dialog. The Library opens it under the row. Sheet hygiene (theme spelling, SMWS location, and status case) was finished in the workbook. It is not app work.
+Already in the app, and so not listed above: the Age and ABV range histograms, the Library's list and card grid, the Pick in the filter drawer, the fancy wheel, guest-visible owner edits, and apartment bottles tagged from a location of `Apartment` (39 in the bundled catalog). The Library opens a bottle's detail under its row or card. Sheet hygiene (theme spelling, SMWS location, and status case) was finished in the workbook. It is not app work.
 
 ---
 
@@ -314,5 +309,4 @@ Already in the app, and so not listed above: the Age and ABV range histograms, t
 
 - Unbuilt work is an open GitHub issue, a milestone under **To spec**, or a line under **Not tracked yet**. Phrase status that way.
 - Theme aliases may be normalized at ingest so filters match.
-- First-screen choice: **The Library** or **Pick a Dram**.
 - Sub-characteristic family ownership is a curated lookup (`SUB_FAMILY` / `subOwnerFamily` in `src/lib/library.ts`), not computed: bottles typically carry 5+ flavor families at once, so co-occurrence has no real signal (every sub-characteristic touches every family at a near-uniform rate). It drives both the sub-characteristic color (`subFamilyClass` in `src/lib/colors.ts`) and which subs show under a picked family (`subsForFamilies`). If ingest introduces a new sub-characteristic, add it to `SUB_FAMILY` so it gets color-coded and scoped correctly; until then it's treated as unowned (neutral color, always visible).
