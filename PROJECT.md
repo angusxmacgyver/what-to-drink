@@ -4,6 +4,8 @@
 
 **Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The order of the next builds is under **In GitHub**. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
 
+**Next session (as of 10 Nov 2026):** #9 is approved but waits on #28, an owner step: clean the casks in the workbook, re-ingest, run a full replace. #13 can be built now. #31, #32, #33, and #34 need grilling or prototyping with the owner first. The Last Poured sash (#34) waits on a font decision.
+
 **Side quest:** Fancy Picker Easter Egg is done.
 
 **Living copy:** this file.
@@ -278,16 +280,17 @@ GitHub issues are the spec for work that is ready to build. **In GitHub** is tha
 
 ### In GitHub
 
-Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 30 Oct 2026:
+Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 10 Nov 2026:
 
-- **#18 Pick a dram from the Library, and retire Pick a Dram.** The spec. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. Tickets #19–#27 are listed in order in a comment on #18. With #27, Pick a Dram is deleted and the Library is the only screen for the cellar.
+- **#18 Pick a dram from the Library, and retire Pick a Dram.** Closed, shipped. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. The Library is the only screen for the cellar.
 - **#10 Primary cask and secondary cask.** The spec. Casks are shown in the bottle detail and matched by text search. They are not filters (3 Nov 2026), so #12 (cask chips) and #29 are closed as wontfix.
   - #11 (cask data) is closed. The code is done.
   - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
   - #13 (cask search) can be built at any time.
 - **#31 Flavor wheel taxonomy** and **#32 Filter drawer clean-up.** Both are `needs-triage`: grill them with the owner before speccing. #31 replaces Flavor Families and Sub-Characteristics with the wheel's levels (likely Families | Subgroup | Flavor Descriptors), loaded fresh from a re-tagged workbook. The wheel may also become the flavor filter. SMWS Theme stays a filter. #31 may answer #32 for the flavor sections.
 - **#33 Graveyard styling.** `needs-triage`: grill it with the owner. Bring the Graveyard closer to the Library views, partly so it can carry the Last Poured sash after a kill shot.
-- **#9 Record drams against each bottle and round-trip that history.** On hold. #30 re-grills its Pick a Dram stories after #27, and #28 must load the casks first. No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
+- **#9 Record drams against each bottle and round-trip that history.** The spec. Its Pick stories were re-grilled in #30 (closed 10 Nov 2026), and the owner approved the edited body. It now covers Pour This Dram on each bottle in an opened row, Recently poured as a section in Analytics, the Last Poured sash, the Last third filter, and the Favor last third and I feel fancy Pick modifiers (ADR 0003). The vocabulary is in `GLOSSARY.md`. Still blocked by #28: the full replace must happen before any dram is recorded. The first ticket is the catalog export and replace that keeps bottle ids. No dram can be written before it. Weekly backup storage is outside that issue.
+- **#34 Finish the Last Poured sash.** `needs-triage`, and it needs owner time. The owner chose the Sash look (a copper left-edge strip with a "LAST POURED" tab), but the spacing waits on a font decision: keep Google Fonts, or serve the fonts from the app. The prototype is on the throwaway branch `prototype/last-poured-sash`, which is never merged. #9's sash work waits on #34. The rest of #9 doesn't.
 
 ### To spec
 
