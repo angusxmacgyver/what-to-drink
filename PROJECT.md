@@ -286,19 +286,21 @@ Blocking links on GitHub are the source of truth for order. Work any open issue 
   - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
   - #13 (cask search) can be built at any time.
 - **#31 Flavor wheel taxonomy** and **#32 Filter drawer clean-up.** Both are `needs-triage`: grill them with the owner before speccing. #31 replaces Flavor Families and Sub-Characteristics with the wheel's levels (likely Families | Subgroup | Flavor Descriptors), loaded fresh from a re-tagged workbook. The wheel may also become the flavor filter. SMWS Theme stays a filter. #31 may answer #32 for the flavor sections.
+- **#33 Graveyard styling.** `needs-triage`: grill it with the owner. Bring the Graveyard closer to the Library views, partly so it can carry the Last Poured sash after a kill shot.
 - **#9 Record drams against each bottle and round-trip that history.** On hold. #30 re-grills its Pick a Dram stories after #27, and #28 must load the casks first. No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
 
 ### To spec
 
 1. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
 2. **Search inside a filter section.** (May fold into #32.) The Library's filter drawer has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
-3. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, Graveyard trends, and a cask breakdown. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
+3. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, Graveyard trends, and a cask breakdown. Charts of dram counts and kill shots wait until #9, which left them out of scope. The Recently poured list is part of #9.
 4. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from the Library filters.
 5. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
 
 ### Not tracked yet
 
 - **R2 backups.** A weekly Worker cron, and the same write when an owner exports by hand. Each run stores a timestamped snapshot in Cloudflare R2 and keeps the last 10. A scheduled commit to `main` would redeploy the app for no code change. This is not the export in #9.
+- **Not Poured Yet and The Usual.** Possible Pick modifiers or Library filters named while grilling #30. Neither is defined, and both are outside #9.
 - **Whisky Draft.** Not scoped. The data need not live in D1. If it uses the workbook's Draft Participants sheet, decide what happens to contact data first. That sheet stays out of the app and git.
 
 Already in the app, and so not listed above: the Age and ABV range histograms, the Library's list and card grid, the Pick in the filter drawer, the fancy wheel, guest-visible owner edits, and apartment bottles tagged from a location of `Apartment` (39 in the bundled catalog). The Library opens a bottle's detail under its row or card. Sheet hygiene (theme spelling, SMWS location, and status case) was finished in the workbook. It is not app work.
