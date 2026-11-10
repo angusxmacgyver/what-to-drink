@@ -1,3 +1,8 @@
+@font-face { font-family: Fraunces; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/fraunces/Fraunces-Variable.ttf") format("truetype"); }
+@font-face { font-family: Fraunces; font-style: italic; font-weight: 100 900; font-display: swap; src: url("/fonts/fraunces/Fraunces-Italic-Variable.ttf") format("truetype"); }
+@font-face { font-family: "Source Sans 3"; font-style: normal; font-weight: 200 900; font-display: swap; src: url("/fonts/source-sans-3/SourceSans3-Variable.ttf") format("truetype"); }
+@font-face { font-family: "Source Sans 3"; font-style: italic; font-weight: 200 900; font-display: swap; src: url("/fonts/source-sans-3/SourceSans3-Italic-Variable.ttf") format("truetype"); }
+
 :root,
 [data-theme="dark"] {
   --bg: #2b1710;
