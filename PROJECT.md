@@ -281,17 +281,17 @@ GitHub issues are the spec for work that is ready to build. **In GitHub** is tha
 Blocking links on GitHub are the source of truth for order. Work any open issue whose blockers are all closed. Status as of 30 Oct 2026:
 
 - **#18 Pick a dram from the Library, and retire Pick a Dram.** The spec. ADR 0002 supersedes ADR 0001: one set of Library filters, and a Pick is made from what the Library shows, at the House unless the Apartment is chosen. Tickets #19–#27 are listed in order in a comment on #18. With #27, Pick a Dram is deleted and the Library is the only screen for the cellar.
-- **#10 Primary cask and secondary cask.** The spec.
+- **#10 Primary cask and secondary cask.** The spec. Casks are shown in the bottle detail and matched by text search. They are not filters (3 Nov 2026), so #12 (cask chips) and #29 are closed as wontfix.
   - #11 (cask data) is closed. The code is done.
   - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
   - #13 (cask search) can be built at any time.
-  - #12 (cask chips) is on hold. It was written for two drawers. #29 rewrites it for the one Library drawer after #27.
+- **#31 Flavor wheel taxonomy** and **#32 Filter drawer clean-up.** Both are `needs-triage`: grill them with the owner before speccing. #31 replaces Flavor Families and Sub-Characteristics with the wheel's levels (likely Families | Subgroup | Flavor Descriptors), loaded fresh from a re-tagged workbook. The wheel may also become the flavor filter. SMWS Theme stays a filter. #31 may answer #32 for the flavor sections.
 - **#9 Record drams against each bottle and round-trip that history.** On hold. #30 re-grills its Pick a Dram stories after #27, and #28 must load the casks first. No dram can be written until a catalog export and replace keep bottle ids. Weekly backup storage is outside that issue.
 
 ### To spec
 
 1. **`empty` status.** `BottleStatus` is `Open`, `Closed`, `empty`, or `Killed`. The Graveyard is `Killed`. Ingest can still write `empty`. The Pick pool already refuses it, and the bundled catalog has none. Still open: should ingest turn `empty` into `Killed`? #9 left that decision alone.
-2. **Search inside a filter section.** The Library's filter drawer has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
+2. **Search inside a filter section.** (May fold into #32.) The Library's filter drawer has no search box for a value that appears only after its parent is picked, such as a sub-characteristic or a region. Whether it needs one was never decided.
 3. **Analytics, later.** A flavor-by-region heatmap, a click from a bar through to a filtered Library, Graveyard trends, and a cask breakdown. Charts of dram counts, kill shots, and Just poured wait until #9, which left them out of scope.
 4. **Quick Pours.** Named starting points, such as Heavily Peated or Sweet & Mellow, applied as presets that can then be changed. Theme stays its own facet. This is a taxonomy change, so it stays separate from the Library filters.
 5. **Origin imagery.** A picture of each bottle's region of Scotland, or its country.
