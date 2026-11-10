@@ -21,6 +21,7 @@ import { BottleFields } from "./BottleFields";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { Filters } from "./Filters";
 import { FlavorTags } from "./FlavorTags";
+import { LastPouredBadge, LastPouredEyebrow, LastPouredSash, sashHostClass, usePrototypeSash } from "./LastPouredSash.prototype";
 
 type Props = {
   bottles: Bottle[];
@@ -75,6 +76,7 @@ export function LibraryCard({
   where,
   cardId,
   showDistillery = true,
+  lastPoured = false,
 }: {
   row: LibraryRow;
   expanded: boolean;
@@ -84,12 +86,20 @@ export function LibraryCard({
   where?: string;
   cardId?: string;
   showDistillery?: boolean;
+  lastPoured?: boolean;
 }) {
+  const sash = usePrototypeSash();
   const shown = detailBottle(row.bottles);
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
-  const classes = ["library-card", expanded ? "open" : "", picked ? "picked" : "", pulsing ? "pick-pulse" : ""]
+  const classes = [
+    "library-card",
+    expanded ? "open" : "",
+    picked ? "picked" : "",
+    pulsing ? "pick-pulse" : "",
+    sashHostClass(lastPoured, sash.variant),
+  ]
     .filter(Boolean)
     .join(" ");
   return (
@@ -102,9 +112,12 @@ export function LibraryCard({
       title={name}
       onClick={onToggle}
     >
+      {lastPoured ? <LastPouredSash variant={sash.variant} /> : null}
+      {lastPoured ? <LastPouredBadge variant={sash.variant} /> : null}
       {picked ? <span className="your-dram">Your dram</span> : null}
       {showDistillery ? <strong className="card-distillery">{row.distillery}</strong> : null}
       <em className="card-expression">{row.bottling}</em>
+      {lastPoured ? <LastPouredEyebrow variant={sash.variant} /> : null}
       {picked ? <span className="card-where">Bottle is at: {place}</span> : null}
       {origin ? <span className="card-origin">{origin}</span> : null}
       {row.flavorFamilies.length ? (
@@ -201,6 +214,7 @@ function DistillerySection({
   picked,
   pulseKey,
   landedKey,
+  lastPouredKey,
   ...actions
 }: Actions & {
   group: DistilleryGroup;
@@ -211,7 +225,9 @@ function DistillerySection({
   picked: Bottle | null;
   pulseKey: string | null;
   landedKey: string | null;
+  lastPouredKey: string | null;
 }) {
+  const sash = usePrototypeSash();
   return (
     <section className="distillery-group">
       <DistilleryHeader
@@ -225,6 +241,7 @@ function DistillerySection({
           const isPicked = picked?.bottleKey === row.bottleKey;
           const pulsing = pulseKey === row.bottleKey;
           const landed = isPicked && landedKey === row.bottleKey;
+          const lastPoured = lastPouredKey === row.bottleKey;
           if (layout === "grid") {
             return (
               <Fragment key={row.bottleKey}>
@@ -232,6 +249,7 @@ function DistillerySection({
                   row={row}
                   expanded={expanded}
                   showDistillery={false}
+                  lastPoured={lastPoured}
                   picked={isPicked}
                   pulsing={pulsing}
                   where={isPicked ? picked?.location : undefined}
@@ -248,8 +266,11 @@ function DistillerySection({
             <article
               key={row.bottleKey}
               id={rowId(row.bottleKey)}
-              className={["row", expanded ? "open" : "", pulsing ? "pick-pulse" : ""].filter(Boolean).join(" ")}
+              className={["row", expanded ? "open" : "", pulsing ? "pick-pulse" : "", sashHostClass(lastPoured, sash.variant)]
+                .filter(Boolean)
+                .join(" ")}
             >
+              {lastPoured ? <LastPouredSash variant={sash.variant} /> : null}
               <button
                 type="button"
                 className="row-main"
@@ -260,7 +281,11 @@ function DistillerySection({
                   {isPicked ? (
                     <span className="your-dram">Your dram · Bottle is at: {picked?.location || "not tagged yet"}</span>
                   ) : null}
-                  <strong><em>{row.bottling}</em></strong>
+                  <strong>
+                    <em>{row.bottling}</em>
+                    {lastPoured ? <LastPouredBadge variant={sash.variant} /> : null}
+                  </strong>
+                  {lastPoured ? <LastPouredEyebrow variant={sash.variant} /> : null}
                 </span>
                 <span className="list-facts">Age: {row.ageLabel} | ABV: {row.abvLabel}</span>
                 <span className={`theme ${smwsThemeClass(row.theme)}`}>{row.theme}</span>
@@ -308,6 +333,9 @@ export function Library({
   const filtered = showing(filters);
   const rows = groupLibrary(filtered);
   const groups = groupDistilleries(rows);
+  const sash = usePrototypeSash();
+  // PROTOTYPE stand-in for the newest dram: the first expression showing.
+  const lastPouredKey = sash.kill ? null : (groups[0]?.rows[0]?.bottleKey ?? null);
   const actions = { owner, onEdit, onKill, onOpen };
   const filterCount = activeFilterCount(filters);
   const nothingMatches = filtered.length === 0 && filterCount > 0;
@@ -467,6 +495,7 @@ export function Library({
             picked={settled}
             pulseKey={pulseKey}
             landedKey={landedKey}
+            lastPouredKey={lastPouredKey}
             {...actions}
           />
         ))}

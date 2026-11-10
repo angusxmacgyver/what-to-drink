@@ -1,0 +1,139 @@
+/* PROTOTYPE, throwaway: Last Poured mark, three concepts. One copper accent, never a flavor hue. */
+
+:root,
+[data-theme="dark"] {
+  --lp: #e0894a;
+  --lp-on: #000;
+  --lp-text: #e38c4d;
+}
+[data-theme="light"] {
+  --lp: #a4511f;
+  --lp-on: #fff;
+  --lp-text: #6c2d00;
+}
+
+.lp-host { position: relative; }
+.library-card.lp-host-A { overflow: hidden; }
+
+@keyframes lp-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.lp-mark { animation: lp-in 480ms cubic-bezier(0.23, 1, 0.32, 1) backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .lp-mark { animation: none; }
+}
+
+/* A: copper edge strip plus a label tab that sits in the row's top padding, clear of the tags. */
+.lp-edge,
+.lp-tab { position: absolute; z-index: 2; pointer-events: none; }
+.lp-edge { top: 0; bottom: 0; left: 0; width: 4px; background: var(--lp); }
+.lp-tab {
+  top: 0;
+  left: 4px;
+  padding: 1px 8px 1px 6px;
+  border-radius: 0 0 6px 0;
+  background: var(--lp);
+  color: var(--lp-on);
+  font-size: 9px;
+  line-height: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* B: pill in the existing tag vocabulary, in the name line. */
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border: 1px solid var(--lp);
+  border-radius: 999px;
+  color: var(--lp-text);
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.library-card .lp-badge { position: absolute; top: 10px; right: 10px; margin-left: 0; }
+.library-card.lp-host-B .card-distillery,
+.library-card.lp-host-B .card-expression { padding-right: 0; }
+.library-card.lp-host-B { padding-top: 38px; }
+
+/* C: faint copper tint, thicker copper rule, one caption line. */
+.lp-host-C { background: color-mix(in srgb, var(--lp) 9%, transparent); box-shadow: inset 3px 0 0 var(--lp); }
+.library-card.lp-host-C {
+  background: color-mix(in srgb, var(--lp) 9%, var(--bg-2));
+  border: 2px solid var(--lp);
+  padding: 13px;
+  box-shadow: none;
+}
+.lp-caption {
+  color: var(--lp-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Compact: the label shortens to "Last poured" with no date. */
+@media (max-width: 640px) {
+  .lp-date { display: none; }
+}
+
+/* Concept switch: outlined pills in the tag vocabulary, copper when selected. */
+.lp-switcher {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+}
+.lp-segments { display: flex; gap: 6px; }
+.lp-segment {
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+}
+.lp-segment.on {
+  background: var(--lp);
+  border-color: var(--lp);
+  color: var(--lp-on);
+  font-weight: 700;
+}
+.lp-segment:focus-visible,
+.lp-kill:focus-within { outline: 2px solid var(--lp-text); outline-offset: 2px; }
+.lp-kill { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; cursor: pointer; }
+.lp-kill input { width: 18px; height: 18px; accent-color: var(--lp); }
+@media (hover: hover) and (pointer: fine) {
+  .lp-segment:not(.on):hover { border-color: var(--lp); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-segment { transition: none; }
+}
+@media (max-width: 640px) {
+  .lp-segments { width: 100%; }
+  .lp-segment { flex: 1; }
+}

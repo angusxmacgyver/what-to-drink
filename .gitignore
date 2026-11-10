@@ -10,3 +10,5 @@ data/seed.sql
 .env.local
 .dev.vars
 *.tgz
+
+.taste/

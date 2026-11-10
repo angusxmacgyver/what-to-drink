@@ -11,6 +11,7 @@ import { OwnerForm } from "./components/OwnerForm";
 import { OwnerLock } from "./components/OwnerLock";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { BackToTop } from "./components/BackToTop";
+import { PrototypeSashSwitcher } from "./components/LastPouredSash.prototype";
 import { applyMerge } from "./lib/merge";
 import { consumeFancyReturn } from "./lib/fancy";
 import { uniqueTags } from "./lib/library";
@@ -306,6 +307,7 @@ export default function App() {
         />
       ) : null}
       <BackToTop />
+      <PrototypeSashSwitcher />
     </div>
   );
 }

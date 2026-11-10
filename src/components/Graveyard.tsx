@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Bottle } from "../types";
 import { BottleFields } from "./BottleFields";
+import { LastPouredBadge, LastPouredEyebrow, LastPouredSash, sashHostClass, usePrototypeSash } from "./LastPouredSash.prototype";
 
 function formatFinished(value: string): string {
   if (!value || /unknown/i.test(value)) return "Unknown";
@@ -10,6 +11,9 @@ function formatFinished(value: string): string {
 export function Graveyard({ bottles }: { bottles: Bottle[] }) {
   const [open, setOpen] = useState<string | null>(null);
   const sorted = [...bottles].sort((a, b) => a.distillery.localeCompare(b.distillery));
+  const sash = usePrototypeSash();
+  // PROTOTYPE stand-in for a kill shot as the newest dram: the first bottle listed.
+  const lastPouredId = sash.kill ? (sorted[0]?.id ?? null) : null;
 
   return (
     <section className="panel">
@@ -29,16 +33,25 @@ export function Graveyard({ bottles }: { bottles: Bottle[] }) {
         </div>
         {sorted.map((bottle) => {
           const expanded = open === bottle.id;
+          const lastPoured = lastPouredId === bottle.id;
           return (
-            <article key={bottle.id} className={expanded ? "row open" : "row"}>
+            <article
+              key={bottle.id}
+              className={["row", expanded ? "open" : "", sashHostClass(lastPoured, sash.variant)].filter(Boolean).join(" ")}
+            >
+              {lastPoured ? <LastPouredSash variant={sash.variant} /> : null}
               <button
                 type="button"
                 className="row-main grave"
                 onClick={() => setOpen(expanded ? null : bottle.id)}
               >
                 <span className="who">
-                  <strong>{bottle.distillery}</strong>
+                  <strong>
+                    {bottle.distillery}
+                    {lastPoured ? <LastPouredBadge variant={sash.variant} /> : null}
+                  </strong>
                   <em>{bottle.bottling}</em>
+                  {lastPoured ? <LastPouredEyebrow variant={sash.variant} /> : null}
                 </span>
                 <span>{bottle.age == null ? "—" : bottle.age}</span>
                 <span>{bottle.abv == null ? "—" : `${bottle.abv}%`}</span>
