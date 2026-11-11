@@ -212,6 +212,8 @@ export function matchesFilters(bottle: Bottle, filters: FilterState, exact = fal
       bottle.bottling,
       bottle.smws?.fullCode ?? "",
       bottle.smws?.nameIntl ?? "",
+      ...bottle.primaryCask,
+      ...bottle.secondaryCask,
     ]
       .join(" ")
       .toLowerCase();

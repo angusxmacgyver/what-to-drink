@@ -43,6 +43,7 @@ export const visitCatalog: Catalog = {
       distillery: "Glendronach",
       bottling: "12",
       flavorFamilies: ["Sweet"],
+      primaryCask: ["Oloroso sherry"],
     }),
     visitBottle({
       id: "house-both",

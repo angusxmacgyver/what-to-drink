@@ -263,6 +263,17 @@ describe("one visit: the Library filters", () => {
     expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
     expect(libraryPanel().queryByText("No bottles match this combination.")).toBeNull();
   });
+
+  it("narrows the Library when search matches a cask tag", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await goLibrary(user);
+    await openFilters(user);
+    await typeSearch(user, "oloroso");
+    expect(libraryCountsText()).toBe("1 expressions · 1 bottles");
+    expect(libraryPanel().getByRole("heading", { name: "Glendronach" })).toBeTruthy();
+  });
 });
 
 describe("Pick from the Library drawer", () => {

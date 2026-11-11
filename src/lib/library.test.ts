@@ -381,6 +381,65 @@ describe("withoutRange", () => {
   });
 });
 
+describe("matchesFilters search", () => {
+  it('matches a bottle whose primary cask includes the search term', () => {
+    const sherry = bottle({ primaryCask: ["Oloroso sherry"] });
+    const filters = { ...emptyFilters(), search: "oloroso" };
+    expect(matchesFilters(sherry, filters)).toBe(true);
+  });
+
+  it('matches a bottle whose secondary cask includes the search term', () => {
+    const finished = bottle({ secondaryCask: ["Oloroso sherry"] });
+    const filters = { ...emptyFilters(), search: "oloroso" };
+    expect(matchesFilters(finished, filters)).toBe(true);
+  });
+
+  it('does not match a bottle that mentions the cask only in notes', () => {
+    const notesOnly = bottle({ notes: "Finished in Oloroso" });
+    const filters = { ...emptyFilters(), search: "oloroso" };
+    expect(matchesFilters(notesOnly, filters)).toBe(false);
+  });
+
+  it('still matches distillery, bottling, and SMWS fields', () => {
+    const byDistillery = bottle({ distillery: "Glenmorangie", bottling: "Original" });
+    const byBottling = bottle({ distillery: "Macallan", bottling: "Sherry Oak" });
+    const byCode = bottle({
+      distillery: "SMWS",
+      bottling: "Cask Strength",
+      smws: {
+        fullCode: "53.123",
+        nameIntl: "Fruity punch",
+        distilleryNo: "",
+        caskNo: "",
+        flavorProfile: "",
+        smwsCask: "",
+        secondaryMaturation: "",
+        vintage: "",
+        smwsUrl: "",
+      },
+    });
+    const bySmwsName = bottle({
+      distillery: "SMWS",
+      bottling: "Batch",
+      smws: {
+        fullCode: "99.1",
+        nameIntl: "Oloroso elegance",
+        distilleryNo: "",
+        caskNo: "",
+        flavorProfile: "",
+        smwsCask: "",
+        secondaryMaturation: "",
+        vintage: "",
+        smwsUrl: "",
+      },
+    });
+    expect(matchesFilters(byDistillery, { ...emptyFilters(), search: "glenmorangie" })).toBe(true);
+    expect(matchesFilters(byBottling, { ...emptyFilters(), search: "sherry oak" })).toBe(true);
+    expect(matchesFilters(byCode, { ...emptyFilters(), search: "53.123" })).toBe(true);
+    expect(matchesFilters(bySmwsName, { ...emptyFilters(), search: "oloroso" })).toBe(true);
+  });
+});
+
 describe("detailBottle", () => {
   it("uses the first Open bottle when one exists", () => {
     const closed = bottle({ id: "closed", status: "Closed" });
