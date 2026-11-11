@@ -50,3 +50,31 @@ npx wrangler d1 execute what-to-drink --remote --file=./data/seed.sql
 ```
 
 Work that is not built yet is listed in [PROJECT.md](PROJECT.md).
+
+## Timeline
+
+What shipped, newest first. Each entry is the date the work landed on `main`.
+
+- **11 Nov 2026:** Text search matches primary-cask and secondary-cask tags, but not Notes. ([#13](https://github.com/angusxmacgyver/what-to-drink/issues/13))
+- **30 Oct 2026:** The Pick a Dram screen is retired. The Library is the only screen for the cellar, and the Pick lives in its filter drawer (ADR 0002). ([#18](https://github.com/angusxmacgyver/what-to-drink/issues/18), [#27](https://github.com/angusxmacgyver/what-to-drink/issues/27))
+- **29 Oct 2026:** I feel fancy spins the fancy wheel from the Library drawer, and the wheel hands its bottle back to the Library. ([#26](https://github.com/angusxmacgyver/what-to-drink/issues/26))
+- **29 Oct 2026:** A Pick lasts for the visit. The app opens on the Library, and the Pick is made only from its drawer. ([#24](https://github.com/angusxmacgyver/what-to-drink/issues/24), [#25](https://github.com/angusxmacgyver/what-to-drink/issues/25))
+- **28 Oct 2026:** Pick a dram from the Library drawer. The Library scrolls to the picked bottle, pulses it, and opens it. ([#23](https://github.com/angusxmacgyver/what-to-drink/issues/23))
+- **28 Oct 2026:** The Library drawer guides filtering with live counts, a flag on the filter that hides the most bottles, and a way back from an empty result. ([#22](https://github.com/angusxmacgyver/what-to-drink/issues/22))
+- **28 Oct 2026:** A Match exactly switch in the Library drawer. ([#21](https://github.com/angusxmacgyver/what-to-drink/issues/21))
+- **28 Oct 2026:** A Place filter on the Library, for the House or the Apartment. ([#20](https://github.com/angusxmacgyver/what-to-drink/issues/20))
+- **21 Oct 2026:** Primary cask and secondary cask are read from the workbook, shown on a bottle's detail, and edited in the owner form. ([#11](https://github.com/angusxmacgyver/what-to-drink/issues/11))
+- **20 Oct 2026:** Library filters and Pick criteria are kept separate for one visit (ADR 0001, later replaced by ADR 0002). ([#7](https://github.com/angusxmacgyver/what-to-drink/issues/7), [#8](https://github.com/angusxmacgyver/what-to-drink/issues/8))
+- **14 Oct 2026:** The fancy wheel easter egg (I feel fancy) on Pick a Dram, and pours grouped by distillery.
+- **12 Oct 2026:** The Library is grouped by distillery. SMWS themes get their own palettes, themes and flavor families are ordered by flavor, and open cards group their characteristics.
+- **9 Oct 2026:** Pick a Dram is rebuilt around a sliding filter drawer: live option counts, a removable tray of applied filters, undo for the last selection, matches as cards, a bottle dialog, and a selection remembered on this device. A pour walks to the open bottle of its expression.
+- **8 Oct 2026:** Age and ABV filters are histograms, built from the bottles every other filter leaves.
+- **7 Oct 2026:** The Library shows one detail per expression and adds a card grid beside the list. It remembers which one you chose.
+- **7 Oct 2026:** Kill, merge-import, replacing the cellar, and overwriting a bottle each ask for confirmation.
+- **6 Oct 2026:** The Worker checks the owner PIN. A lock glyph replaces the owner login and opens Bottle Management.
+- **5 Oct 2026:** The catalog lives in D1 behind a Worker API. Owner changes are saved per bottle, so another device sees them. ([PR #6](https://github.com/angusxmacgyver/what-to-drink/pull/6))
+- **30 Sep 2026:** Merge-import adds bottles from a workbook without a full replace. ([PR #5](https://github.com/angusxmacgyver/what-to-drink/pull/5))
+- **30 Sep 2026:** Each flavor family has its own color, and sub-characteristics sit under the family that owns them. ([PR #1](https://github.com/angusxmacgyver/what-to-drink/pull/1), [PR #2](https://github.com/angusxmacgyver/what-to-drink/pull/2), [PR #3](https://github.com/angusxmacgyver/what-to-drink/pull/3))
+- **29 Sep 2026:** The Analytics screen: headline numbers, the shelf, region, producer, age, and ABV bars, a smoke donut, a flavor radar, and a palate cloud. The app deploys on Cloudflare Workers.
+- **29 Sep 2026:** A light and dark theme toggle that remembers your choice, chip filters with a distillery typeahead, and an Open/Closed status filter.
+- **23 Sep 2026:** The first version: the Library, Pick a Dram, and the Graveyard.
