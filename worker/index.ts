@@ -1,4 +1,4 @@
-import type { Bottle } from "../src/types";
+import { isRecentPour, type Bottle } from "../src/types";
 import { catalogJson, chunk, toRow, type BottleRow } from "../src/lib/rows";
 
 type Statement = {
@@ -26,7 +26,7 @@ const INSERT_MANY = `INSERT INTO bottles (id, bottle_key, status, data, updated_
   FROM json_each(?)`;
 const INSERT_CHUNK = 500;
 
-const SET_IMPORTED_AT = `INSERT INTO meta (key, value) VALUES ('importedAt', ?)
+const SET_META = `INSERT INTO meta (key, value) VALUES (?, ?)
   ON CONFLICT (key) DO UPDATE SET value = excluded.value`;
 
 const respond = (body: string | null, status: number) =>
@@ -60,20 +60,28 @@ async function getCatalog(db: Db): Promise<Response> {
   const { results } = await db
     .prepare("SELECT status, data FROM bottles ORDER BY rowid")
     .all<Pick<BottleRow, "status" | "data">>();
-  const meta = await db.prepare("SELECT value FROM meta WHERE key = 'importedAt'").first<{ value: string }>();
-  return respond(catalogJson(results, meta?.value ?? ""), 200);
+  const { results: meta } = await db.prepare("SELECT key, value FROM meta").all<{ key: string; value: string }>();
+  const value = (key: string) => meta.find((row) => row.key === key)?.value;
+  return respond(catalogJson(results, value("importedAt") ?? "", value("recentlyPoured")), 200);
 }
 
 async function replaceCatalog(db: Db, request: Request): Promise<Response> {
-  const body = (await readBody(request)) as { importedAt?: unknown; bottles?: unknown; graveyard?: unknown } | undefined;
+  const body = (await readBody(request)) as
+    | { importedAt?: unknown; bottles?: unknown; graveyard?: unknown; recentlyPoured?: unknown }
+    | undefined;
   if (!body || typeof body.importedAt !== "string" || !isBottleList(body.bottles) || !isBottleList(body.graveyard)) {
     return fail(400, "expected a catalog with bottles and graveyard lists");
+  }
+  const recentlyPoured = body.recentlyPoured ?? [];
+  if (!Array.isArray(recentlyPoured) || !recentlyPoured.every(isRecentPour)) {
+    return fail(400, "expected Recently poured lines with a bottle id, a time, and a kill-shot fact");
   }
   const now = new Date().toISOString();
   await db.batch([
     db.prepare("DELETE FROM bottles"),
     ...insertMany(db, [...body.bottles, ...body.graveyard], now),
-    db.prepare(SET_IMPORTED_AT).bind(body.importedAt),
+    db.prepare(SET_META).bind("importedAt", body.importedAt),
+    db.prepare(SET_META).bind("recentlyPoured", JSON.stringify(recentlyPoured)),
   ]);
   return respond(null, 204);
 }

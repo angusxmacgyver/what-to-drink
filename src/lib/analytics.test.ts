@@ -36,12 +36,15 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     country: "Scotland",
     dateEmptied: "",
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
     ...overrides,
   };
 }
 
 function catalog(bottles: Bottle[], graveyard: Bottle[] = []): Catalog {
-  return { schemaVersion: 1, importedAt: "", bottles, graveyard };
+  return { schemaVersion: 1, importedAt: "", bottles, graveyard, recentlyPoured: [] };
 }
 
 describe("tally", () => {

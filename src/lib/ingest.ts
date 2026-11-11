@@ -116,6 +116,9 @@ function fromOpenClosed(
     country: countryFromRegion(region),
     dateEmptied: excelDate(cell(row, "Date Emptied")),
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
   };
 }
 
@@ -163,6 +166,9 @@ function fromSmws(row: Record<string, unknown>, id: string): Bottle {
     country: countryFromRegion(region),
     dateEmptied: "",
     smws: extras,
+    drams: [],
+    lastThird: false,
+    killShot: false,
   };
 }
 
@@ -192,6 +198,7 @@ export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): 
     importedAt: now.toISOString(),
     bottles,
     graveyard,
+    recentlyPoured: [],
   };
 }
 

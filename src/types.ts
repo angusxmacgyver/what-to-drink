@@ -35,6 +35,30 @@ export type Bottle = {
   country: string;
   dateEmptied: string;
   smws: SmwsExtras | null;
+  /** Commit time of each dram, oldest first. The dram count is its length. Empty in the graveyard. */
+  drams: string[];
+  lastThird: boolean;
+  /** On a graveyard bottle: whether a kill shot finished it. */
+  killShot: boolean;
+};
+
+export type RecentPour = {
+  bottleId: string;
+  at: string;
+  killShot: boolean;
+};
+
+export const RECENTLY_POURED_LIMIT = 25;
+
+export const isRecentPour = (value: unknown): value is RecentPour => {
+  const line = value as RecentPour | null;
+  return (
+    typeof line === "object" &&
+    line !== null &&
+    typeof line.bottleId === "string" &&
+    typeof line.at === "string" &&
+    typeof line.killShot === "boolean"
+  );
 };
 
 export type Catalog = {
@@ -42,6 +66,8 @@ export type Catalog = {
   importedAt: string;
   bottles: Bottle[];
   graveyard: Bottle[];
+  /** Newest first, at most RECENTLY_POURED_LIMIT. */
+  recentlyPoured: RecentPour[];
 };
 
 export type FilterState = {

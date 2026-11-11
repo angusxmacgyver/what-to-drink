@@ -34,6 +34,9 @@ const blank = (): Bottle => ({
   country: "",
   dateEmptied: "",
   smws: null,
+  drams: [],
+  lastThird: false,
+  killShot: false,
 });
 
 export function OwnerForm({

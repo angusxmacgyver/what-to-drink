@@ -25,6 +25,9 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     country: "Scotland",
     dateEmptied: "",
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
     ...overrides,
   };
 }

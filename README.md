@@ -16,7 +16,7 @@ Live at https://what-to-drink.max-krueger.workers.dev/. A push to `main` deploys
 
 **Analytics** is a picture of the cellar, counted by physical bottle. It follows imports and owner edits.
 
-The owner unlocks with the lock beside the theme switch. Bottle Management can replace the cellar from a workbook, add bottles from a workbook, add or edit one bottle, mark one open, or kill one into the Graveyard. Those writes go to the shared catalog, so another device sees them on the next load.
+The owner unlocks with the lock beside the theme switch. Bottle Management can replace the cellar from a workbook or a downloaded bottles.json, add bottles from a workbook, add or edit one bottle, mark one open, or kill one into the Graveyard. Those writes go to the shared catalog, so another device sees them on the next load.
 
 Scotch Malt Whisky Society bottles are ordinary bottles after import. The SMWS sheet is only a capture format.
 
@@ -55,6 +55,7 @@ Work that is not built yet is listed in [PROJECT.md](PROJECT.md).
 
 What shipped, newest first. Each entry is the date the work landed on `main`.
 
+- **11 Nov 2026:** The catalog round-trips its dram history. Download bottles.json carries each live bottle's drams and last third, each Graveyard bottle's kill shot, and the Recently poured lines, which the shared cellar keeps for every device, and a full replace from that file restores them onto the same bottle ids. ([#35](https://github.com/angusxmacgyver/what-to-drink/issues/35))
 - **11 Nov 2026:** Text search matches primary-cask and secondary-cask tags, but not Notes. ([#13](https://github.com/angusxmacgyver/what-to-drink/issues/13))
 - **30 Oct 2026:** The Pick a Dram screen is retired. The Library is the only screen for the cellar, and the Pick lives in its filter drawer (ADR 0002). ([#18](https://github.com/angusxmacgyver/what-to-drink/issues/18), [#27](https://github.com/angusxmacgyver/what-to-drink/issues/27))
 - **29 Oct 2026:** I feel fancy spins the fancy wheel from the Library drawer, and the wheel hands its bottle back to the Library. ([#26](https://github.com/angusxmacgyver/what-to-drink/issues/26))

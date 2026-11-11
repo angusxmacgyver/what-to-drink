@@ -164,7 +164,7 @@ Sub-characteristics depend on Flavor Families: the chips appear only after a fam
 
 ## Architecture
 
-The catalog lives in Cloudflare D1, one row per bottle: `id`, `bottle_key`, `status` (`Killed` rows are the Graveyard), the full bottle as JSON in `data`, and `updated_at`. A `meta` table holds `importedAt`. The Worker answers `/api/*` ahead of the static assets (`run_worker_first` in `wrangler.toml`):
+The catalog lives in Cloudflare D1, one row per bottle: `id`, `bottle_key`, `status` (`Killed` rows are the Graveyard), the full bottle as JSON in `data`, and `updated_at`. A `meta` table holds `importedAt` and the Recently poured lines (`recentlyPoured`, one JSON array). The Worker answers `/api/*` ahead of the static assets (`run_worker_first` in `wrangler.toml`):
 
 - `GET /api/catalog` — the whole catalog, in the same envelope as `bottles.json`
 - `PUT /api/bottles/:id` — save one bottle (edit, add, mark Open, kill)

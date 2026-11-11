@@ -27,6 +27,9 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     country: "Scotland",
     dateEmptied: "",
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
     ...overrides,
   };
 }
@@ -56,7 +59,14 @@ describe("catalogJson", () => {
       importedAt: "2026-10-02T18:00:10.484Z",
       bottles: [live],
       graveyard: [dead],
+      recentlyPoured: [],
     });
+  });
+
+  it("joins the stored Recently poured lines", () => {
+    const line = { bottleId: "a", at: "2026-11-02T21:30:00.000Z", killShot: false };
+    const catalog = JSON.parse(catalogJson([], "t", JSON.stringify([line])));
+    expect(catalog.recentlyPoured).toEqual([line]);
   });
 });
 
@@ -76,6 +86,7 @@ describe("seedSql", () => {
     importedAt: "2026-10-02T18:00:10.484Z",
     bottles: [bottle({ id: "live", bottling: "Uigeadail's Own" })],
     graveyard: [bottle({ id: "dead", status: "Killed" })],
+    recentlyPoured: [],
   };
   const sql = seedSql(catalog, "2026-10-05T00:00:00.000Z");
 
@@ -92,6 +103,15 @@ describe("seedSql", () => {
   it("escapes single quotes in the JSON", () => {
     expect(sql).toContain("Uigeadail''s Own");
     expect(sql).not.toContain("Uigeadail's Own");
+  });
+
+  it("stores Recently poured in meta, and none when the catalog omits it", () => {
+    const line = { bottleId: "live", at: "2026-11-02T21:30:00.000Z", killShot: false };
+    expect(seedSql({ ...catalog, recentlyPoured: [line] }, "t")).toContain(
+      `INSERT INTO meta (key, value) VALUES ('recentlyPoured', '${JSON.stringify([line])}');`,
+    );
+    const { recentlyPoured: _r, ...older } = catalog;
+    expect(seedSql(older as Catalog, "t")).toContain("INSERT INTO meta (key, value) VALUES ('recentlyPoured', '[]');");
   });
 
   it("stores importedAt in meta", () => {

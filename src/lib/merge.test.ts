@@ -27,6 +27,9 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
     country: "Scotland",
     dateEmptied: "",
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
     ...overrides,
   };
 }
@@ -60,6 +63,7 @@ describe("applyMerge", () => {
       importedAt: "2026-01-01",
       bottles: [existing],
       graveyard: [],
+      recentlyPoured: [],
     };
     const added = bottle({ bottleKey: "lagavulin::16" });
     const next = applyMerge(catalog, [added]);
@@ -74,13 +78,14 @@ describe("applyMerge", () => {
       importedAt: "2026-01-01",
       bottles: [],
       graveyard: [killed],
+      recentlyPoured: [],
     };
     const next = applyMerge(catalog, [bottle()]);
     expect(next.graveyard).toBe(catalog.graveyard);
   });
 
   it("adds nothing when no bottles are selected", () => {
-    const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [] };
+    const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [] };
     expect(applyMerge(catalog, []).bottles).toEqual([]);
   });
 });

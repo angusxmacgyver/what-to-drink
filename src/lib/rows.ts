@@ -19,11 +19,15 @@ export function toRow(bottle: Bottle, updatedAt: string): BottleRow {
 }
 
 // Joins the stored JSON as strings so the Worker never parses bottles on a read.
-export function catalogJson(rows: Pick<BottleRow, "status" | "data">[], importedAt: string): string {
+export function catalogJson(
+  rows: Pick<BottleRow, "status" | "data">[],
+  importedAt: string,
+  recentlyPoured = "[]",
+): string {
   const bottles: string[] = [];
   const graveyard: string[] = [];
   for (const row of rows) (row.status === "Killed" ? graveyard : bottles).push(row.data);
-  return `{"schemaVersion":1,"importedAt":${JSON.stringify(importedAt)},"bottles":[${bottles.join(",")}],"graveyard":[${graveyard.join(",")}]}`;
+  return `{"schemaVersion":1,"importedAt":${JSON.stringify(importedAt)},"bottles":[${bottles.join(",")}],"graveyard":[${graveyard.join(",")}],"recentlyPoured":${recentlyPoured}}`;
 }
 
 export function chunk<T>(items: T[], size: number): T[][] {
@@ -43,5 +47,8 @@ export function seedSql(catalog: Catalog, updatedAt: string): string {
     lines.push(`INSERT INTO bottles (id, bottle_key, status, data, updated_at) VALUES (${values});`);
   }
   lines.push(`INSERT INTO meta (key, value) VALUES ('importedAt', ${quote(catalog.importedAt)});`);
+  lines.push(
+    `INSERT INTO meta (key, value) VALUES ('recentlyPoured', ${quote(JSON.stringify(catalog.recentlyPoured ?? []))});`,
+  );
   return `${lines.join("\n")}\n`;
 }

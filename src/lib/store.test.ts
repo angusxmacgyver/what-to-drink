@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Bottle, Catalog } from "../types";
 import {
   addBottles,
+  catalogDocument,
+  catalogFromDocument,
   fetchRemoteCatalog,
   isOwner,
   loadLibraryLayout,
@@ -34,9 +36,18 @@ const bottle = (id: string): Bottle => ({
   country: "Scotland",
   dateEmptied: "",
   smws: null,
+  drams: [],
+  lastThird: false,
+  killShot: false,
 });
 
-const catalog = (bottles: Bottle[]): Catalog => ({ schemaVersion: 1, importedAt: "t", bottles, graveyard: [] });
+const catalog = (bottles: Bottle[]): Catalog => ({
+  schemaVersion: 1,
+  importedAt: "t",
+  bottles,
+  graveyard: [],
+  recentlyPoured: [],
+});
 
 let fetchMock: ReturnType<typeof vi.fn>;
 const respondWith = (status: number, body: unknown = null) =>
@@ -127,6 +138,60 @@ describe("bottles saved before casks", () => {
     const tagged = { ...bottle("tagged"), primaryCask: ["Ex-bourbon"], secondaryCask: ["Rum"] };
     respondWith(200, catalog([tagged]));
     expect((await fetchRemoteCatalog())!.bottles).toEqual([tagged]);
+  });
+});
+
+describe("the catalog document", () => {
+  const history: Catalog = {
+    schemaVersion: 1,
+    importedAt: "t",
+    bottles: [
+      { ...bottle("poured"), drams: ["2026-11-01T20:00:00.000Z", "2026-11-02T21:30:00.000Z"], lastThird: true },
+      bottle("untouched"),
+    ],
+    graveyard: [{ ...bottle("finished"), status: "Killed", dateEmptied: "2026-11-03", killShot: true }],
+    recentlyPoured: [
+      { bottleId: "finished", at: "2026-11-03T22:00:00.000Z", killShot: true },
+      { bottleId: "poured", at: "2026-11-02T21:30:00.000Z", killShot: false },
+      { bottleId: "poured", at: "2026-11-01T20:00:00.000Z", killShot: false },
+    ],
+  };
+
+  it("restores drams, last third, kill shot, and Recently poured onto the same bottle ids", () => {
+    expect(catalogFromDocument(catalogDocument(history))).toEqual(history);
+  });
+
+  it("reads a document that omits them as no drams, no last third, no kill shots, and nothing Recently poured", () => {
+    const { primaryCask: _p, secondaryCask: _s, drams: _d, lastThird: _l, killShot: _k, ...older } = bottle("old");
+    const document = JSON.stringify({
+      schemaVersion: 1,
+      importedAt: "t",
+      bottles: [older],
+      graveyard: [{ ...older, id: "dead", status: "Killed" }],
+    });
+    const read = catalogFromDocument(document);
+    expect(read.recentlyPoured).toEqual([]);
+    expect([...read.bottles, ...read.graveyard].map((b) => [b.id, b.drams, b.lastThird, b.killShot])).toEqual([
+      ["old", [], false, false],
+      ["dead", [], false, false],
+    ]);
+    expect(catalogFromDocument(catalogDocument(read))).toEqual(read);
+  });
+
+  it("keeps at most 25 Recently poured lines, newest first", () => {
+    const lines = Array.from({ length: 30 }, (_, i) => ({ bottleId: "poured", at: `line-${i}`, killShot: false }));
+    const read = catalogFromDocument(JSON.stringify({ ...history, recentlyPoured: lines }));
+    expect(read.recentlyPoured.map((line) => line.at)).toEqual(lines.slice(0, 25).map((line) => line.at));
+  });
+
+  it("reads a graveyard bottle with an empty dram list", () => {
+    const stray = { ...history, graveyard: [{ ...history.graveyard[0], drams: ["2026-11-03T22:00:00.000Z"] }] };
+    expect(catalogFromDocument(JSON.stringify(stray)).graveyard[0].drams).toEqual([]);
+  });
+
+  it("refuses a file that is not a catalog", () => {
+    expect(() => catalogFromDocument("not json{")).toThrow();
+    expect(() => catalogFromDocument(JSON.stringify({ bottles: "nope" }))).toThrow();
   });
 });
 

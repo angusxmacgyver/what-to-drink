@@ -1,4 +1,4 @@
-import type { Bottle, Catalog } from "../types";
+import { RECENTLY_POURED_LIMIT, isRecentPour, type Bottle, type Catalog } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
@@ -37,16 +37,36 @@ const readBottle = (bottle: Bottle): Bottle => ({
   ...bottle,
   primaryCask: stringList(bottle.primaryCask),
   secondaryCask: stringList(bottle.secondaryCask),
+  drams: stringList(bottle.drams),
+  lastThird: bottle.lastThird === true,
+  killShot: bottle.killShot === true,
 });
 
-/** A catalog from D1, this device, or the bundled file. Bottles saved before casks read as having none. */
+/**
+ * A catalog from D1, this device, the bundled file, or a downloaded bottles.json. Facts a catalog
+ * saved before them omits read as none: no casks, no drams, no last third, no kill shots, nothing Recently poured.
+ */
 export function readCatalog(raw: unknown): Catalog {
   const catalog = raw as Catalog;
+  const recentlyPoured = Array.isArray(catalog.recentlyPoured) ? catalog.recentlyPoured.filter(isRecentPour) : [];
   return {
     ...catalog,
     bottles: (catalog.bottles ?? []).map(readBottle),
-    graveyard: (catalog.graveyard ?? []).map(readBottle),
+    graveyard: (catalog.graveyard ?? []).map((bottle) => ({ ...readBottle(bottle), drams: [] })),
+    recentlyPoured: recentlyPoured.slice(0, RECENTLY_POURED_LIMIT),
   };
+}
+
+export function catalogDocument(catalog: Catalog): string {
+  return `${JSON.stringify(catalog, null, 2)}\n`;
+}
+
+export function catalogFromDocument(text: string): Catalog {
+  const raw = JSON.parse(text) as Partial<Catalog> | null;
+  if (!raw || !Array.isArray(raw.bottles) || !Array.isArray(raw.graveyard)) {
+    throw new Error("expected a catalog with bottles and graveyard lists");
+  }
+  return readCatalog(raw);
 }
 
 export function loadStoredCatalog(): Catalog | null {
@@ -64,9 +84,7 @@ export function saveCatalog(catalog: Catalog): void {
 }
 
 export function downloadCatalog(catalog: Catalog): void {
-  const blob = new Blob([`${JSON.stringify(catalog, null, 2)}\n`], {
-    type: "application/json",
-  });
+  const blob = new Blob([catalogDocument(catalog)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

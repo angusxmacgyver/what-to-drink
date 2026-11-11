@@ -21,6 +21,9 @@ export function visitBottle(overrides: Partial<Bottle> & Pick<Bottle, "id">): Bo
     country: "Scotland",
     dateEmptied: "",
     smws: null,
+    drams: [],
+    lastThird: false,
+    killShot: false,
     ...overrides,
   };
 }
@@ -71,4 +74,5 @@ export const visitCatalog: Catalog = {
     }),
   ],
   graveyard: [],
+  recentlyPoured: [],
 };
