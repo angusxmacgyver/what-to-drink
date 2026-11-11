@@ -4,7 +4,7 @@
 
 **Current milestone:** 6 of 6 (Remote editing) is done through guest-visible edits. The order of the next builds is under **In GitHub**. Issue #9 owns the catalog export. Milestones 1–5 are done. The first version of the app is listed under **Done**.
 
-**Next session (as of 11 Nov 2026):** #9 is broken into tickets #35–#46. #35 (catalog round-trip) can be built now, and #36, #43, and #44 follow it without waiting on #28. Tickets that record a dram (#37 onward) wait on #28, an owner step: clean the casks in the workbook, re-ingest, run a full replace. #13 can be built now. #31, #32, #33, #34, and #45 need grilling or prototyping with the owner first. The Last Poured sash (#34) waits on a font decision.
+**Next session (as of 11 Nov 2026):** #9 is broken into tickets #35–#46. #35 (catalog round-trip) can be built now, and #36, #43, and #44 follow it without waiting on #28. Tickets that record a dram (#37 onward) wait on #28, an owner step: clean the casks in the workbook, re-ingest, run a full replace. #13 (cask search) shipped on 11 Nov 2026. #31, #32, #33, #34, #45, and #47 need grilling or prototyping with the owner first. The Last Poured sash (#34) waits on a font decision.
 
 **Side quest:** Fancy Picker Easter Egg is done.
 
@@ -286,9 +286,10 @@ Blocking links on GitHub are the source of truth for order. Work any open issue 
 - **#10 Primary cask and secondary cask.** The spec. Casks are shown in the bottle detail and matched by text search. They are not filters (3 Nov 2026), so #12 (cask chips) and #29 are closed as wontfix.
   - #11 (cask data) is closed. The code is done.
   - #28 loads the casks. It's an owner step: clean the tags in the Oct 19 workbook, re-ingest the seed, run a full replace. The seed and the live cellar have no casks until then. It can happen at any time, but it must happen before #9 records a dram.
-  - #13 (cask search) can be built at any time.
+  - #13 (cask search) is closed. Text search matches primary-cask and secondary-cask tags, not Notes. Shipped 11 Nov 2026.
 - **#31 Flavor wheel taxonomy** and **#32 Filter drawer clean-up.** Both are `needs-triage`: grill them with the owner before speccing. #31 replaces Flavor Families and Sub-Characteristics with the wheel's levels (likely Families | Subgroup | Flavor Descriptors), loaded fresh from a re-tagged workbook. The wheel may also become the flavor filter. SMWS Theme stays a filter. #31 may answer #32 for the flavor sections.
 - **#33 Graveyard styling.** `needs-triage`: grill it with the owner. Bring the Graveyard closer to the Library views, partly so it can carry the Last Poured sash after a kill shot.
+- **#47 Expanded views.** `needs-triage`: grill it with the owner. The opened bottle detail shows a lot, and how it presents needs rework. #9's tickets add dram counts, the last-third mark, collapsed backups, and the owner's dram list to it, so leave room for them. #32 is the filter drawer, not this.
 - **#9 Record drams against each bottle and round-trip that history.** The spec. Its Pick stories were re-grilled in #30 (closed 10 Nov 2026), and the owner approved the edited body. It now covers Pour This Dram on each bottle in an opened row, Recently poured as a section in Analytics, the Last Poured sash, the Last third filter, and the Favor last third and I feel fancy Pick modifiers (ADR 0003). The vocabulary is in `GLOSSARY.md`. Weekly backup storage is outside that issue. Broken into sub-issue tickets on 11 Nov 2026, with native blocking links:
   - #35 round-trips the catalog with its dram history, keeping bottle ids. It has no blockers. No dram can be written before it.
   - #36 (two warnings before a replace clears dram history), #43 (Last third filter), and #44 (Favor last third and I feel fancy) need only #35. None of them records a dram, so none waits on #28.
