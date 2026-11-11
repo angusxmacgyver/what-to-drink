@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Bottle, Catalog } from "../types";
 import {
   addBottles,
+  carriesDramHistory,
   catalogDocument,
   catalogFromDocument,
   fetchRemoteCatalog,
@@ -187,6 +188,23 @@ describe("the catalog document", () => {
   it("reads a graveyard bottle with an empty dram list", () => {
     const stray = { ...history, graveyard: [{ ...history.graveyard[0], drams: ["2026-11-03T22:00:00.000Z"] }] };
     expect(catalogFromDocument(JSON.stringify(stray)).graveyard[0].drams).toEqual([]);
+  });
+
+  it("carries the dram history when every bottle has its drams and last third, every graveyard bottle its kill shot, and Recently poured is present", () => {
+    expect(carriesDramHistory(catalogDocument(history))).toBe(true);
+    expect(carriesDramHistory(catalogDocument({ ...history, recentlyPoured: [] }))).toBe(true);
+  });
+
+  it("does not carry the dram history when any of those facts is missing", () => {
+    const { recentlyPoured: _r, ...noLines } = history;
+    const { drams: _d, ...noDrams } = history.bottles[0];
+    const { lastThird: _l, ...noLastThird } = history.bottles[0];
+    const { killShot: _k, ...noKillShot } = history.graveyard[0];
+    expect(carriesDramHistory(JSON.stringify(noLines))).toBe(false);
+    expect(carriesDramHistory(JSON.stringify({ ...history, bottles: [noDrams] }))).toBe(false);
+    expect(carriesDramHistory(JSON.stringify({ ...history, bottles: [noLastThird] }))).toBe(false);
+    expect(carriesDramHistory(JSON.stringify({ ...history, graveyard: [noKillShot] }))).toBe(false);
+    expect(carriesDramHistory("not json{")).toBe(false);
   });
 
   it("refuses a file that is not a catalog", () => {

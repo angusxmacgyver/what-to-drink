@@ -50,6 +50,12 @@ describe("planMerge", () => {
     expect(rows[0].duplicateOf?.id).toBe("existing-1");
   });
 
+  it("starts each incoming bottle at no drams with last third off", () => {
+    const incoming = [bottle({ drams: ["2026-11-01T20:00:00.000Z"], lastThird: true })];
+    const [row] = planMerge([], incoming);
+    expect(row.bottle).toEqual({ ...incoming[0], drams: [], lastThird: false });
+  });
+
   it("handles an empty incoming list", () => {
     expect(planMerge([bottle()], [])).toEqual([]);
   });
@@ -69,6 +75,21 @@ describe("applyMerge", () => {
     const next = applyMerge(catalog, [added]);
     expect(next.bottles).toEqual([existing, added]);
     expect(next.bottles).not.toBe(catalog.bottles);
+  });
+
+  it("leaves existing drams, last third, and Recently poured alone", () => {
+    const poured = bottle({ drams: ["2026-11-01T20:00:00.000Z"], lastThird: true });
+    const catalog: Catalog = {
+      schemaVersion: 1,
+      importedAt: "2026-01-01",
+      bottles: [poured],
+      graveyard: [],
+      recentlyPoured: [{ bottleId: poured.id, at: "2026-11-01T20:00:00.000Z", killShot: false }],
+    };
+    const [row] = planMerge(catalog.bottles, [bottle()]);
+    const next = applyMerge(catalog, [row.bottle]);
+    expect(next.bottles[0]).toBe(poured);
+    expect(next.recentlyPoured).toBe(catalog.recentlyPoured);
   });
 
   it("never touches the graveyard", () => {

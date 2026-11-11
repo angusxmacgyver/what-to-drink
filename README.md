@@ -55,6 +55,7 @@ Work that is not built yet is listed in [PROJECT.md](PROJECT.md).
 
 What shipped, newest first. Each entry is the date the work landed on `main`.
 
+- **11 Nov 2026:** A replace that would clear dram history warns twice. A workbook, or a bottles.json without the drams, last third, kill shots, and Recently poured lines, asks for two confirmations that both say dram counts are cleared, and a merge starts each new bottle at 0 drams with last third off. ([#36](https://github.com/angusxmacgyver/what-to-drink/issues/36))
 - **11 Nov 2026:** The catalog round-trips its dram history. Download bottles.json carries each live bottle's drams and last third, each Graveyard bottle's kill shot, and the Recently poured lines, which the shared cellar keeps for every device, and a full replace from that file restores them onto the same bottle ids. ([#35](https://github.com/angusxmacgyver/what-to-drink/issues/35))
 - **11 Nov 2026:** Text search matches primary-cask and secondary-cask tags, but not Notes. ([#13](https://github.com/angusxmacgyver/what-to-drink/issues/13))
 - **30 Oct 2026:** The Pick a Dram screen is retired. The Library is the only screen for the cellar, and the Pick lives in its filter drawer (ADR 0002). ([#18](https://github.com/angusxmacgyver/what-to-drink/issues/18), [#27](https://github.com/angusxmacgyver/what-to-drink/issues/27))

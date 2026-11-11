@@ -10,7 +10,10 @@ export type MergeRow = {
 // already live, so the owner can choose per row before anything is written.
 export function planMerge(existing: Bottle[], incoming: Bottle[]): MergeRow[] {
   const byKey = new Map(existing.map((b) => [b.bottleKey, b]));
-  return incoming.map((bottle) => ({ bottle, duplicateOf: byKey.get(bottle.bottleKey) ?? null }));
+  return incoming.map((bottle) => ({
+    bottle: { ...bottle, drams: [], lastThird: false },
+    duplicateOf: byKey.get(bottle.bottleKey) ?? null,
+  }));
 }
 
 export function applyMerge(catalog: Catalog, selected: Bottle[]): Catalog {

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { Catalog } from "../types";
-import { catalogFromDocument } from "../lib/store";
+import { carriesDramHistory, catalogFromDocument } from "../lib/store";
 
 export function ImportPanel({
   onCatalog,
 }: {
-  onCatalog: (catalog: Catalog, filename: string) => void;
+  onCatalog: (catalog: Catalog, filename: string, carriesDramHistory: boolean) => void;
 }) {
   const [error, setError] = useState("");
 
@@ -28,14 +28,15 @@ export function ImportPanel({
           setError("");
           if (file.name.toLowerCase().endsWith(".json")) {
             try {
-              onCatalog(catalogFromDocument(await file.text()), file.name);
+              const text = await file.text();
+              onCatalog(catalogFromDocument(text), file.name, carriesDramHistory(text));
             } catch {
               setError(`${file.name} is not a bottles.json catalog. Nothing was replaced.`);
             }
             return;
           }
           const { catalogFromArrayBuffer } = await import("../lib/ingest");
-          onCatalog(catalogFromArrayBuffer(await file.arrayBuffer()), file.name);
+          onCatalog(catalogFromArrayBuffer(await file.arrayBuffer()), file.name, false);
         }}
       />
       {error ? <p className="hint">{error}</p> : null}

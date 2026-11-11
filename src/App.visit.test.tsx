@@ -6,6 +6,7 @@ import { emptyFilters } from "./types";
 import { stageFancyVisit } from "./lib/fancy";
 import { saveLibraryLayout } from "./lib/store";
 import { visitBottle, visitCatalog } from "./test/visitCatalog";
+import * as XLSX from "xlsx";
 
 function mockDeviceStorage() {
   const local = new Map<string, string>();
@@ -621,5 +622,112 @@ describe("Pick from the Library drawer", () => {
     await user.click(screen.getByRole("button", { name: "What To Drink" }));
 
     expect(screen.getByRole("heading", { level: 1, name: "The Library" })).toBeTruthy();
+  });
+});
+
+describe("replacing the cellar", () => {
+  const clearing = /Dram counts are cleared unless the file itself contains the drams, last third, kill shots, and Recently poured lines/;
+
+  beforeEach(() => {
+    mockDeviceStorage();
+    seedVisitCatalog();
+    sessionStorage.setItem("what-to-drink-owner-pin", "cellar");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation(() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })),
+    );
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:catalog", revokeObjectURL: () => {} }));
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  async function replaceFrom(user: ReturnType<typeof userEvent.setup>, file: File) {
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Owner tools" }));
+    await user.click(screen.getByRole("button", { name: "Bottle Management" }));
+    const input = screen.getByRole("heading", { name: "Replace the cellar" }).closest("section")!.querySelector("input")!;
+    await user.upload(input, file);
+  }
+
+  const jsonFile = (catalog: unknown) => new File([JSON.stringify(catalog)], "bottles.json", { type: "application/json" });
+
+  function workbookFile() {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet([{ "Distillery / Producer": "Lagavulin", Bottling: "16", Status: "Open" }]),
+      "Open Bottles",
+    );
+    return new File([XLSX.write(workbook, { type: "array", bookType: "xlsx" })], "cellar.xlsx");
+  }
+
+  function withoutDramHistory() {
+    const { recentlyPoured: _r, ...rest } = visitCatalog;
+    return { ...rest, bottles: rest.bottles.map(({ drams: _d, lastThird: _l, ...bottle }) => bottle) };
+  }
+
+  const replaceWrites = () =>
+    vi.mocked(fetch).mock.calls.filter(([path, init]) => path === "/api/catalog" && init?.method === "PUT");
+
+  const storedCatalog = () => localStorage.getItem("what-to-drink-catalog");
+
+  async function confirmDialog(user: ReturnType<typeof userEvent.setup>, label: string) {
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: label }));
+  }
+
+  it("warns twice before a workbook replace, and both warnings say dram counts are cleared", async () => {
+    const user = userEvent.setup();
+    await replaceFrom(user, workbookFile());
+
+    expect((await screen.findByRole("dialog")).textContent).toMatch(clearing);
+    await confirmDialog(user, "Continue");
+    expect(screen.getByRole("dialog").textContent).toMatch(clearing);
+    await confirmDialog(user, "Clear dram counts and replace");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(replaceWrites()).toHaveLength(1);
+  });
+
+  it("warns twice before a bottles.json replace that lacks the dram history, and the second Cancel leaves the cellar unchanged", async () => {
+    const user = userEvent.setup();
+    const before = storedCatalog();
+    await replaceFrom(user, jsonFile(withoutDramHistory()));
+
+    expect((await screen.findByRole("dialog")).textContent).toMatch(clearing);
+    await confirmDialog(user, "Continue");
+    expect(screen.getByRole("dialog").textContent).toMatch(clearing);
+    await confirmDialog(user, "Cancel");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(replaceWrites()).toHaveLength(0);
+    expect(storedCatalog()).toBe(before);
+  });
+
+  it("leaves the cellar unchanged when the first warning is canceled", async () => {
+    const user = userEvent.setup();
+    const before = storedCatalog();
+    await replaceFrom(user, workbookFile());
+
+    await confirmDialog(user, "Cancel");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(replaceWrites()).toHaveLength(0);
+    expect(storedCatalog()).toBe(before);
+  });
+
+  it("asks once, without the clearing warning, for a bottles.json that carries the dram history", async () => {
+    const user = userEvent.setup();
+    await replaceFrom(user, jsonFile(visitCatalog));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.textContent).not.toMatch(/Dram counts/);
+    await confirmDialog(user, "Replace");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(replaceWrites()).toHaveLength(1);
   });
 });

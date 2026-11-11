@@ -237,8 +237,15 @@ export default function App() {
             {catalog.bottles.length} bottles · {importedLabel}
           </p>
           <ImportPanel
-            onCatalog={(next, filename) => {
-              void ask(`Replace the whole cellar from ${filename}?`, "Replace").then((ok) => {
+            onCatalog={(next, filename, carriesDramHistory) => {
+              const clearing =
+                "Dram counts are cleared unless the file itself contains the drams, last third, kill shots, and Recently poured lines.";
+              const confirmed = carriesDramHistory
+                ? ask(`Replace the whole cellar from ${filename}?`, "Replace")
+                : ask(`Replace the whole cellar from ${filename}? ${clearing} This one doesn't.`, "Continue").then(
+                    (ok) => ok && ask(`Are you sure? ${clearing}`, "Clear dram counts and replace"),
+                  );
+              void confirmed.then((ok) => {
                 if (!ok) return;
                 const previous = catalog;
                 saveCatalog(previous);

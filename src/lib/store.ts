@@ -69,6 +69,22 @@ export function catalogFromDocument(text: string): Catalog {
   return readCatalog(raw);
 }
 
+/** Whether a replace from this document keeps the dram history, instead of reading it as none. */
+export function carriesDramHistory(text: string): boolean {
+  try {
+    const raw = JSON.parse(text) as Partial<Catalog> | null;
+    return (
+      Array.isArray(raw?.recentlyPoured) &&
+      Array.isArray(raw.bottles) &&
+      raw.bottles.every((b) => Array.isArray(b?.drams) && typeof b.lastThird === "boolean") &&
+      Array.isArray(raw.graveyard) &&
+      raw.graveyard.every((b) => typeof b?.killShot === "boolean")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function loadStoredCatalog(): Catalog | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
