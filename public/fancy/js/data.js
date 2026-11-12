@@ -53,9 +53,16 @@ export function buildEntries(bottles) {
 /** Favor last third gives a last-third bottle three tickets and every other bottle one. */
 const ticketCount = (bottle, favorLastThird) => (favorLastThird && bottle.lastThird ? 3 : 1);
 
+/** Closed bottles are not tickets while an open one of the same expression can be poured. */
+function tickets(bottles) {
+  const openKeys = new Set(bottles.filter((bottle) => bottle.status === "Open").map((bottle) => bottle.bottleKey));
+  return bottles.filter((bottle) => bottle.status === "Open" || !openKeys.has(bottle.bottleKey));
+}
+
 export function pickBottle(bottles, previousId = null, favorLastThird = false, random = Math.random) {
-  if (!bottles.length) return null;
-  const choices = bottles.length > 1 ? bottles.filter((bottle) => bottle.id !== previousId) : bottles;
+  const pourable = tickets(bottles);
+  if (!pourable.length) return null;
+  const choices = pourable.length > 1 ? pourable.filter((bottle) => bottle.id !== previousId) : pourable;
   const total = choices.reduce((sum, bottle) => sum + ticketCount(bottle, favorLastThird), 0);
   let ticket = random() * total;
   for (const bottle of choices) {

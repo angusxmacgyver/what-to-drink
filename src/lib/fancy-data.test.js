@@ -69,6 +69,24 @@ describe("fancy picker data", () => {
     expect(pickBottle([full, low], null, true, () => 0.25).id).toBe("low");
   });
 
+  it("never lands on a backup while its expression has an open bottle", () => {
+    const open = bottle();
+    const backup = bottle({ id: "backup", status: "Closed" });
+    const other = bottle({ id: "other", bottleKey: "lagavulin::16" });
+
+    expect(pickBottle([backup, open, other], null, false, () => 0).id).toBe("open");
+    expect(pickBottle([backup, open, other], null, false, () => 0.49).id).toBe("open");
+    expect(pickBottle([backup, open, other], null, false, () => 0.5).id).toBe("other");
+  });
+
+  it("keeps closed bottles as tickets when their expression has no open bottle", () => {
+    const sealed = bottle({ id: "sealed", status: "Closed" });
+    const second = bottle({ id: "second", status: "Closed" });
+
+    expect(pickBottle([sealed, second], null, false, () => 0).id).toBe("sealed");
+    expect(pickBottle([sealed, second], null, false, () => 0.5).id).toBe("second");
+  });
+
   it("reads whether Favor last third was on from the staged pool", () => {
     const staged = (payload) => {
       let stored = JSON.stringify(payload);

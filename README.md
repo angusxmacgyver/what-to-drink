@@ -55,6 +55,7 @@ Work that is not built yet is listed in [PROJECT.md](PROJECT.md).
 
 What shipped, newest first. Each entry is the date the work landed on `main`.
 
+- **12 Nov 2026:** I feel fancy draws the same way a Pick does: the fancy wheel never lands on a backup while its expression has an open bottle showing. ([#48](https://github.com/angusxmacgyver/what-to-drink/issues/48))
 - **12 Nov 2026:** The Library drawer has a Pick modifiers section with Favor last third, which gives each last-third bottle three tickets to every other bottle's one without hiding any bottle, stays on until turned off or reload, and also weights where I feel fancy lands the wheel. ([#44](https://github.com/angusxmacgyver/what-to-drink/issues/44))
 - **12 Nov 2026:** The Library's Status filters offer Last third, with a live count. It narrows whatever else is picked, so Islay plus Last third shows last-third Islay bottles, it shows in the Applied tray, and a Pick draws only from the bottles it leaves showing. ([#43](https://github.com/angusxmacgyver/what-to-drink/issues/43))
 - **11 Nov 2026:** A replace that would clear dram history warns twice. A workbook, or a bottles.json without the drams, last third, kill shots, and Recently poured lines, asks for two confirmations that both say dram counts are cleared, and a merge starts each new bottle at 0 drams with last third off. ([#36](https://github.com/angusxmacgyver/what-to-drink/issues/36))
