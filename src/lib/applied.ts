@@ -1,5 +1,6 @@
 import { type FilterState } from "../types";
 import { familyClass, smwsThemeClass, subFamilyClass } from "./colors";
+import { LAST_THIRD } from "./library";
 
 export type AppliedChip = {
   id: string;
@@ -41,6 +42,7 @@ export function appliedChips(filters: FilterState): AppliedChip[] {
   const abv = rangeLabel("ABV", filters.abvMin, filters.abvMax, "%");
   if (abv) chips.push({ id: chipId("abv"), label: abv });
   chips.push(...listed("status", filters.statuses));
+  if (filters.lastThird) chips.push({ id: chipId("lastThird"), label: LAST_THIRD });
   return chips;
 }
 
@@ -73,5 +75,6 @@ export function removeChip(filters: FilterState, id: string): FilterState {
   if (kind === "nas") return { ...filters, includeNas: true };
   if (kind === "abv") return { ...filters, abvMin: "", abvMax: "" };
   if (kind === "status") return { ...filters, statuses: without(filters.statuses, value) };
+  if (kind === "lastThird") return { ...filters, lastThird: false };
   return filters;
 }

@@ -60,6 +60,13 @@ describe("appliedChips", () => {
     expect(appliedChips({ ...emptyFilters(), place: "house" }).map((chip) => chip.label)).toEqual(["House"]);
   });
 
+  it("shows Last third after the statuses, and removing it leaves the statuses", () => {
+    const filters = { ...emptyFilters(), statuses: ["Open"], lastThird: true };
+    const chips = appliedChips(filters);
+    expect(chips.map((chip) => chip.label)).toEqual(["Open", "Last third"]);
+    expect(removeChip(filters, chips[1].id)).toMatchObject({ statuses: ["Open"], lastThird: false });
+  });
+
   it("removes a sub-characteristic and its selected family context together", () => {
     const filters = {
       ...emptyFilters(),

@@ -1,7 +1,15 @@
 import type { Bottle, FilterState } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
-import { matchesFilters, optionCounts, subOwnerFamily, subsForFamilies, withoutRange, type CountFacet } from "../lib/library";
+import {
+  LAST_THIRD,
+  matchesFilters,
+  optionCounts,
+  subOwnerFamily,
+  subsForFamilies,
+  withoutRange,
+  type CountFacet,
+} from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
 import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
 
@@ -90,10 +98,12 @@ export function Filters({
       {showStatus ? (
         <ChipSelect
           label="Status"
-          options={statuses}
-          value={filters.statuses}
-          onChange={(statuses) => set({ statuses })}
-          counts={counts("status", statuses)}
+          options={[...statuses, LAST_THIRD]}
+          value={filters.lastThird ? [...filters.statuses, LAST_THIRD] : filters.statuses}
+          onChange={(picked) =>
+            set({ statuses: picked.filter((option) => option !== LAST_THIRD), lastThird: picked.includes(LAST_THIRD) })
+          }
+          counts={{ ...counts("status", statuses), ...counts("lastThird", [LAST_THIRD]) }}
         />
       ) : null}
       <ChipSelect

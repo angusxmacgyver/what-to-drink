@@ -77,6 +77,8 @@ export type FilterState = {
   distilleries: string[];
   themes: string[];
   statuses: string[];
+  /** Narrows to last-third bottles, whatever statuses are picked. */
+  lastThird: boolean;
   ageMin: string;
   ageMax: string;
   includeNas: boolean;
@@ -95,6 +97,7 @@ export const emptyFilters = (): FilterState => ({
   distilleries: [],
   themes: [],
   statuses: [],
+  lastThird: false,
   ageMin: "",
   ageMax: "",
   includeNas: true,

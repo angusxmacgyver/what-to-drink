@@ -254,6 +254,40 @@ describe("originLabel", () => {
   });
 });
 
+function lastThirdCellar() {
+  const islayLow = bottle({ region: "Islay", lastThird: true });
+  const islayFull = bottle({ region: "Islay" });
+  const speysideLow = bottle({ region: "Speyside", lastThird: true });
+  return { islayLow, speysideLow, all: [islayLow, islayFull, speysideLow] };
+}
+
+describe("matchesFilters last third", () => {
+  const { islayLow, speysideLow, all } = lastThirdCellar();
+
+  it("keeps every bottle while Last third is off", () => {
+    expect(all.filter((b) => matchesFilters(b, emptyFilters()))).toEqual(all);
+  });
+
+  it("keeps only bottles whose last-third flag is on", () => {
+    const filters = { ...emptyFilters(), lastThird: true };
+    expect(all.filter((b) => matchesFilters(b, filters))).toEqual([islayLow, speysideLow]);
+  });
+
+  it("combines with another filter, so Islay plus Last third is last-third Islay bottles", () => {
+    const filters = { ...emptyFilters(), regions: ["Islay"], lastThird: true };
+    expect(all.filter((b) => matchesFilters(b, filters))).toEqual([islayLow]);
+    expect(all.filter((b) => matchesFilters(b, filters, true))).toEqual([islayLow]);
+  });
+
+  it("narrows a picked status instead of standing in for one", () => {
+    const closed = bottle({ status: "Closed" });
+    const open = { ...emptyFilters(), statuses: ["Open"], lastThird: true };
+    expect([...all, closed].filter((b) => matchesFilters(b, open))).toEqual([islayLow, speysideLow]);
+    expect([...all, closed].filter((b) => matchesFilters(b, open, true))).toEqual([islayLow, speysideLow]);
+    expect([...all, closed].filter((b) => matchesFilters(b, { ...open, statuses: ["Closed"] }))).toEqual([]);
+  });
+});
+
 describe("matchesFilters exact", () => {
   const smoky = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Smoke"] });
   const fruity = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Fruit (Fresh)"] });
@@ -342,6 +376,18 @@ describe("optionCounts", () => {
       house: 1,
       apartment: 1,
     });
+  });
+
+  it("counts the last-third bottles the other filters leave, whether or not Last third is on", () => {
+    const { all } = lastThirdCellar();
+    const islay = { ...emptyFilters(), regions: ["Islay"] };
+    for (const exact of [false, true]) {
+      expect(optionCounts(all, islay, "lastThird", ["Last third"], exact)).toEqual({ "Last third": 1 });
+      expect(optionCounts(all, { ...islay, lastThird: true }, "lastThird", ["Last third"], exact)).toEqual({
+        "Last third": 1,
+      });
+    }
+    expect(optionCounts(all, emptyFilters(), "lastThird", ["Last third"])).toEqual({ "Last third": 2 });
   });
 
   it("counts statuses, which a bottle has only one of", () => {

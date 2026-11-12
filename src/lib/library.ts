@@ -190,6 +190,7 @@ export function matchesFilters(bottle: Bottle, filters: FilterState, exact = fal
   if (filters.place === "apartment" && !bottle.atApartment) return false;
   if (filters.place === "house" && bottle.atApartment) return false;
   if (!matchesStatus(bottle, filters.statuses, exact)) return false;
+  if (filters.lastThird && !bottle.lastThird) return false;
   if (!inList(filters.distilleries, bottle.distillery, exact)) return false;
   if (!inList(filters.themes, bottle.theme, exact)) return false;
   if (!inList(filters.countries, bottle.country, exact)) return false;
@@ -229,11 +230,23 @@ export function withoutRange(filters: FilterState, axis: "age" | "abv"): FilterS
   return { ...filters, abvMin: "", abvMax: "" };
 }
 
-export type CountFacet = "place" | "status" | "distillery" | "theme" | "family" | "sub" | "country" | "region";
+export type CountFacet =
+  | "place"
+  | "status"
+  | "lastThird"
+  | "distillery"
+  | "theme"
+  | "family"
+  | "sub"
+  | "country"
+  | "region";
+
+export const LAST_THIRD = "Last third";
 
 function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
   if (facet === "place") return { ...filters, place: null };
   if (facet === "status") return { ...filters, statuses: [] };
+  if (facet === "lastThird") return { ...filters, lastThird: false };
   if (facet === "distillery") return { ...filters, distilleries: [] };
   if (facet === "theme") return { ...filters, themes: [] };
   if (facet === "family") return { ...filters, families: [] };
@@ -245,6 +258,7 @@ function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
 function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
   if (facet === "place") return [bottle.atApartment ? "apartment" : "house"];
   if (facet === "status") return [bottle.status];
+  if (facet === "lastThird") return bottle.lastThird ? [LAST_THIRD] : [];
   if (facet === "distillery") return [bottle.distillery];
   if (facet === "theme") return [bottle.theme];
   if (facet === "family") return bottle.flavorFamilies;
