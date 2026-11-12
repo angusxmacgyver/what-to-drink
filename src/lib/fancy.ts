@@ -10,15 +10,17 @@ export const FANCY_PICKER_URL = "/fancy/index.html";
 export type FancyPoolPayload = {
   version: 1;
   bottles: Bottle[];
+  favorLastThird: boolean;
 };
 
 export type FancyVisit = {
   filters: FilterState;
   exact: boolean;
+  favorLastThird: boolean;
 };
 
-export function stageFancyPool(bottles: Bottle[]): void {
-  const payload: FancyPoolPayload = { version: 1, bottles };
+export function stageFancyPool(bottles: Bottle[], favorLastThird: boolean): void {
+  const payload: FancyPoolPayload = { version: 1, bottles, favorLastThird };
   sessionStorage.setItem(FANCY_POOL_KEY, JSON.stringify(payload));
 }
 
@@ -37,7 +39,10 @@ export function consumeFancyReturn(): { visit: FancyVisit; bottleId: string | nu
     if (visit?.version !== 1 || typeof visit.filters !== "object" || typeof visit.exact !== "boolean") return null;
     const result = rawResult ? JSON.parse(rawResult) : null;
     const bottleId = result?.version === 1 && typeof result.bottleId === "string" ? result.bottleId : null;
-    return { visit: { filters: visit.filters, exact: visit.exact }, bottleId };
+    return {
+      visit: { filters: visit.filters, exact: visit.exact, favorLastThird: visit.favorLastThird === true },
+      bottleId,
+    };
   } catch {
     return null;
   }

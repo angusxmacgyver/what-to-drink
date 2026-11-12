@@ -528,6 +528,44 @@ describe("Pick from the Library drawer", () => {
     });
   });
 
+  describe("Favor last third", () => {
+    it("sits in its own Pick modifiers section, off by default, and changes no counts", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await openFilters(user);
+      const modifiers = within(filterDrawer().getByRole("group", { name: "Pick modifiers" }));
+      const favor = modifiers.getByRole("checkbox", { name: "Favor last third" });
+      expect(favor).not.toBeChecked();
+      const before = [libraryCountsText(), filterDrawer().getByText(/available$/).textContent];
+
+      await user.click(favor);
+
+      expect(favor).toBeChecked();
+      expect([libraryCountsText(), filterDrawer().getByText(/available$/).textContent]).toEqual(before);
+    });
+
+    it("stays on across Picks and goes to the wheel with I feel fancy, which clears", async () => {
+      vi.spyOn(window.location, "assign").mockImplementation(() => {});
+      const user = userEvent.setup();
+      render(<App />);
+
+      await openFilters(user);
+      await user.click(filterDrawer().getByRole("checkbox", { name: "Favor last third" }));
+      await user.click(filterDrawer().getByRole("button", { name: /^Pick from/ }));
+      await openFilters(user);
+      expect(filterDrawer().getByRole("checkbox", { name: "Favor last third" })).toBeChecked();
+
+      await user.click(filterDrawer().getByRole("checkbox", { name: "I feel fancy" }));
+      await user.click(filterDrawer().getByRole("button", { name: /^Pick from/ }));
+
+      expect(JSON.parse(sessionStorage.getItem("what-to-drink-fancy-pool")!).favorLastThird).toBe(true);
+      expect(JSON.parse(sessionStorage.getItem("what-to-drink-fancy-visit")!).favorLastThird).toBe(true);
+      expect(filterDrawer().getByRole("checkbox", { name: "I feel fancy" })).not.toBeChecked();
+      expect(filterDrawer().getByRole("checkbox", { name: "Favor last third" })).toBeChecked();
+    });
+  });
+
   describe("the fancy wheel round trip", () => {
     it("with I feel fancy, Pick stages its own pool and the visit, then opens the wheel", async () => {
       const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
@@ -550,7 +588,7 @@ describe("Pick from the Library drawer", () => {
     });
 
     function returnFromWheel(landedId: string | null) {
-      stageFancyVisit({ filters: { ...emptyFilters(), place: "apartment", families: ["Smoke"] }, exact: true });
+      stageFancyVisit({ filters: { ...emptyFilters(), place: "apartment", families: ["Smoke"] }, exact: true, favorLastThird: false });
       if (landedId) sessionStorage.setItem("what-to-drink-fancy-result", JSON.stringify({ version: 1, bottleId: landedId }));
     }
 
@@ -579,7 +617,7 @@ describe("Pick from the Library drawer", () => {
           ],
         }),
       );
-      stageFancyVisit({ filters: { ...emptyFilters(), search: "Pair" }, exact: false });
+      stageFancyVisit({ filters: { ...emptyFilters(), search: "Pair" }, exact: false, favorLastThird: false });
       sessionStorage.setItem("what-to-drink-fancy-result", JSON.stringify({ version: 1, bottleId: "pair-closed" }));
       render(<App />);
 

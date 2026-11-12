@@ -60,7 +60,7 @@ const labelsEl = $("labels");
 const resultEl = $("result");
 const nameEl = $("rName");
 
-const bottles = consumePool();
+const { bottles, favorLastThird } = consumePool();
 const entries = buildEntries(bottles);
 let decoys = entries;
 let previousId = null;
@@ -165,7 +165,7 @@ function go(phase) {
 const enter = {
   spin() {
     if (!bottles.length) return;
-    const picked = pickBottle(bottles, previousId);
+    const picked = pickBottle(bottles, previousId, favorLastThird);
     previousId = picked.id;
     S.winner = entryForBottle(bottles, picked);
     decoys = entries;

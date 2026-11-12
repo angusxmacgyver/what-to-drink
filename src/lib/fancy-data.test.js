@@ -33,9 +33,9 @@ describe("fancy picker data", () => {
         stored = null;
       },
     };
-    expect(consumePool(storage).map(({ id }) => id)).toEqual(["open"]);
+    expect(consumePool(storage).bottles.map(({ id }) => id)).toEqual(["open"]);
     expect(stored).toBeNull();
-    expect(consumePool(storage)).toEqual([]);
+    expect(consumePool(storage).bottles).toEqual([]);
   });
 
   it("saves the landed bottle as the result for the Library, replacing any earlier landing", () => {
@@ -57,6 +57,25 @@ describe("fancy picker data", () => {
     const first = pickBottle(stock, null);
     expect(pickBottle(stock, first.id).id).not.toBe(first.id);
     expect(pickBottle([stock[0]], stock[0].id).id).toBe("open");
+  });
+
+  it("lands on a winner chosen with Favor last third's tickets", () => {
+    const low = bottle({ id: "low", lastThird: true });
+    const full = bottle({ id: "full", bottleKey: "lagavulin::16", lastThird: false });
+
+    expect(pickBottle([low, full], null, false, () => 0.5).id).toBe("full");
+    expect(pickBottle([low, full], null, true, () => 0.74).id).toBe("low");
+    expect(pickBottle([low, full], null, true, () => 0.75).id).toBe("full");
+    expect(pickBottle([full, low], null, true, () => 0.25).id).toBe("low");
+  });
+
+  it("reads whether Favor last third was on from the staged pool", () => {
+    const staged = (payload) => {
+      let stored = JSON.stringify(payload);
+      return { getItem: () => stored, removeItem: () => (stored = null) };
+    };
+    expect(consumePool(staged({ version: 1, bottles: [bottle()], favorLastThird: true })).favorLastThird).toBe(true);
+    expect(consumePool(staged({ version: 1, bottles: [bottle()] })).favorLastThird).toBe(false);
   });
 
   it("describes a distillery pour with flavor labels and a find line", () => {

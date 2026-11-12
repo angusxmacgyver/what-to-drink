@@ -42,6 +42,7 @@ export default function App() {
   const [catalog, setCatalog] = useState<Catalog>(seed);
   const libraryVisit = useUndoableFilters();
   const [matchExactly, setMatchExactly] = useState(false);
+  const [favorLastThird, setFavorLastThird] = useState(false);
   const [libraryPick, setLibraryPick] = useState<Bottle | null>(null);
   const [landedId, setLandedId] = useState<string | null>(null);
   const [owner, setOwnerState] = useState(false);
@@ -75,6 +76,7 @@ export default function App() {
       if (!trip) return;
       libraryVisit.setFilters(trip.visit.filters);
       setMatchExactly(trip.visit.exact);
+      setFavorLastThird(trip.visit.favorLastThird);
       setLandedId(trip.bottleId);
       setView("library");
     };
@@ -189,6 +191,8 @@ export default function App() {
           canUndo={libraryVisit.canUndo}
           exact={matchExactly}
           onExact={setMatchExactly}
+          favorLastThird={favorLastThird}
+          onFavorLastThird={setFavorLastThird}
           pick={libraryPick}
           onPick={setLibraryPick}
           landedId={landedId}

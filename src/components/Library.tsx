@@ -30,6 +30,8 @@ type Props = {
   canUndo: boolean;
   exact: boolean;
   onExact: (next: boolean) => void;
+  favorLastThird: boolean;
+  onFavorLastThird: (next: boolean) => void;
   pick: Bottle | null;
   onPick: (next: Bottle | null) => void;
   /** A bottle the fancy wheel landed on, to reveal as the Pick. */
@@ -291,6 +293,8 @@ export function Library({
   canUndo,
   exact,
   onExact,
+  favorLastThird,
+  onFavorLastThird,
   pick,
   onPick,
   landedId = null,
@@ -347,13 +351,13 @@ export function Library({
 
   const makePick = () => {
     if (fancyArmed) {
-      stageFancyPool(pool);
-      stageFancyVisit({ filters, exact });
+      stageFancyPool(pool, favorLastThird);
+      stageFancyVisit({ filters, exact, favorLastThird });
       flushSync(() => setFancyArmed(false));
       window.location.assign(FANCY_PICKER_URL);
       return;
     }
-    const next = choosePour(pool, pick?.id ?? null);
+    const next = choosePour(pool, pick?.id ?? null, Math.random, favorLastThird);
     if (next) reveal(leadBottle(pool, next));
   };
 
@@ -483,14 +487,25 @@ export function Library({
           trayTitle="Applied"
           foot={
             <div className="pick-foot">
-              <label className="fancy-mode">
-                <input
-                  type="checkbox"
-                  checked={fancyArmed}
-                  onChange={(event) => setFancyArmed(event.currentTarget.checked)}
-                />
-                <span>I feel fancy</span>
-              </label>
+              <fieldset className="pick-modifiers">
+                <legend className="eyebrow">Pick modifiers</legend>
+                <label className="fancy-mode">
+                  <input
+                    type="checkbox"
+                    checked={favorLastThird}
+                    onChange={(event) => onFavorLastThird(event.currentTarget.checked)}
+                  />
+                  <span>Favor last third</span>
+                </label>
+                <label className="fancy-mode">
+                  <input
+                    type="checkbox"
+                    checked={fancyArmed}
+                    onChange={(event) => setFancyArmed(event.currentTarget.checked)}
+                  />
+                  <span>I feel fancy</span>
+                </label>
+              </fieldset>
               <button type="button" className="roll" onClick={makePick} disabled={pool.length === 0}>
                 {pool.length ? `Pick from ${pool.length}` : "No pours available"}
               </button>

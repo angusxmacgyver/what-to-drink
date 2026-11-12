@@ -75,6 +75,28 @@ describe("choosePour", () => {
     const secondOpen = { id: "open-2", status: "Open" as const, bottleKey: "hakushu::12" };
     expect(choosePour([open, secondOpen, closed], null, () => 0.9)).toBe(secondOpen);
   });
+
+  describe("tickets under Favor last third", () => {
+    const low = { id: "low", lastThird: true };
+    const full = { id: "full", lastThird: false };
+
+    it("gives every bottle one ticket while it is off", () => {
+      expect(choosePour([low, full], null, () => 0.49)).toBe(low);
+      expect(choosePour([low, full], null, () => 0.5)).toBe(full);
+    });
+
+    it("gives a last-third bottle three tickets and every other bottle one while it is on", () => {
+      expect(choosePour([low, full], null, () => 0.74, true)).toBe(low);
+      expect(choosePour([low, full], null, () => 0.75, true)).toBe(full);
+      expect(choosePour([full, low], null, () => 0.24, true)).toBe(full);
+      expect(choosePour([full, low], null, () => 0.25, true)).toBe(low);
+    });
+
+    it("still skips the last bottle while another can be poured", () => {
+      expect(choosePour([low, full], "full", () => 0.99, true)).toBe(low);
+      expect(choosePour([low, full], "low", () => 0, true)).toBe(full);
+    });
+  });
 });
 
 describe("leadBottle", () => {

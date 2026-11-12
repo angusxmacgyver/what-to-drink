@@ -1,4 +1,9 @@
-type Ticket = { id: string; status?: string; bottleKey?: string };
+type Ticket = { id: string; status?: string; bottleKey?: string; lastThird?: boolean };
+
+/** Favor last third gives a last-third bottle three tickets and every other bottle one. */
+function ticketCount(item: Ticket, favorLastThird: boolean): number {
+  return favorLastThird && item.lastThird ? 3 : 1;
+}
 
 /** Closed bottles are not tickets while an open one of the same expression can be poured. */
 function tickets<T extends Ticket>(pool: T[]): T[] {
@@ -13,12 +18,19 @@ export function choosePour<T extends Ticket>(
   pool: T[],
   lastId: string | null,
   random: () => number = Math.random,
+  favorLastThird = false,
 ): T | null {
   const pourable = tickets(pool);
   if (pourable.length === 0) return null;
   const others = lastId == null ? [] : pourable.filter((item) => item.id !== lastId);
   const choices = others.length > 0 ? others : pourable;
-  return choices[Math.floor(random() * choices.length)] ?? null;
+  const total = choices.reduce((sum, item) => sum + ticketCount(item, favorLastThird), 0);
+  let ticket = random() * total;
+  for (const item of choices) {
+    ticket -= ticketCount(item, favorLastThird);
+    if (ticket < 0) return item;
+  }
+  return choices[choices.length - 1];
 }
 
 /** The bottle to walk to. A closed pick yields to an open one of the same expression. */

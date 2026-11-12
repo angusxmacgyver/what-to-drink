@@ -20,21 +20,23 @@ export function saveResult(bottle, storage = sessionStorage) {
 }
 
 export function consumePool(storage = sessionStorage) {
+  const emptyPool = { bottles: [], favorLastThird: false };
   try {
     const raw = storage.getItem(FANCY_POOL_KEY);
     storage.removeItem(FANCY_POOL_KEY);
-    if (!raw) return [];
+    if (!raw) return emptyPool;
     const payload = JSON.parse(raw);
-    if (payload?.version !== 1 || !Array.isArray(payload.bottles)) return [];
-    return payload.bottles.filter(
+    if (payload?.version !== 1 || !Array.isArray(payload.bottles)) return emptyPool;
+    const bottles = payload.bottles.filter(
       (bottle) =>
         bottle &&
         typeof bottle.id === "string" &&
         typeof bottle.bottleKey === "string" &&
         (bottle.status === "Open" || bottle.status === "Closed"),
     );
+    return { bottles, favorLastThird: payload.favorLastThird === true };
   } catch {
-    return [];
+    return emptyPool;
   }
 }
 
@@ -48,10 +50,19 @@ export function buildEntries(bottles) {
   return [...groups.values()].map((group) => toEntry(group));
 }
 
-export function pickBottle(bottles, previousId = null) {
+/** Favor last third gives a last-third bottle three tickets and every other bottle one. */
+const ticketCount = (bottle, favorLastThird) => (favorLastThird && bottle.lastThird ? 3 : 1);
+
+export function pickBottle(bottles, previousId = null, favorLastThird = false, random = Math.random) {
   if (!bottles.length) return null;
   const choices = bottles.length > 1 ? bottles.filter((bottle) => bottle.id !== previousId) : bottles;
-  return choices[Math.floor(Math.random() * choices.length)];
+  const total = choices.reduce((sum, bottle) => sum + ticketCount(bottle, favorLastThird), 0);
+  let ticket = random() * total;
+  for (const bottle of choices) {
+    ticket -= ticketCount(bottle, favorLastThird);
+    if (ticket < 0) return bottle;
+  }
+  return choices[choices.length - 1];
 }
 
 export function entryForBottle(bottles, picked) {

@@ -18,11 +18,20 @@ describe("stageFancyPool", () => {
       { id: "closed", bottleKey: "ardbeg::10", status: "Closed" },
     ] as Bottle[];
 
-    stageFancyPool(bottles);
+    stageFancyPool(bottles, false);
 
     expect(setItem).toHaveBeenCalledWith(
       FANCY_POOL_KEY,
-      JSON.stringify({ version: 1, bottles }),
+      JSON.stringify({ version: 1, bottles, favorLastThird: false }),
+    );
+  });
+
+  it("tells the wheel when Favor last third is on", () => {
+    stageFancyPool([], true);
+
+    expect(setItem).toHaveBeenCalledWith(
+      FANCY_POOL_KEY,
+      JSON.stringify({ version: 1, bottles: [], favorLastThird: true }),
     );
   });
 });
@@ -41,7 +50,11 @@ describe("the fancy round trip", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  const visit = { filters: { ...emptyFilters(), place: "apartment" as const, families: ["Smoke"] }, exact: true };
+  const visit = {
+    filters: { ...emptyFilters(), place: "apartment" as const, families: ["Smoke"] },
+    exact: true,
+    favorLastThird: true,
+  };
 
   it("returns the staged visit and the landed bottle once", () => {
     stageFancyVisit(visit);
@@ -55,6 +68,12 @@ describe("the fancy round trip", () => {
     stageFancyVisit(visit);
 
     expect(consumeFancyReturn()).toEqual({ visit, bottleId: null });
+  });
+
+  it("reads a visit staged without Favor last third as having it off", () => {
+    stored.set("what-to-drink-fancy-visit", JSON.stringify({ version: 1, filters: visit.filters, exact: true }));
+
+    expect(consumeFancyReturn()?.visit.favorLastThird).toBe(false);
   });
 
   it("ignores a result that no staged visit asked for, and discards it", () => {

@@ -1419,6 +1419,8 @@ nav button.on,
 .fancy-mode input { width: 18px; height: 18px; margin: 0; accent-color: var(--gold); }
 .pick-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: none; }
 .pick-foot .fancy-mode { padding-top: 0; }
+.pick-modifiers { display: flex; flex-wrap: wrap; gap: 6px 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.pick-modifiers legend { padding: 0; }
 .drawer .filters { margin-bottom: 0; }
 .drawer .hist-pair { grid-template-columns: 1fr; }
 .drawer .chipset-hint { grid-column: 1 / -1; }
