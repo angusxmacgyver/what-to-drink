@@ -75,7 +75,7 @@ One bottle chosen at random, from the bottles the Library is showing, to walk to
 _Avoid_: Pour, dram, Pick criteria
 
 **Dram**:
-A recorded taking from one live bottle. It stays with that bottle until the bottle is killed, and it is not removed one at a time.
+A recorded taking from one bottle. It stays with that bottle, in the graveyard too, and it is not removed one at a time.
 _Avoid_: Pour, pick, glass
 
 **Dram count**:
@@ -103,9 +103,13 @@ A bottle whose remaining whisky is in its last third.
 _Avoid_: Low, nearly empty, running out
 
 **Graveyard**:
-A killed bottle, kept as its details, the day it was finished, and whether a kill shot finished it. It is no longer in the Library and cannot be picked.
+A killed bottle, kept as its details, its drams, the day it was finished, and whether a kill shot finished it. It is no longer in the Library and cannot be picked.
 _Avoid_: Empty, fallen
 
 **Date finished**:
 The day a bottle was sent to the graveyard.
 _Avoid_: Date emptied
+
+**Revive**:
+Returning a graveyard bottle to the Library as an open bottle. A kill shot that finished it becomes an ordinary dram.
+_Avoid_: Undo kill, restore
