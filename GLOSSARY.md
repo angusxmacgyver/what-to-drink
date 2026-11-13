@@ -42,6 +42,24 @@ _Avoid_: Primary cask, cask type
 The Society's own account of how a Society bottle moved between casks. It is shown with the bottle and is not a secondary cask.
 _Avoid_: Secondary cask, finish
 
+## Flavor
+
+**Flavor Wheel**:
+The vocabulary for how a bottle tastes, in three levels: Family, Subgroup, and Descriptor, as in Fruity, Citric, orange. It is not the fancy wheel. A bottle with none recorded has not been tasted for it yet.
+_Avoid_: Flavor taxonomy, flavor families, fancy wheel
+
+**Family**:
+The top level of the Flavor Wheel, such as Fruity. Each Family has its own color, which everything under it shares.
+_Avoid_: Flavor family, category
+
+**Subgroup**:
+The middle level of the Flavor Wheel. Each Subgroup belongs to exactly one Family, as Citric belongs to Fruity.
+_Avoid_: Sub-characteristic, sub-category
+
+**Descriptor**:
+The bottom level of the Flavor Wheel. Each Descriptor belongs to exactly one Subgroup, as orange belongs to Citric.
+_Avoid_: Flavor note, tasting note, tag
+
 ## Choosing bottles
 
 **Library filters**:
