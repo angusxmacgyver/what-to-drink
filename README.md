@@ -55,6 +55,7 @@ Work that is not built yet is listed in [PROJECT.md](PROJECT.md).
 
 What shipped, newest first. Each entry is the date the work landed on `main`.
 
+- **13 Nov 2026:** Graveyard bottles keep their drams. A Kill keeps the bottle's dram list, Download bottles.json carries each Graveyard bottle's drams, and a full replace restores them onto the same bottle ids, while a file without them reads them as none and warns no more than before. ([#50](https://github.com/angusxmacgyver/what-to-drink/issues/50))
 - **12 Nov 2026:** I feel fancy draws the same way a Pick does: the fancy wheel never lands on a backup while its expression has an open bottle showing. ([#48](https://github.com/angusxmacgyver/what-to-drink/issues/48))
 - **12 Nov 2026:** The Library drawer has a Pick modifiers section with Favor last third, which gives each last-third bottle three tickets to every other bottle's one without hiding any bottle, stays on until turned off or reload, and also weights where I feel fancy lands the wheel. ([#44](https://github.com/angusxmacgyver/what-to-drink/issues/44))
 - **12 Nov 2026:** The Library's Status filters offer Last third, with a live count. It narrows whatever else is picked, so Islay plus Last third shows last-third Islay bottles, it shows in the Applied tray, and a Pick draws only from the bottles it leaves showing. ([#43](https://github.com/angusxmacgyver/what-to-drink/issues/43))

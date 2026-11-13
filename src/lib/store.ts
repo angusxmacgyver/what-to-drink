@@ -52,7 +52,7 @@ export function readCatalog(raw: unknown): Catalog {
   return {
     ...catalog,
     bottles: (catalog.bottles ?? []).map(readBottle),
-    graveyard: (catalog.graveyard ?? []).map((bottle) => ({ ...readBottle(bottle), drams: [] })),
+    graveyard: (catalog.graveyard ?? []).map(readBottle),
     recentlyPoured: recentlyPoured.slice(0, RECENTLY_POURED_LIMIT),
   };
 }

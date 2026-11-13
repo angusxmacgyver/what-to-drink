@@ -7,6 +7,7 @@ import {
   catalogFromDocument,
   fetchRemoteCatalog,
   isOwner,
+  killBottle,
   loadLibraryLayout,
   loadStoredCatalog,
   replaceCatalog,
@@ -150,7 +151,16 @@ describe("the catalog document", () => {
       { ...bottle("poured"), drams: ["2026-11-01T20:00:00.000Z", "2026-11-02T21:30:00.000Z"], lastThird: true },
       bottle("untouched"),
     ],
-    graveyard: [{ ...bottle("finished"), status: "Killed", dateEmptied: "2026-11-03", killShot: true }],
+    graveyard: [
+      {
+        ...bottle("finished"),
+        status: "Killed",
+        dateEmptied: "2026-11-03",
+        drams: ["2026-10-30T19:00:00.000Z", "2026-11-03T22:00:00.000Z"],
+        lastThird: true,
+        killShot: true,
+      },
+    ],
     recentlyPoured: [
       { bottleId: "finished", at: "2026-11-03T22:00:00.000Z", killShot: true },
       { bottleId: "poured", at: "2026-11-02T21:30:00.000Z", killShot: false },
@@ -158,7 +168,7 @@ describe("the catalog document", () => {
     ],
   };
 
-  it("restores drams, last third, kill shot, and Recently poured onto the same bottle ids", () => {
+  it("restores drams, last third, kill shot, graveyard drams, and Recently poured onto the same bottle ids", () => {
     expect(catalogFromDocument(catalogDocument(history))).toEqual(history);
   });
 
@@ -185,9 +195,16 @@ describe("the catalog document", () => {
     expect(read.recentlyPoured.map((line) => line.at)).toEqual(lines.slice(0, 25).map((line) => line.at));
   });
 
-  it("reads a graveyard bottle with an empty dram list", () => {
-    const stray = { ...history, graveyard: [{ ...history.graveyard[0], drams: ["2026-11-03T22:00:00.000Z"] }] };
-    expect(catalogFromDocument(JSON.stringify(stray)).graveyard[0].drams).toEqual([]);
+  it("reads a graveyard bottle without drams as having none, and round-trips it", () => {
+    const { drams: _d, ...noDrams } = history.graveyard[0];
+    const read = catalogFromDocument(JSON.stringify({ ...history, graveyard: [noDrams] }));
+    expect(read.graveyard[0].drams).toEqual([]);
+    expect(catalogFromDocument(catalogDocument(read))).toEqual(read);
+  });
+
+  it("still carries the dram history when graveyard bottles have no drams", () => {
+    const { drams: _d, ...noDrams } = history.graveyard[0];
+    expect(carriesDramHistory(JSON.stringify({ ...history, graveyard: [noDrams] }))).toBe(true);
   });
 
   it("carries the dram history when every bottle has its drams and last third, every graveyard bottle its kill shot, and Recently poured is present", () => {
@@ -210,6 +227,15 @@ describe("the catalog document", () => {
   it("refuses a file that is not a catalog", () => {
     expect(() => catalogFromDocument("not json{")).toThrow();
     expect(() => catalogFromDocument(JSON.stringify({ bottles: "nope" }))).toThrow();
+  });
+});
+
+describe("killBottle", () => {
+  it("keeps the bottle's drams on its graveyard entry", () => {
+    const poured = { ...bottle("poured"), drams: ["2026-11-01T20:00:00.000Z", "2026-11-02T21:30:00.000Z"] };
+    const next = killBottle(catalog([poured, bottle("other")]), "poured");
+    expect(next.bottles.map((b) => b.id)).toEqual(["other"]);
+    expect(next.graveyard).toEqual([expect.objectContaining({ id: "poured", status: "Killed", drams: poured.drams })]);
   });
 });
 
