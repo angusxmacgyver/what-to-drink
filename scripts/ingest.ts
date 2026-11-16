@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as XLSX from "xlsx";
 import { importWorkbook } from "../src/lib/ingest.ts";
-import { describeWheelReport } from "../src/lib/wheelReport.ts";
+import { wheelReportSummary } from "../src/lib/wheelReport.ts";
 
 const DEFAULT_XLSX =
   "/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 7 .xlsx";
@@ -52,4 +52,4 @@ console.log(
     2,
   ),
 );
-console.log(`\n${describeWheelReport(report).join("\n")}`);
+console.log(["", wheelReportSummary(report), ...report.map((finding) => finding.text)].join("\n"));

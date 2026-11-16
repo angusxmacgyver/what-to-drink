@@ -60,6 +60,18 @@ _Avoid_: Sub-characteristic, sub-category
 The bottom level of the Flavor Wheel. Each Descriptor belongs to exactly one Subgroup, as orange belongs to Citric.
 _Avoid_: Flavor note, tasting note, tag
 
+**Stray term**:
+A Family, Subgroup, or Descriptor on a bottle that matches nothing on the Flavor Wheel. It shows as typed, in no Family's color.
+_Avoid_: Unknown term, orphan
+
+**Missing parent**:
+A Descriptor on a bottle without any Subgroup it belongs to, or a Subgroup without any Family it belongs to.
+_Avoid_: Orphan, missing Family
+
+**Wheel report**:
+What in a workbook does not fit its Flavor Wheel, such as stray terms and missing parents, shown before an import is saved. It never stops an import.
+_Avoid_: Dry run, validation, wheel errors
+
 ## Choosing bottles
 
 **Library filters**:

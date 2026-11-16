@@ -45,12 +45,13 @@ export function familyClass(family: string): string {
 
 const WHEEL_COLORS = new Set(["yellow", "orange", "violet", "green", "blue", "grey", "brown", "red"]);
 
-export function isWheelColor(colorName: string): boolean {
-  return WHEEL_COLORS.has(colorName.trim().toLowerCase());
+export function wheelColorClass(colorName: string): string {
+  const name = colorName.trim().toLowerCase();
+  return WHEEL_COLORS.has(name) ? `wheel-${name}` : "wheel-neutral";
 }
 
-export function wheelColorClass(colorName: string): string {
-  return isWheelColor(colorName) ? `wheel-${colorName.trim().toLowerCase()}` : "wheel-neutral";
+export function isWheelColor(colorName: string): boolean {
+  return wheelColorClass(colorName) !== "wheel-neutral";
 }
 
 export function subFamilyClass(sub: string, selectedFamily?: string): string {

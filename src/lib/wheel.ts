@@ -5,7 +5,7 @@ export type WheelLevel = "family" | "subgroup" | "descriptor";
 /** A bottle's term placed on the Flavor Wheel. A stray term keeps its own spelling and has no Family. */
 export type PlacedTerm = { label: string; family: string | null; color: string };
 
-const sameTerm = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+export const sameTerm = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 function termsAt(family: WheelFamily, level: WheelLevel): string[] {
   if (level === "family") return [family.name];
@@ -19,6 +19,17 @@ export function placeTerm(wheel: WheelFamily[], level: WheelLevel, term: string)
     if (label !== undefined) return { label, family: family.name, color: family.color };
   }
   return { label: term, family: null, color: "" };
+}
+
+export function parentsOf(wheel: WheelFamily[], level: WheelLevel, term: string): string[] {
+  if (level === "subgroup") {
+    return wheel.filter((family) => family.subgroups.some((s) => sameTerm(s.name, term))).map((family) => family.name);
+  }
+  if (level === "descriptor") {
+    const subgroups = wheel.flatMap((family) => family.subgroups);
+    return subgroups.filter((s) => s.descriptors.some((d) => sameTerm(d, term))).map((s) => s.name);
+  }
+  return [];
 }
 
 export type SubgroupCluster = { subgroup: string; color: string; descriptors: string[] };

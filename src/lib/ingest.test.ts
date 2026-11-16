@@ -80,9 +80,27 @@ describe("Flavor Wheel import", () => {
     ]);
   });
 
-  it("reports a workbook without the tab as missing it", () => {
+  it("reports a workbook without the tab, or with a tab that has no Family header row, as missing it", () => {
     const { report } = importWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] }));
     expect(report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+    const headless = importWorkbook(glossary([["Fruity", "Orange", "Citric", "orange"]]));
+    expect(headless.catalog.wheel).toEqual([]);
+    expect(headless.report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+  });
+
+  it("gives a Family the color from its first row that has one, and reports a second color", () => {
+    const { catalog, report } = importWorkbook(
+      glossary([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "", "Citric", "orange"],
+        ["Fruity", "Orange", "Dried Fruit", "raisin"],
+        ["Fruity", "Red", "Tropical", "mango"],
+      ]),
+    );
+    expect(catalog.wheel.map((family) => family.color)).toEqual(["Orange"]);
+    expect(report.map((finding) => finding.text)).toEqual([
+      'Conflicting colors in the Wheel Glossary: Family "Fruity" is given Orange and Red.',
+    ]);
   });
 });
 

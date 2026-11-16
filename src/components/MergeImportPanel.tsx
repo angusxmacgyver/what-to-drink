@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Bottle, Catalog } from "../types";
 import { planMerge } from "../lib/merge";
 import type { MergeRow } from "../lib/merge";
+import { wheelReportSummary, type WheelFinding } from "../lib/wheelReport";
 
 export function MergeImportPanel({
   catalog,
@@ -11,10 +12,12 @@ export function MergeImportPanel({
   onConfirm: (bottles: Bottle[]) => boolean | Promise<boolean>;
 }) {
   const [rows, setRows] = useState<MergeRow[] | null>(null);
+  const [report, setReport] = useState<WheelFinding[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const reset = () => {
     setRows(null);
+    setReport([]);
     setSelected(new Set());
   };
 
@@ -40,17 +43,28 @@ export function MergeImportPanel({
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            const { catalogFromArrayBuffer } = await import("../lib/ingest");
+            const { importArrayBuffer } = await import("../lib/ingest");
             const buffer = await file.arrayBuffer();
-            const incoming = catalogFromArrayBuffer(buffer).bottles;
-            const plan = planMerge(catalog.bottles, incoming);
+            const imported = importArrayBuffer(buffer);
+            const plan = planMerge(catalog.bottles, imported.catalog.bottles);
             setRows(plan);
+            setReport(imported.report);
             setSelected(new Set(plan.filter((r) => !r.duplicateOf).map((r) => r.bottle.id)));
             e.target.value = "";
           }}
         />
       ) : (
         <>
+          <section className="notice wheel-report" aria-label="Wheel report">
+            <p>{wheelReportSummary(report)}</p>
+            {report.length ? (
+              <ul>
+                {report.map((finding, index) => (
+                  <li key={index}>{finding.text}</li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
           {rows.length === 0 ? <p className="hint">No bottles found in that file.</p> : null}
           <ul className="merge-preview">
             {rows.map((row) => (
