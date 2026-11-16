@@ -14,7 +14,6 @@
   --on-gold: #2b1710;
   --line-strong: #7a4f30;
   --row-hover: #35200f;
-  --tag-family-bg: #472a15;
   --card-bg: #33200f;
   --danger-ink: #ffd8cc;
   --notice-bg: #4a3111;
@@ -55,7 +54,6 @@
   --on-gold: #fdf8ee;
   --line-strong: #a1552b;
   --row-hover: #e6d7bb;
-  --tag-family-bg: #e8d5ac;
   --card-bg: #fff8ec;
   --danger-ink: #6b1f0f;
   --notice-bg: #f0dfb8;
@@ -713,10 +711,6 @@ nav button.on,
   padding-bottom: 8px;
 }
 
-.row.open .row-flavors:not(:empty) {
-  padding-top: 4px;
-}
-
 .row-main.grave {
   grid-template-columns: minmax(220px, 2.2fr) 70px 80px 160px;
 }
@@ -732,7 +726,9 @@ nav button.on,
   border-bottom: 1px solid var(--line);
 }
 
-.row-main:hover {
+.row-main:hover,
+.row:not(.open):has(.row-flavors:hover) .row-main,
+.row:not(.open):has(.row-main:hover, .row-flavors:hover) .row-flavors {
   background: var(--row-hover);
 }
 
@@ -803,13 +799,7 @@ nav button.on,
 }
 
 .flavor-cluster-label { color: var(--ink); letter-spacing: 0.06em; }
-.grouped .tag.family { background: color-mix(in srgb, var(--family-color) 32%, var(--bg-2)); font-weight: 700; }
-
-.flavor-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.flavors.toggles { cursor: pointer; }
 
 .tag {
   display: inline-block;
@@ -822,18 +812,6 @@ nav button.on,
   font-size: 12px;
   letter-spacing: 0.02em;
   line-height: 1.4;
-}
-
-.tag.family {
-  background: var(--tag-family-bg);
-  border: 1px solid var(--line-strong);
-  color: var(--ink);
-}
-
-.tag.sub {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--muted);
 }
 
 .family-coastal { --family-color: var(--family-coastal); }
@@ -896,24 +874,6 @@ nav button.on,
 .smws-theme-bold-peaty { --family-color: #078648; }
 .smws-theme-smoky-fruity { --family-color: #78bb43; }
 .smws-theme-other { --family-color: var(--line-strong); }
-
-.tag.family[class*="family-"] {
-  background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
-  border-color: var(--family-color);
-  color: var(--ink);
-}
-
-.tag.sub[class*="family-"] {
-  background: color-mix(in srgb, var(--family-color) 14%, var(--bg-2));
-  border-color: var(--family-color);
-}
-
-.tag.matched[class*="family-"] {
-  background: var(--family-color);
-  border-color: var(--family-color);
-  color: var(--on-gold);
-  font-weight: 700;
-}
 
 .chip[class*="family-"] {
   background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
@@ -1133,7 +1093,7 @@ nav button.on,
   padding: 16px 18px 18px;
 }
 
-.library-grid > .detail .flavors { margin-top: 12px; }
+.detail .flavors { margin-top: 12px; }
 
 .theme-toggle,
 .lock-toggle {

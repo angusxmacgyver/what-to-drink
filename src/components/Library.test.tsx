@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Bottle, WheelFamily } from "../types";
 import { emptyFilters } from "../types";
@@ -68,7 +68,10 @@ const hakushu = bottle({
 });
 const bottles = [closedBottle, openBottle, hakushu];
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 beforeEach(() => {
   const store = new Map<string, string>();
@@ -82,7 +85,7 @@ beforeEach(() => {
 describe("Library layout", () => {
   it("defaults to a list grouped by distillery with section counts", () => {
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
+      <Library bottles={bottles} wheel={[]} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">List');
     expect(html).toContain('aria-pressed="false">Grid');
@@ -104,7 +107,7 @@ describe("Library layout", () => {
 
   it("shows a shared filter on the page and keeps the controls in the drawer", () => {
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={{ ...emptyFilters(), countries: ["USA"] }} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
+      <Library bottles={bottles} wheel={[]} filters={{ ...emptyFilters(), countries: ["USA"] }} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
     );
     expect(html).toContain("filters-badge");
     expect(html).toContain(">1<");
@@ -117,7 +120,7 @@ describe("Library layout", () => {
   it("opens a grouped grid with full accessible names and no repeated maker labels", () => {
     localStorage.setItem("what-to-drink-library-layout", "grid");
     const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
+      <Library bottles={bottles} wheel={[]} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
     );
     expect(html).toContain('aria-pressed="true">Grid');
     expect(html).not.toContain('class="list"');
@@ -142,7 +145,7 @@ describe("expression detail", () => {
 
   it("shows the open bottle once and lists the others as status and location", () => {
     const html = renderToStaticMarkup(
-      <ExpressionDetail bottles={[closedBottle, openBottle]} owner={false} />,
+      <ExpressionDetail bottles={[closedBottle, openBottle]} wheel={[]} owner={false} />,
     );
     expect(html.match(/bottle-fields/g)).toHaveLength(1);
     expect(html).toContain("OPEN-NOTE");
@@ -156,7 +159,7 @@ describe("expression detail", () => {
   });
 
   it("no longer shows Flavor Families or Sub-Characteristics", () => {
-    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} groupedFlavors owner={false} />);
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} wheel={[]} groupedFlavors owner={false} />);
     expect(html).not.toContain("Smoke");
     expect(html).not.toContain("Honey");
   });
@@ -164,27 +167,27 @@ describe("expression detail", () => {
   it("groups grid characteristics by Subgroup, in the Family's color", () => {
     const html = renderToStaticMarkup(<ExpressionDetail bottles={[tasted]} wheel={wheel} groupedFlavors owner={false} />);
     expect(html).toContain(">Characteristics<");
-    expect(html).toContain('class="flavor-cluster wheel-green" aria-label="Medicinal characteristics"');
+    expect(html).toContain('class="flavor-cluster wheel-green" role="group" aria-label="Medicinal"');
     expect(html).toContain('<span class="flavor-cluster-label">Medicinal</span>');
     expect(html).toContain('class="tag wheel-term term-descriptor wheel-green">iodine<');
   });
 
   it("shows primary cask and secondary cask in the Library detail", () => {
     const drum = bottle({ primaryCask: ["Ex-bourbon", "Oloroso sherry"], secondaryCask: ["Rum"] });
-    const html = renderToStaticMarkup(<ExpressionDetail bottles={[drum]} owner={false} />);
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[drum]} wheel={[]} owner={false} />);
     expect(html).toContain("<dt>Primary cask</dt><dd>Ex-bourbon · Oloroso sherry</dd>");
     expect(html).toContain("<dt>Secondary cask</dt><dd>Rum</dd>");
   });
 
   it("leaves out cask fields for a bottle with no casks recorded", () => {
-    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} owner={false} />);
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} wheel={[]} owner={false} />);
     expect(html).not.toContain("Primary cask");
     expect(html).not.toContain("Secondary cask");
   });
 
   it("puts Mark open, Edit, and Kill on each physical bottle", () => {
     const html = renderToStaticMarkup(
-      <ExpressionDetail bottles={[closedBottle, openBottle]} owner {...actions} />,
+      <ExpressionDetail bottles={[closedBottle, openBottle]} wheel={[]} owner {...actions} />,
     );
     const lines = [...html.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((match) => match[1]);
     const open = lines.find((line) => line.includes("Open · Bar"));
@@ -274,6 +277,24 @@ describe("Flavor Wheel terms", () => {
     expect(html.match(/>Characteristics</g)).toHaveLength(1);
   });
 
+  it("puts an opened list row's owner actions after its characteristics", () => {
+    const html = renderToStaticMarkup(
+      <Library bottles={[tasted]} wheel={wheel} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={tasted} onPick={() => {}} owner onEdit={() => {}} />,
+    );
+    expect(html.indexOf(">Edit<")).toBeGreaterThan(html.indexOf(">Characteristics<"));
+  });
+
+  it("opens and closes a list row from its characteristics", async () => {
+    render(
+      <Library bottles={[tasted]} wheel={wheel} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
+    );
+    const row = screen.getByRole("button", { name: /Spectacular/ });
+    await userEvent.click(screen.getByText("iodine"));
+    expect(row.getAttribute("aria-expanded")).toBe("true");
+    await userEvent.click(screen.getByText("iodine"));
+    expect(row.getAttribute("aria-expanded")).toBe("false");
+  });
+
   it("shows nothing for a bottle not tasted for the wheel yet", () => {
     const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} wheel={wheel} owner={false} />);
     expect(html).not.toContain("wheel-term");
@@ -306,7 +327,7 @@ describe("Flavor Wheel terms", () => {
 describe("library card", () => {
   it("keeps the full name on the card", () => {
     const [row] = groupLibrary([openBottle, closedBottle]);
-    const html = renderToStaticMarkup(<LibraryCard row={row} expanded={false} onToggle={() => {}} />);
+    const html = renderToStaticMarkup(<LibraryCard row={row} wheel={[]} expanded={false} onToggle={() => {}} />);
     expect(html).toContain('aria-label="Ardbeg Spectacular"');
     expect(html).toContain('title="Ardbeg Spectacular"');
     expect(html).toContain(">×2<");

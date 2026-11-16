@@ -50,9 +50,9 @@ describe("subgroupClusters", () => {
     wheelDescriptors: descriptors,
   });
 
-  it("gathers each Subgroup's Descriptors under it in its Family's color, in wheel order", () => {
+  it("gathers each Subgroup's Descriptors under it in its Family's color, Subgroups in wheel order", () => {
     expect(subgroupClusters(wheel, [terms(["medicinal", "Citric"], ["iodine", "LEMON ZEST", "orange"])])).toEqual([
-      { subgroup: "Citric", color: "Orange", descriptors: ["orange", "lemon zest"] },
+      { subgroup: "Citric", color: "Orange", descriptors: ["lemon zest", "orange"] },
       { subgroup: "Medicinal", color: "Green", descriptors: ["iodine"] },
     ]);
   });
@@ -75,6 +75,13 @@ describe("subgroupClusters", () => {
     expect(subgroupClusters(wheel, [terms(["Citrus", "Citric"], ["orange", "raisins", "Raisins"])])).toEqual([
       { subgroup: "Citric", color: "Orange", descriptors: ["orange"] },
       { subgroup: "Citrus", color: "", descriptors: [] },
+      { subgroup: "Other", color: "", descriptors: ["raisins"] },
+    ]);
+  });
+
+  it("folds a stray Subgroup typed as Other into the Other cluster", () => {
+    expect(subgroupClusters(wheel, [terms(["other"], [])])).toEqual([{ subgroup: "Other", color: "", descriptors: [] }]);
+    expect(subgroupClusters(wheel, [terms(["Other"], ["raisins"])])).toEqual([
       { subgroup: "Other", color: "", descriptors: ["raisins"] },
     ]);
   });

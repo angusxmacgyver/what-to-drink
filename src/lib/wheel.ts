@@ -25,28 +25,33 @@ export type SubgroupCluster = { subgroup: string; color: string; descriptors: st
 
 type WheelTerms = Pick<Bottle, "wheelFamilies" | "wheelSubgroups" | "wheelDescriptors">;
 
-/**
- * The Subgroups of the given bottles, each with their Descriptors, in wheel order. A Descriptor shows under its
- * wheel Subgroup even when the bottle does not list that Subgroup. Stray Subgroups follow, then stray Descriptors.
- */
+export function bottleFamilies(wheel: WheelFamily[], bottles: Pick<Bottle, "wheelFamilies">[]): PlacedTerm[] {
+  return placeTerms(wheel, "family", bottles.flatMap((b) => b.wheelFamilies));
+}
+
+const OTHER = "Other";
+
+/** A Descriptor shows under its wheel Subgroup even when the bottle does not list that Subgroup. */
 export function subgroupClusters(wheel: WheelFamily[], bottles: WheelTerms[]): SubgroupCluster[] {
   const subgroups = bottles.flatMap((b) => b.wheelSubgroups);
-  const descriptors = bottles.flatMap((b) => b.wheelDescriptors);
-  const listed = (terms: string[], name: string) => terms.some((term) => sameTerm(term, name));
+  const descriptors = placeTerms(wheel, "descriptor", bottles.flatMap((b) => b.wheelDescriptors));
   const clusters: SubgroupCluster[] = [];
   for (const family of wheel) {
     for (const subgroup of family.subgroups) {
-      const found = subgroup.descriptors.filter((name) => listed(descriptors, name));
-      if (found.length || listed(subgroups, subgroup.name)) {
+      const found = descriptors.filter((d) => subgroup.descriptors.includes(d.label)).map((d) => d.label);
+      if (found.length || subgroups.some((term) => sameTerm(term, subgroup.name))) {
         clusters.push({ subgroup: subgroup.name, color: family.color, descriptors: found });
       }
     }
   }
-  const stray = (level: WheelLevel, terms: string[]) =>
-    placeTerms(wheel, level, terms).filter((term) => term.family === null).map((term) => term.label);
-  for (const subgroup of stray("subgroup", subgroups)) clusters.push({ subgroup, color: "", descriptors: [] });
-  const strayDescriptors = stray("descriptor", descriptors);
-  if (strayDescriptors.length) clusters.push({ subgroup: "Other", color: "", descriptors: strayDescriptors });
+  const straySubgroups = placeTerms(wheel, "subgroup", subgroups).filter((term) => term.family === null);
+  for (const { label } of straySubgroups) {
+    if (!sameTerm(label, OTHER)) clusters.push({ subgroup: label, color: "", descriptors: [] });
+  }
+  const strayDescriptors = descriptors.filter((d) => d.family === null).map((d) => d.label);
+  if (strayDescriptors.length || straySubgroups.some(({ label }) => sameTerm(label, OTHER))) {
+    clusters.push({ subgroup: OTHER, color: "", descriptors: strayDescriptors });
+  }
   return clusters;
 }
 

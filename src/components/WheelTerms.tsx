@@ -1,20 +1,23 @@
 import type { Bottle, WheelFamily } from "../types";
 import { wheelColorClass } from "../lib/colors";
-import { placeTerms, subgroupClusters } from "../lib/wheel";
+import { bottleFamilies, subgroupClusters } from "../lib/wheel";
 
-export function WheelClusters({ wheel, bottles }: { wheel: WheelFamily[]; bottles: Bottle[] }) {
+type Terms = { wheel: WheelFamily[]; bottles: Bottle[] };
+
+export function WheelClusters({ wheel, bottles, onClick }: Terms & { onClick?: () => void }) {
   const clusters = subgroupClusters(wheel, bottles);
   if (!clusters.length) return null;
   return (
-    <div className="flavors grouped">
+    <div className={onClick ? "flavors grouped toggles" : "flavors grouped"} onClick={onClick}>
       <div className="flavor-lane">
         <span className="flavor-lane-label">Characteristics</span>
         <div className="flavor-lane-content">
           {clusters.map(({ subgroup, color, descriptors }) => (
             <div
-              key={subgroup}
+              key={`${color}|${subgroup}`}
               className={`flavor-cluster ${wheelColorClass(color)}`}
-              aria-label={`${subgroup} characteristics`}
+              role="group"
+              aria-label={subgroup}
             >
               <span className="flavor-cluster-label">{subgroup}</span>
               {descriptors.map((descriptor) => (
@@ -30,11 +33,11 @@ export function WheelClusters({ wheel, bottles }: { wheel: WheelFamily[]; bottle
   );
 }
 
-export function WheelFamilies({ wheel, bottles }: { wheel: WheelFamily[]; bottles: Bottle[] }) {
-  const families = placeTerms(wheel, "family", bottles.flatMap((b) => b.wheelFamilies));
+export function WheelFamilies({ wheel, bottles }: Terms) {
+  const families = bottleFamilies(wheel, bottles);
   if (!families.length) return null;
   return (
-    <div className="flavors wheel-terms">
+    <div className="flavors">
       <div className="flavor-lane">
         <span className="flavor-lane-label">Families</span>
         <div className="flavor-lane-content">

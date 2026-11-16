@@ -9,8 +9,6 @@ export type LibraryRow = {
   ageLabel: string;
   abvLabel: string;
   theme: string;
-  flavorFamilies: string[];
-  subCharacteristics: string[];
   stock: number;
 };
 
@@ -134,8 +132,6 @@ export function groupLibrary(bottles: Bottle[]): LibraryRow[] {
       ageLabel: ageLabel(group),
       abvLabel: abvLabel(group),
       theme: group.find((b) => b.theme)?.theme || first.theme || "—",
-      flavorFamilies: uniqueTags(group.flatMap((b) => b.flavorFamilies)),
-      subCharacteristics: uniqueTags(group.flatMap((b) => b.subCharacteristics)),
       stock: group.length,
     });
   }

@@ -13,7 +13,7 @@ import {
   type LibraryRow,
 } from "../lib/library";
 import { choosePour, leadBottle, prefersReducedMotion, revealCard, settlePick } from "../lib/pour";
-import { placeTerms } from "../lib/wheel";
+import { bottleFamilies } from "../lib/wheel";
 import { mostConstrainingChip } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
@@ -24,7 +24,7 @@ import { WheelClusters, WheelFamilies } from "./WheelTerms";
 
 type Props = {
   bottles: Bottle[];
-  wheel?: WheelFamily[];
+  wheel: WheelFamily[];
   filters: FilterState;
   onFilters: (next: FilterState) => void;
   onUndo: () => void;
@@ -78,10 +78,10 @@ export function LibraryCard({
   where,
   cardId,
   showDistillery = true,
-  wheel = [],
+  wheel,
 }: {
   row: LibraryRow;
-  wheel?: WheelFamily[];
+  wheel: WheelFamily[];
   expanded: boolean;
   onToggle: () => void;
   picked?: boolean;
@@ -91,7 +91,7 @@ export function LibraryCard({
   showDistillery?: boolean;
 }) {
   const shown = detailBottle(row.bottles);
-  const families = placeTerms(wheel, "family", row.bottles.flatMap((b) => b.wheelFamilies));
+  const families = bottleFamilies(wheel, row.bottles);
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
@@ -155,14 +155,16 @@ export function DistilleryHeader({
 
 export function ExpressionDetail({
   bottles,
-  wheel = [],
+  wheel,
   groupedFlavors = false,
+  onFlavorsClick,
   landed = false,
   ...actions
 }: Actions & {
   bottles: Bottle[];
-  wheel?: WheelFamily[];
+  wheel: WheelFamily[];
   groupedFlavors?: boolean;
+  onFlavorsClick?: () => void;
   landed?: boolean;
 }) {
   const shown = detailBottle(bottles);
@@ -170,7 +172,7 @@ export function ExpressionDetail({
     <div className={landed ? "detail landed" : "detail"}>
       <BottleFields bottle={shown} />
       <WheelFamilies wheel={wheel} bottles={bottles} />
-      {groupedFlavors ? <WheelClusters wheel={wheel} bottles={bottles} /> : null}
+      {groupedFlavors ? <WheelClusters wheel={wheel} bottles={bottles} onClick={onFlavorsClick} /> : null}
       {bottles.length > 1 ? (
         <ul className="bottle-splits">
           {bottles.map((bottle) => (
@@ -273,10 +275,20 @@ function DistillerySection({
                 <span className={`theme ${smwsThemeClass(row.theme)}`}>{row.theme}</span>
                 {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
               </button>
-              {expanded ? <ExpressionDetail bottles={row.bottles} wheel={wheel} landed={landed} {...actions} /> : null}
-              <div className="row-flavors">
-                <WheelClusters wheel={wheel} bottles={row.bottles} />
-              </div>
+              {expanded ? (
+                <ExpressionDetail
+                  bottles={row.bottles}
+                  wheel={wheel}
+                  groupedFlavors
+                  onFlavorsClick={() => onToggle(row.bottleKey)}
+                  landed={landed}
+                  {...actions}
+                />
+              ) : (
+                <div className="row-flavors">
+                  <WheelClusters wheel={wheel} bottles={row.bottles} onClick={() => onToggle(row.bottleKey)} />
+                </div>
+              )}
             </article>
           );
         })}
@@ -287,7 +299,7 @@ function DistillerySection({
 
 export function Library({
   bottles,
-  wheel = [],
+  wheel,
   filters,
   onFilters,
   onUndo,
