@@ -81,11 +81,24 @@ describe("Flavor Wheel import", () => {
   });
 
   it("reports a workbook without the tab, or with a tab that has no Family header row, as missing it", () => {
-    const { report } = importWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] }));
+    const { report, wheel } = importWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] }));
     expect(report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+    expect(wheel).toBeNull();
     const headless = importWorkbook(glossary([["Fruity", "Orange", "Citric", "orange"]]));
     expect(headless.catalog.wheel).toEqual([]);
+    expect(headless.wheel).toBeNull();
     expect(headless.report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+  });
+
+  it("hands a merge the wheel it read from the tab", () => {
+    const imported = importWorkbook(
+      glossary([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange"],
+      ]),
+    );
+    expect(imported.wheel).toEqual(imported.catalog.wheel);
+    expect(imported.wheel).toHaveLength(1);
   });
 
   it("gives a Family the color from its first row that has one, and reports a second color", () => {

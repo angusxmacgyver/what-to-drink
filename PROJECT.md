@@ -168,7 +168,7 @@ The catalog lives in Cloudflare D1, one row per bottle: `id`, `bottle_key`, `sta
 
 - `GET /api/catalog` — the whole catalog, in the same envelope as `bottles.json`
 - `PUT /api/bottles/:id` — save one bottle (edit, add, mark Open, kill)
-- `POST /api/bottles` — add bottles (merge-import)
+- `POST /api/bottles` — add bottles (merge-import), as `{ bottles, wheel? }`; a `wheel` replaces the Flavor Wheel in the same batch, and without one the stored wheel stays
 - `PUT /api/catalog` — replace everything (replace-import)
 - `POST /api/owner` — check the PIN and write nothing
 
@@ -265,6 +265,7 @@ Migrate the catalog into Cloudflare D1, served by a Worker script (`main` in `wr
 - Lives in Bottle Management, owner-gated.
 - Upload always opens a preview screen first; nothing writes to D1 until confirmed.
 - Rows matching an existing `bottleKey` are flagged in that preview; the owner chooses per row whether to insert as new stock or skip.
+- A workbook with a Wheel Glossary tab replaces the Flavor Wheel on confirm. Without the tab, the wheel stays and the Wheel report says so.
 
 **Export and backups.** Not required for the done-when above. Issue #9 owns the catalog export that a replace can read back. A weekly R2 backup is untracked; see **Undeveloped**.
 

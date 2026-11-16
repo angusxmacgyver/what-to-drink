@@ -276,11 +276,19 @@ describe("writes", () => {
     expect(lastRequest()).toEqual({ path: "/api/bottles/smws%2F1.246", method: "PUT", body: b });
   });
 
-  it("addBottles POSTs the list", async () => {
+  it("addBottles POSTs the list, without a wheel so the cellar keeps its own", async () => {
     respondWith(204);
     const list = [bottle("a"), bottle("b")];
     expect(await addBottles(list)).toBe(true);
-    expect(lastRequest()).toEqual({ path: "/api/bottles", method: "POST", body: list });
+    expect(lastRequest()).toEqual({ path: "/api/bottles", method: "POST", body: { bottles: list } });
+  });
+
+  it("addBottles sends the workbook's wheel beside the list", async () => {
+    respondWith(204);
+    const list = [bottle("a")];
+    const wheel = [{ name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] }];
+    expect(await addBottles(list, wheel)).toBe(true);
+    expect(lastRequest()).toEqual({ path: "/api/bottles", method: "POST", body: { bottles: list, wheel } });
   });
 
   it("replaceCatalog PUTs the whole catalog", async () => {

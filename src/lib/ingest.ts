@@ -210,7 +210,8 @@ function glossaryFromSheet(sheet: XLSX.WorkSheet): WheelGlossary | null {
   return { wheel, familyRows };
 }
 
-export type WorkbookImport = { catalog: Catalog; report: WheelFinding[] };
+/** `wheel` is null when no Wheel Glossary was found, so a merge keeps the current wheel. */
+export type WorkbookImport = { catalog: Catalog; report: WheelFinding[]; wheel: WheelFamily[] | null };
 
 export function importWorkbook(workbook: XLSX.WorkBook, now = new Date()): WorkbookImport {
   const bottles: Bottle[] = [];
@@ -251,6 +252,7 @@ export function importWorkbook(workbook: XLSX.WorkBook, now = new Date()): Workb
       wheel: glossary?.wheel ?? [],
     },
     report: wheelReport(glossary, sheetBottles),
+    wheel: glossary?.wheel ?? null,
   };
 }
 

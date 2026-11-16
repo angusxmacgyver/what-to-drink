@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Bottle, Catalog } from "../types";
+import type { Bottle, Catalog, WheelFamily } from "../types";
 import { planMerge } from "../lib/merge";
 import type { MergeRow } from "../lib/merge";
 import { wheelReportSummary, type WheelFinding } from "../lib/wheelReport";
@@ -9,15 +9,17 @@ export function MergeImportPanel({
   onConfirm,
 }: {
   catalog: Catalog;
-  onConfirm: (bottles: Bottle[]) => boolean | Promise<boolean>;
+  onConfirm: (bottles: Bottle[], wheel: WheelFamily[] | null) => boolean | Promise<boolean>;
 }) {
   const [rows, setRows] = useState<MergeRow[] | null>(null);
   const [report, setReport] = useState<WheelFinding[]>([]);
+  const [wheel, setWheel] = useState<WheelFamily[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const reset = () => {
     setRows(null);
     setReport([]);
+    setWheel(null);
     setSelected(new Set());
   };
 
@@ -49,6 +51,7 @@ export function MergeImportPanel({
             const plan = planMerge(catalog.bottles, imported.catalog.bottles);
             setRows(plan);
             setReport(imported.report);
+            setWheel(imported.wheel);
             setSelected(new Set(plan.filter((r) => !r.duplicateOf).map((r) => r.bottle.id)));
             e.target.value = "";
           }}
@@ -92,7 +95,7 @@ export function MergeImportPanel({
               disabled={selected.size === 0}
               onClick={() => {
                 const bottles = rows.filter((r) => selected.has(r.bottle.id)).map((r) => r.bottle);
-                void Promise.resolve(onConfirm(bottles)).then((ok) => {
+                void Promise.resolve(onConfirm(bottles, wheel)).then((ok) => {
                   if (ok) reset();
                 });
               }}

@@ -264,14 +264,16 @@ export default function App() {
           />
           <MergeImportPanel
             catalog={catalog}
-            onConfirm={(bottles) => {
+            onConfirm={(bottles, wheel) => {
               const count = bottles.length;
               return ask(
-                `Add ${count} bottle${count === 1 ? "" : "s"}? Existing bottles stay as they are.`,
+                `Add ${count} bottle${count === 1 ? "" : "s"}? Existing bottles stay as they are.${
+                  wheel ? " The Flavor Wheel is replaced with the workbook's Wheel Glossary." : ""
+                }`,
                 "Add",
               ).then((ok) => {
                 if (!ok) return false;
-                void persist(applyMerge(catalog, bottles), addBottles(bottles));
+                void persist(applyMerge(catalog, bottles, wheel), addBottles(bottles, wheel));
                 setNotice(`Added ${count} bottle${count === 1 ? "" : "s"} from the workbook.`);
                 return true;
               });

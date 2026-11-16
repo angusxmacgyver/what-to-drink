@@ -221,6 +221,36 @@ describe("POST /api/bottles", () => {
   it("rejects anything that is not a list of bottles", async () => {
     expect((await call("POST", "/api/bottles", [{ id: 1 }])).status).toBe(400);
     expect((await call("POST", "/api/bottles", "not json{")).status).toBe(400);
+    expect((await call("POST", "/api/bottles", { bottles: "nope" })).status).toBe(400);
+  });
+
+  const peaty = [{ name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] }];
+  const fruity = [{ name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] }];
+  const storeWheel = (wheel: unknown) =>
+    call("PUT", "/api/catalog", { schemaVersion: 1, importedAt: "t", bottles: [], graveyard: [], wheel });
+
+  it("replaces the Flavor Wheel with the one sent beside the bottles, for every device", async () => {
+    await storeWheel(peaty);
+    const added = [bottle()];
+    expect((await call("POST", "/api/bottles", { bottles: added, wheel: fruity })).status).toBe(204);
+    const catalog = await getCatalog();
+    expect(catalog.bottles).toEqual(added);
+    expect(catalog.wheel).toEqual(fruity);
+  });
+
+  it("keeps the Flavor Wheel when none is sent", async () => {
+    await storeWheel(peaty);
+    await call("POST", "/api/bottles", { bottles: [bottle()] });
+    await call("POST", "/api/bottles", [bottle()]);
+    expect((await getCatalog()).wheel).toEqual(peaty);
+  });
+
+  it("rejects a wheel that is not Families of Subgroups and adds no bottles", async () => {
+    await storeWheel(peaty);
+    expect((await call("POST", "/api/bottles", { bottles: [bottle()], wheel: [{ name: "Fruity" }] })).status).toBe(400);
+    const catalog = await getCatalog();
+    expect(catalog.bottles).toEqual([]);
+    expect(catalog.wheel).toEqual(peaty);
   });
 });
 
