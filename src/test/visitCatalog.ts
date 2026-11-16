@@ -75,4 +75,5 @@ export const visitCatalog: Catalog = {
   ],
   graveyard: [],
   recentlyPoured: [],
+  wheel: [],
 };

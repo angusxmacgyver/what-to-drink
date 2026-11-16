@@ -89,7 +89,7 @@ describe("GET /api/catalog", () => {
   it("returns an empty catalog before anything is imported", async () => {
     const res = await call("GET", "/api/catalog");
     expect(res.headers.get("Content-Type")).toBe("application/json");
-    expect(await res.json()).toEqual({ schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [] });
+    expect(await res.json()).toEqual({ schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [], wheel: [] });
   });
 });
 
@@ -102,15 +102,16 @@ describe("PUT /api/catalog", () => {
       bottles: [bottle(), bottle({ status: "Closed" })],
       graveyard: [bottle({ status: "Killed" })],
       recentlyPoured: [],
+      wheel: [],
     };
     expect((await call("PUT", "/api/catalog", next)).status).toBe(204);
     expect(await getCatalog()).toEqual(next);
   });
 
-  it("round-trips the real cellar unchanged, with nothing Recently poured", async () => {
+  it("round-trips the real cellar unchanged, with nothing Recently poured and no wheel", async () => {
     const real = JSON.parse(fs.readFileSync("data/bottles.json", "utf8")) as Catalog;
     await call("PUT", "/api/catalog", real);
-    expect(await getCatalog()).toEqual({ ...real, recentlyPoured: [] });
+    expect(await getCatalog()).toEqual({ ...real, recentlyPoured: [], wheel: [] });
   });
 
   it("stores drams, last third, kill shot, and Recently poured so another device reads them", async () => {
@@ -125,6 +126,7 @@ describe("PUT /api/catalog", () => {
         { bottleId: finished.id, at: "2026-11-03T22:00:00.000Z", killShot: true },
         { bottleId: poured.id, at: "2026-11-02T21:30:00.000Z", killShot: false },
       ],
+      wheel: [],
     };
     expect((await call("PUT", "/api/catalog", next)).status).toBe(204);
     expect(await getCatalog()).toEqual(next);
@@ -141,6 +143,29 @@ describe("PUT /api/catalog", () => {
     });
     await call("PUT", "/api/catalog", { schemaVersion: 1, importedAt: "t", bottles: [b], graveyard: [] });
     expect((await getCatalog()).recentlyPoured).toEqual([]);
+  });
+
+  it("stores the Flavor Wheel so every device and guest reads it", async () => {
+    const wheel = [
+      { name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine", "TCP"] }] },
+    ];
+    const next: Catalog = { schemaVersion: 1, importedAt: "t", bottles: [bottle()], graveyard: [], recentlyPoured: [], wheel };
+    expect((await call("PUT", "/api/catalog", next)).status).toBe(204);
+    expect((await call("GET", "/api/catalog", undefined, null)).status).toBe(200);
+    expect(await getCatalog()).toEqual(next);
+  });
+
+  it("clears the wheel when the replacing catalog has none", async () => {
+    const wheel = [{ name: "Peaty", color: "Green", subgroups: [] }];
+    await call("PUT", "/api/catalog", { schemaVersion: 1, importedAt: "t", bottles: [bottle()], graveyard: [], wheel });
+    await call("PUT", "/api/catalog", { schemaVersion: 1, importedAt: "t", bottles: [bottle()], graveyard: [] });
+    expect((await getCatalog()).wheel).toEqual([]);
+  });
+
+  it("rejects a wheel that is not Families of Subgroups", async () => {
+    const body = { schemaVersion: 1, importedAt: "t", bottles: [bottle()], graveyard: [], wheel: [{ name: "Peaty" }] };
+    expect((await call("PUT", "/api/catalog", body)).status).toBe(400);
+    expect((await getCatalog()).bottles).toEqual([]);
   });
 
   it("rejects Recently poured lines that are not lines", async () => {
@@ -206,7 +231,7 @@ describe("owner PIN", () => {
     expect((await call("POST", "/api/owner")).status).toBe(204);
     expect((await call("POST", "/api/owner", undefined, null)).status).toBe(401);
     expect((await call("POST", "/api/owner", undefined, "wrong")).status).toBe(401);
-    expect(await getCatalog()).toEqual({ schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [] });
+    expect(await getCatalog()).toEqual({ schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [], wheel: [] });
   });
 
   it("rejects owner writes that omit or miss the PIN and leaves the catalog unchanged", async () => {

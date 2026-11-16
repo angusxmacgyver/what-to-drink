@@ -60,6 +60,7 @@ describe("catalogJson", () => {
       bottles: [live],
       graveyard: [dead],
       recentlyPoured: [],
+      wheel: [],
     });
   });
 
@@ -67,6 +68,11 @@ describe("catalogJson", () => {
     const line = { bottleId: "a", at: "2026-11-02T21:30:00.000Z", killShot: false };
     const catalog = JSON.parse(catalogJson([], "t", JSON.stringify([line])));
     expect(catalog.recentlyPoured).toEqual([line]);
+  });
+
+  it("joins the stored Flavor Wheel", () => {
+    const wheel = [{ name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] }];
+    expect(JSON.parse(catalogJson([], "t", "[]", JSON.stringify(wheel))).wheel).toEqual(wheel);
   });
 });
 
@@ -87,6 +93,7 @@ describe("seedSql", () => {
     bottles: [bottle({ id: "live", bottling: "Uigeadail's Own" })],
     graveyard: [bottle({ id: "dead", status: "Killed" })],
     recentlyPoured: [],
+    wheel: [],
   };
   const sql = seedSql(catalog, "2026-10-05T00:00:00.000Z");
 
@@ -112,6 +119,15 @@ describe("seedSql", () => {
     );
     const { recentlyPoured: _r, ...older } = catalog;
     expect(seedSql(older as Catalog, "t")).toContain("INSERT INTO meta (key, value) VALUES ('recentlyPoured', '[]');");
+  });
+
+  it("stores the Flavor Wheel in meta, and none when the catalog omits it", () => {
+    const wheel = [{ name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] }];
+    expect(seedSql({ ...catalog, wheel }, "t")).toContain(
+      `INSERT INTO meta (key, value) VALUES ('wheel', '${JSON.stringify(wheel)}');`,
+    );
+    const { wheel: _w, ...older } = catalog;
+    expect(seedSql(older as Catalog, "t")).toContain("INSERT INTO meta (key, value) VALUES ('wheel', '[]');");
   });
 
   it("stores importedAt in meta", () => {

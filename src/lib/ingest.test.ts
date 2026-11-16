@@ -16,6 +16,54 @@ function workbook(sheets: Record<string, Record<string, string>[]>): XLSX.WorkBo
   return book;
 }
 
+describe("Flavor Wheel import", () => {
+  const glossary = (rows: string[][]): XLSX.WorkBook => {
+    const book = workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] });
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), "Wheel Glossary");
+    return book;
+  };
+
+  it("reads the wheel from the header row down, past the title and notes above it", () => {
+    const catalog = catalogFromWorkbook(
+      glossary([
+        ["Revised Flavor Wheel Glossary"],
+        ["Family colors and subgroup names unchanged."],
+        [],
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange | lemon zest|  grapefruit "],
+        ["Fruity", "Orange", "Dried Fruit", "raisin"],
+        ["Peaty", "Green", "Medicinal", "iodine | TCP"],
+        [],
+      ]),
+    );
+    expect(catalog.wheel).toEqual([
+      {
+        name: "Fruity",
+        color: "Orange",
+        subgroups: [
+          { name: "Citric", descriptors: ["orange", "lemon zest", "grapefruit"] },
+          { name: "Dried Fruit", descriptors: ["raisin"] },
+        ],
+      },
+      { name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine", "TCP"] }] },
+    ]);
+  });
+
+  it("never reads the Wheel Glossary as bottles", () => {
+    const catalog = catalogFromWorkbook(
+      glossary([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange"],
+      ]),
+    );
+    expect([...catalog.bottles, ...catalog.graveyard].map((b) => b.bottling)).toEqual(["10"]);
+  });
+
+  it("gives a workbook without the tab no wheel", () => {
+    expect(catalogFromWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] })).wheel).toEqual([]);
+  });
+});
+
 describe("cask import", () => {
   const casks = { "Primary Cask": "Ex-bourbon | Oloroso sherry", "Secondary Cask": "Rum" };
 

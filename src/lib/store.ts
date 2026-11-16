@@ -1,4 +1,4 @@
-import { RECENTLY_POURED_LIMIT, isRecentPour, type Bottle, type Catalog } from "../types";
+import { RECENTLY_POURED_LIMIT, isRecentPour, isWheelFamily, type Bottle, type Catalog } from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
@@ -44,7 +44,7 @@ const readBottle = (bottle: Bottle): Bottle => ({
 
 /**
  * A catalog from D1, this device, the bundled file, or a downloaded bottles.json. Facts a catalog
- * saved before them omits read as none: no casks, no drams, no last third, no kill shots, nothing Recently poured.
+ * saved before them omits read as none: no casks, no drams, no last third, no kill shots, nothing Recently poured, no wheel.
  */
 export function readCatalog(raw: unknown): Catalog {
   const catalog = raw as Catalog;
@@ -54,6 +54,7 @@ export function readCatalog(raw: unknown): Catalog {
     bottles: (catalog.bottles ?? []).map(readBottle),
     graveyard: (catalog.graveyard ?? []).map(readBottle),
     recentlyPoured: recentlyPoured.slice(0, RECENTLY_POURED_LIMIT),
+    wheel: Array.isArray(catalog.wheel) ? catalog.wheel.filter(isWheelFamily) : [],
   };
 }
 

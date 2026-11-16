@@ -26,6 +26,7 @@ const workbook = XLSX.read(fs.readFileSync(source), { type: "buffer" });
 const catalog = catalogFromWorkbook(workbook);
 fs.writeFileSync(dest, `${JSON.stringify(catalog, null, 2)}\n`);
 
+const subgroups = catalog.wheel.flatMap((f) => f.subgroups);
 const cs10 = catalog.bottles.filter((b) => b.bottleKey === "ardbeg::cask-strength-10").length;
 const smws = catalog.bottles.filter((b) => b.bottleKey.startsWith("smws::1.246")).length;
 
@@ -36,6 +37,11 @@ console.log(
       importedAt: catalog.importedAt,
       bottles: catalog.bottles.length,
       graveyard: catalog.graveyard.length,
+      wheel: {
+        families: catalog.wheel.length,
+        subgroups: subgroups.length,
+        descriptors: subgroups.flatMap((s) => s.descriptors).length,
+      },
       cs10,
       smws1246: smws,
       wrote: dest,

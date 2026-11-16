@@ -61,6 +61,31 @@ export const isRecentPour = (value: unknown): value is RecentPour => {
   );
 };
 
+export type WheelSubgroup = { name: string; descriptors: string[] };
+
+/** A Family of the Flavor Wheel, with its color name as written in the Wheel Glossary. */
+export type WheelFamily = { name: string; color: string; subgroups: WheelSubgroup[] };
+
+const isStringList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === "string");
+
+const isWheelSubgroup = (value: unknown): value is WheelSubgroup => {
+  const subgroup = value as WheelSubgroup | null;
+  return typeof subgroup === "object" && subgroup !== null && typeof subgroup.name === "string" && isStringList(subgroup.descriptors);
+};
+
+export const isWheelFamily = (value: unknown): value is WheelFamily => {
+  const family = value as WheelFamily | null;
+  return (
+    typeof family === "object" &&
+    family !== null &&
+    typeof family.name === "string" &&
+    typeof family.color === "string" &&
+    Array.isArray(family.subgroups) &&
+    family.subgroups.every(isWheelSubgroup)
+  );
+};
+
 export type Catalog = {
   schemaVersion: 1;
   importedAt: string;
@@ -68,6 +93,8 @@ export type Catalog = {
   graveyard: Bottle[];
   /** Newest first, at most RECENTLY_POURED_LIMIT. */
   recentlyPoured: RecentPour[];
+  /** The Flavor Wheel, in the Wheel Glossary's order. Empty when no wheel has been imported. */
+  wheel: WheelFamily[];
 };
 
 export type FilterState = {

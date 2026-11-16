@@ -44,7 +44,7 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
 }
 
 function catalog(bottles: Bottle[], graveyard: Bottle[] = []): Catalog {
-  return { schemaVersion: 1, importedAt: "", bottles, graveyard, recentlyPoured: [] };
+  return { schemaVersion: 1, importedAt: "", bottles, graveyard, recentlyPoured: [], wheel: [] };
 }
 
 describe("tally", () => {

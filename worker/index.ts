@@ -1,4 +1,4 @@
-import { isRecentPour, type Bottle } from "../src/types";
+import { isRecentPour, isWheelFamily, type Bottle } from "../src/types";
 import { catalogJson, chunk, toRow, type BottleRow } from "../src/lib/rows";
 
 type Statement = {
@@ -62,12 +62,12 @@ async function getCatalog(db: Db): Promise<Response> {
     .all<Pick<BottleRow, "status" | "data">>();
   const { results: meta } = await db.prepare("SELECT key, value FROM meta").all<{ key: string; value: string }>();
   const value = (key: string) => meta.find((row) => row.key === key)?.value;
-  return respond(catalogJson(results, value("importedAt") ?? "", value("recentlyPoured")), 200);
+  return respond(catalogJson(results, value("importedAt") ?? "", value("recentlyPoured"), value("wheel")), 200);
 }
 
 async function replaceCatalog(db: Db, request: Request): Promise<Response> {
   const body = (await readBody(request)) as
-    | { importedAt?: unknown; bottles?: unknown; graveyard?: unknown; recentlyPoured?: unknown }
+    | { importedAt?: unknown; bottles?: unknown; graveyard?: unknown; recentlyPoured?: unknown; wheel?: unknown }
     | undefined;
   if (!body || typeof body.importedAt !== "string" || !isBottleList(body.bottles) || !isBottleList(body.graveyard)) {
     return fail(400, "expected a catalog with bottles and graveyard lists");
@@ -76,12 +76,17 @@ async function replaceCatalog(db: Db, request: Request): Promise<Response> {
   if (!Array.isArray(recentlyPoured) || !recentlyPoured.every(isRecentPour)) {
     return fail(400, "expected Recently poured lines with a bottle id, a time, and a kill-shot fact");
   }
+  const wheel = body.wheel ?? [];
+  if (!Array.isArray(wheel) || !wheel.every(isWheelFamily)) {
+    return fail(400, "expected a Flavor Wheel of Families, each with a color and Subgroups of Descriptors");
+  }
   const now = new Date().toISOString();
   await db.batch([
     db.prepare("DELETE FROM bottles"),
     ...insertMany(db, [...body.bottles, ...body.graveyard], now),
     db.prepare(SET_META).bind("importedAt", body.importedAt),
     db.prepare(SET_META).bind("recentlyPoured", JSON.stringify(recentlyPoured)),
+    db.prepare(SET_META).bind("wheel", JSON.stringify(wheel)),
   ]);
   return respond(null, 204);
 }

@@ -49,6 +49,7 @@ const catalog = (bottles: Bottle[]): Catalog => ({
   bottles,
   graveyard: [],
   recentlyPoured: [],
+  wheel: [],
 });
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -166,6 +167,7 @@ describe("the catalog document", () => {
       { bottleId: "poured", at: "2026-11-02T21:30:00.000Z", killShot: false },
       { bottleId: "poured", at: "2026-11-01T20:00:00.000Z", killShot: false },
     ],
+    wheel: [],
   };
 
   it("restores drams, last third, kill shot, graveyard drams, and Recently poured onto the same bottle ids", () => {
@@ -222,6 +224,20 @@ describe("the catalog document", () => {
     expect(carriesDramHistory(JSON.stringify({ ...history, bottles: [noLastThird] }))).toBe(false);
     expect(carriesDramHistory(JSON.stringify({ ...history, graveyard: [noKillShot] }))).toBe(false);
     expect(carriesDramHistory("not json{")).toBe(false);
+  });
+
+  it("restores the Flavor Wheel", () => {
+    const wheel = [
+      { name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange", "lemon zest"] }] },
+    ];
+    expect(catalogFromDocument(catalogDocument({ ...history, wheel })).wheel).toEqual(wheel);
+  });
+
+  it("reads a document from before the wheel as having no wheel, with no new replace warning", () => {
+    const { wheel: _w, ...older } = history;
+    const document = JSON.stringify(older);
+    expect(catalogFromDocument(document).wheel).toEqual([]);
+    expect(carriesDramHistory(document)).toBe(true);
   });
 
   it("refuses a file that is not a catalog", () => {

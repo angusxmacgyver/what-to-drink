@@ -23,11 +23,12 @@ export function catalogJson(
   rows: Pick<BottleRow, "status" | "data">[],
   importedAt: string,
   recentlyPoured = "[]",
+  wheel = "[]",
 ): string {
   const bottles: string[] = [];
   const graveyard: string[] = [];
   for (const row of rows) (row.status === "Killed" ? graveyard : bottles).push(row.data);
-  return `{"schemaVersion":1,"importedAt":${JSON.stringify(importedAt)},"bottles":[${bottles.join(",")}],"graveyard":[${graveyard.join(",")}],"recentlyPoured":${recentlyPoured}}`;
+  return `{"schemaVersion":1,"importedAt":${JSON.stringify(importedAt)},"bottles":[${bottles.join(",")}],"graveyard":[${graveyard.join(",")}],"recentlyPoured":${recentlyPoured},"wheel":${wheel}}`;
 }
 
 export function chunk<T>(items: T[], size: number): T[][] {
@@ -50,5 +51,6 @@ export function seedSql(catalog: Catalog, updatedAt: string): string {
   lines.push(
     `INSERT INTO meta (key, value) VALUES ('recentlyPoured', ${quote(JSON.stringify(catalog.recentlyPoured ?? []))});`,
   );
+  lines.push(`INSERT INTO meta (key, value) VALUES ('wheel', ${quote(JSON.stringify(catalog.wheel ?? []))});`);
   return `${lines.join("\n")}\n`;
 }

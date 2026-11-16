@@ -70,6 +70,7 @@ describe("applyMerge", () => {
       bottles: [existing],
       graveyard: [],
       recentlyPoured: [],
+      wheel: [],
     };
     const added = bottle({ bottleKey: "lagavulin::16" });
     const next = applyMerge(catalog, [added]);
@@ -85,6 +86,7 @@ describe("applyMerge", () => {
       bottles: [poured],
       graveyard: [],
       recentlyPoured: [{ bottleId: poured.id, at: "2026-11-01T20:00:00.000Z", killShot: false }],
+      wheel: [],
     };
     const [row] = planMerge(catalog.bottles, [bottle()]);
     const next = applyMerge(catalog, [row.bottle]);
@@ -100,13 +102,14 @@ describe("applyMerge", () => {
       bottles: [],
       graveyard: [killed],
       recentlyPoured: [],
+      wheel: [],
     };
     const next = applyMerge(catalog, [bottle()]);
     expect(next.graveyard).toBe(catalog.graveyard);
   });
 
   it("adds nothing when no bottles are selected", () => {
-    const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [] };
+    const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [], wheel: [] };
     expect(applyMerge(catalog, []).bottles).toEqual([]);
   });
 });

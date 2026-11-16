@@ -1,8 +1,9 @@
-import type { Age, Bottle, BottleStatus, Catalog, SmwsExtras } from "../types";
+import type { Age, Bottle, BottleStatus, Catalog, SmwsExtras, WheelFamily } from "../types";
 import { countryFromRegion, normalizeTheme } from "./normalize";
 import * as XLSX from "xlsx";
 
 const SKIP_SHEETS = new Set(["draft participants"]);
+const WHEEL_SHEET = "wheel glossary";
 
 function slug(value: string): string {
   return value
@@ -172,9 +173,32 @@ function fromSmws(row: Record<string, unknown>, id: string): Bottle {
   };
 }
 
+// The owner keeps a title and notes above the header, so the table starts at the row whose first cell is Family.
+function wheelFromSheet(sheet: XLSX.WorkSheet): WheelFamily[] {
+  const grid = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: "", raw: false });
+  const start = grid.findIndex((line) => String(line[0] ?? "").trim().toLowerCase() === "family");
+  if (start < 0) return [];
+  const header = grid[start].map(String);
+  const families: WheelFamily[] = [];
+  for (const line of grid.slice(start + 1)) {
+    const row = Object.fromEntries(header.map((key, i) => [key, line[i]]));
+    const name = cell(row, "Family");
+    const subgroup = cell(row, "Wheel Subgroups");
+    if (!name || !subgroup) continue;
+    let family = families.find((f) => f.name === name);
+    if (!family) {
+      family = { name, color: cell(row, "Color"), subgroups: [] };
+      families.push(family);
+    }
+    family.subgroups.push({ name: subgroup, descriptors: splitPipes(cell(row, "Descriptors")) });
+  }
+  return families;
+}
+
 export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): Catalog {
   const bottles: Bottle[] = [];
   const graveyard: Bottle[] = [];
+  const wheelSheet = workbook.SheetNames.find((name) => name.trim().toLowerCase() === WHEEL_SHEET);
 
   for (const name of workbook.SheetNames) {
     if (SKIP_SHEETS.has(name.trim().toLowerCase())) continue;
@@ -199,6 +223,7 @@ export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): 
     bottles,
     graveyard,
     recentlyPoured: [],
+    wheel: wheelSheet ? wheelFromSheet(workbook.Sheets[wheelSheet]) : [],
   };
 }
 
