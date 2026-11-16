@@ -185,6 +185,7 @@ export default function App() {
       {view === "library" ? (
         <Library
           bottles={catalog.bottles}
+          wheel={catalog.wheel}
           filters={libraryVisit.filters}
           onFilters={libraryVisit.change}
           onUndo={libraryVisit.undo}
@@ -222,7 +223,7 @@ export default function App() {
         />
       ) : null}
 
-      {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} /> : null}
+      {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} wheel={catalog.wheel} /> : null}
 
       {view === "analytics" ? <Analytics catalog={catalog} /> : null}
 

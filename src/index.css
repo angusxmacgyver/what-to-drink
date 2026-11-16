@@ -29,6 +29,14 @@
   --family-spice: #df4e92;
   --family-sweet: #af9735;
   --family-wood: #5d9db1;
+  --wheel-yellow: #d6b43c;
+  --wheel-orange: #e8843a;
+  --wheel-violet: #a383ec;
+  --wheel-green: #62ab3c;
+  --wheel-blue: #4f9ae6;
+  --wheel-grey: #949ea4;
+  --wheel-brown: #b98552;
+  --wheel-red: #e05a55;
   --hist-knob: #f4e4cf;
 }
 
@@ -62,6 +70,14 @@
   --family-spice: #ac1f68;
   --family-sweet: #796822;
   --family-wood: #3a6572;
+  --wheel-yellow: #7a6610;
+  --wheel-orange: #a14d17;
+  --wheel-violet: #5b37a6;
+  --wheel-green: #386b1a;
+  --wheel-blue: #1d5a96;
+  --wheel-grey: #565f64;
+  --wheel-brown: #74491f;
+  --wheel-red: #a12428;
   --hist-knob: #fff8ec;
 }
 
@@ -689,6 +705,18 @@ nav button.on,
   cursor: pointer;
 }
 
+.row-flavors:not(:empty) {
+  padding: 0 4px 14px;
+}
+
+.row:not(.open):has(.row-flavors:not(:empty)) .row-main {
+  padding-bottom: 8px;
+}
+
+.row.open .row-flavors:not(:empty) {
+  padding-top: 4px;
+}
+
 .row-main.grave {
   grid-template-columns: minmax(220px, 2.2fr) 70px 80px 160px;
 }
@@ -820,6 +848,32 @@ nav button.on,
 .family-sweet { --family-color: var(--family-sweet); }
 .family-wood { --family-color: var(--family-wood); }
 .family-other { --family-color: var(--line-strong); }
+
+.wheel-yellow { --family-color: var(--wheel-yellow); }
+.wheel-orange { --family-color: var(--wheel-orange); }
+.wheel-violet { --family-color: var(--wheel-violet); }
+.wheel-green { --family-color: var(--wheel-green); }
+.wheel-blue { --family-color: var(--wheel-blue); }
+.wheel-grey { --family-color: var(--wheel-grey); }
+.wheel-brown { --family-color: var(--wheel-brown); }
+.wheel-red { --family-color: var(--wheel-red); }
+.wheel-neutral { --family-color: var(--muted); }
+
+.tag.wheel-term {
+  border: 1px solid var(--family-color);
+  background: color-mix(in srgb, var(--family-color) 12%, transparent);
+  color: var(--ink);
+}
+
+.tag.wheel-term.term-family {
+  background: color-mix(in srgb, var(--family-color) 32%, var(--bg-2));
+  font-weight: 700;
+}
+
+.tag.wheel-term.wheel-neutral {
+  border-style: dashed;
+  background: transparent;
+}
 
 .smws-theme-young-spritely { --family-color: #c58bc1; }
 .smws-theme-sweet-fruity-mellow { --family-color: #a65eac; }
@@ -1051,6 +1105,11 @@ nav button.on,
   border-radius: 50%;
   background: var(--family-color);
   flex: none;
+}
+
+.family-dot.wheel-neutral {
+  border: 1px dashed var(--family-color);
+  background: transparent;
 }
 
 .card-facts {

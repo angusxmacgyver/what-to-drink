@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import type { Bottle, FilterState } from "../types";
-import { familyClass, smwsThemeClass } from "../lib/colors";
+import type { Bottle, FilterState, WheelFamily } from "../types";
+import { smwsThemeClass, wheelColorClass } from "../lib/colors";
 import { FANCY_PICKER_URL, stageFancyPool, stageFancyVisit } from "../lib/fancy";
 import {
   detailBottle,
@@ -9,21 +9,22 @@ import {
   groupLibrary,
   matchesFilters,
   originLabel,
-  uniqueTags,
   type DistilleryGroup,
   type LibraryRow,
 } from "../lib/library";
 import { choosePour, leadBottle, prefersReducedMotion, revealCard, settlePick } from "../lib/pour";
+import { placeTerms } from "../lib/wheel";
 import { mostConstrainingChip } from "../lib/recovery";
 import { loadLibraryLayout, saveLibraryLayout, type LibraryLayout } from "../lib/store";
 import { AppliedTray } from "./AppliedTray";
 import { BottleFields } from "./BottleFields";
 import { activeFilterCount, FilterDrawer, FiltersButton } from "./FilterDrawer";
 import { Filters } from "./Filters";
-import { FlavorTags } from "./FlavorTags";
+import { WheelClusters, WheelFamilies } from "./WheelTerms";
 
 type Props = {
   bottles: Bottle[];
+  wheel?: WheelFamily[];
   filters: FilterState;
   onFilters: (next: FilterState) => void;
   onUndo: () => void;
@@ -77,8 +78,10 @@ export function LibraryCard({
   where,
   cardId,
   showDistillery = true,
+  wheel = [],
 }: {
   row: LibraryRow;
+  wheel?: WheelFamily[];
   expanded: boolean;
   onToggle: () => void;
   picked?: boolean;
@@ -88,6 +91,7 @@ export function LibraryCard({
   showDistillery?: boolean;
 }) {
   const shown = detailBottle(row.bottles);
+  const families = placeTerms(wheel, "family", row.bottles.flatMap((b) => b.wheelFamilies));
   const origin = originLabel(shown.region, shown.country);
   const name = `${row.distillery} ${row.bottling}`;
   const place = where || "not tagged yet";
@@ -109,10 +113,10 @@ export function LibraryCard({
       <em className="card-expression">{row.bottling}</em>
       {picked ? <span className="card-where">Bottle is at: {place}</span> : null}
       {origin ? <span className="card-origin">{origin}</span> : null}
-      {row.flavorFamilies.length ? (
+      {families.length ? (
         <span className="card-swatches">
-          {row.flavorFamilies.map((family) => (
-            <span key={family} className={`family-dot ${familyClass(family)}`} title={family} />
+          {families.map((family) => (
+            <span key={family.label} className={`family-dot ${wheelColorClass(family.color)}`} title={family.label} />
           ))}
         </span>
       ) : null}
@@ -151,28 +155,22 @@ export function DistilleryHeader({
 
 export function ExpressionDetail({
   bottles,
+  wheel = [],
   groupedFlavors = false,
-  filters,
   landed = false,
   ...actions
 }: Actions & {
   bottles: Bottle[];
+  wheel?: WheelFamily[];
   groupedFlavors?: boolean;
-  filters?: FilterState;
   landed?: boolean;
 }) {
   const shown = detailBottle(bottles);
   return (
     <div className={landed ? "detail landed" : "detail"}>
-      <BottleFields bottle={shown} flavorText={false} />
-      <FlavorTags
-        families={uniqueTags(bottles.flatMap((bottle) => bottle.flavorFamilies))}
-        subs={uniqueTags(bottles.flatMap((bottle) => bottle.subCharacteristics))}
-        grouped={groupedFlavors}
-        selectedFamilies={filters?.families}
-        selectedSubs={filters?.subs}
-        subFamilies={filters?.subFamilies}
-      />
+      <BottleFields bottle={shown} />
+      <WheelFamilies wheel={wheel} bottles={bottles} />
+      {groupedFlavors ? <WheelClusters wheel={wheel} bottles={bottles} /> : null}
       {bottles.length > 1 ? (
         <ul className="bottle-splits">
           {bottles.map((bottle) => (
@@ -196,8 +194,8 @@ const rowId = (bottleKey: string) => `library-${bottleKey}`;
 
 function DistillerySection({
   group,
+  wheel,
   layout,
-  filters,
   openKey,
   onToggle,
   picked,
@@ -206,8 +204,8 @@ function DistillerySection({
   ...actions
 }: Actions & {
   group: DistilleryGroup;
+  wheel: WheelFamily[];
   layout: LibraryLayout;
-  filters: FilterState;
   openKey: string | null;
   onToggle: (key: string) => void;
   picked: Bottle | null;
@@ -232,6 +230,7 @@ function DistillerySection({
               <Fragment key={row.bottleKey}>
                 <LibraryCard
                   row={row}
+                  wheel={wheel}
                   expanded={expanded}
                   showDistillery={false}
                   picked={isPicked}
@@ -241,7 +240,13 @@ function DistillerySection({
                   onToggle={() => onToggle(row.bottleKey)}
                 />
                 {expanded ? (
-                  <ExpressionDetail bottles={row.bottles} groupedFlavors filters={filters} landed={landed} {...actions} />
+                  <ExpressionDetail
+                    bottles={row.bottles}
+                    wheel={wheel}
+                    groupedFlavors
+                    landed={landed}
+                    {...actions}
+                  />
                 ) : null}
               </Fragment>
             );
@@ -267,16 +272,11 @@ function DistillerySection({
                 <span className="list-facts">Age: {row.ageLabel} | ABV: {row.abvLabel}</span>
                 <span className={`theme ${smwsThemeClass(row.theme)}`}>{row.theme}</span>
                 {row.stock > 1 ? <span className="stock">×{row.stock}</span> : <span />}
-                <FlavorTags
-                  families={row.flavorFamilies}
-                  subs={row.subCharacteristics}
-                  grouped
-                  selectedFamilies={filters.families}
-                  selectedSubs={filters.subs}
-                  subFamilies={filters.subFamilies}
-                />
               </button>
-              {expanded ? <ExpressionDetail bottles={row.bottles} landed={landed} {...actions} /> : null}
+              {expanded ? <ExpressionDetail bottles={row.bottles} wheel={wheel} landed={landed} {...actions} /> : null}
+              <div className="row-flavors">
+                <WheelClusters wheel={wheel} bottles={row.bottles} />
+              </div>
             </article>
           );
         })}
@@ -287,6 +287,7 @@ function DistillerySection({
 
 export function Library({
   bottles,
+  wheel = [],
   filters,
   onFilters,
   onUndo,
@@ -464,8 +465,8 @@ export function Library({
           <DistillerySection
             key={group.distillery}
             group={group}
+            wheel={wheel}
             layout={layout}
-            filters={filters}
             openKey={openKey}
             onToggle={(key) => setOpenKey(openKey === key ? null : key)}
             picked={settled}

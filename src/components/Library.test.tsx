@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Bottle } from "../types";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { Bottle, WheelFamily } from "../types";
 import { emptyFilters } from "../types";
 import { groupLibrary } from "../lib/library";
 import { BottleFields } from "./BottleFields";
+import { Graveyard } from "./Graveyard";
 import { ExpressionDetail, Library, LibraryCard } from "./Library";
 
 function bottle(overrides: Partial<Bottle>): Bottle {
@@ -111,23 +114,6 @@ describe("Library layout", () => {
     expect(html).not.toContain('role="dialog"');
   });
 
-  it("shows which list flavor tags drive the active filters", () => {
-    const filters = {
-      ...emptyFilters(),
-      families: ["Smoke"],
-      subs: ["Honey"],
-      subFamilies: { Honey: "Smoke" },
-    };
-    const html = renderToStaticMarkup(
-      <Library bottles={bottles} filters={filters} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
-    );
-    const list = html.slice(html.indexOf("distillery-groups"));
-    expect(list).not.toContain(">Families<");
-    expect(list).toContain(">Characteristics<");
-    expect(list).not.toContain('class="tag family');
-    expect(list).toContain('class="tag sub family-smoke matched"');
-  });
-
   it("opens a grouped grid with full accessible names and no repeated maker labels", () => {
     localStorage.setItem("what-to-drink-library-layout", "grid");
     const html = renderToStaticMarkup(
@@ -166,23 +152,21 @@ describe("expression detail", () => {
     expect(html).toContain("Open · Bar");
     expect(html).toContain("Closed · Crate");
     expect(html).not.toContain("Mark open");
-    expect(html).toContain('class="tag family family-smoke"');
     expect(html).not.toContain(">Characteristics<");
   });
 
-  it("groups grid characteristics and fills the selected one", () => {
-    const html = renderToStaticMarkup(
-      <ExpressionDetail
-        bottles={[openBottle]}
-        owner={false}
-        groupedFlavors
-        filters={{ ...emptyFilters(), subs: ["Honey"], subFamilies: { Honey: "Smoke" } }}
-      />,
-    );
+  it("no longer shows Flavor Families or Sub-Characteristics", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} groupedFlavors owner={false} />);
+    expect(html).not.toContain("Smoke");
+    expect(html).not.toContain("Honey");
+  });
+
+  it("groups grid characteristics by Subgroup, in the Family's color", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[tasted]} wheel={wheel} groupedFlavors owner={false} />);
     expect(html).toContain(">Characteristics<");
-    expect(html).toContain('class="flavor-cluster family-smoke"');
-    expect(html).toContain('class="tag sub family-smoke matched"');
-    expect(html).not.toContain('class="tag family');
+    expect(html).toContain('class="flavor-cluster wheel-green" aria-label="Medicinal characteristics"');
+    expect(html).toContain('<span class="flavor-cluster-label">Medicinal</span>');
+    expect(html).toContain('class="tag wheel-term term-descriptor wheel-green">iodine<');
   });
 
   it("shows primary cask and secondary cask in the Library detail", () => {
@@ -240,14 +224,101 @@ describe("graveyard bottle fields", () => {
   });
 });
 
+const wheel: WheelFamily[] = [
+  { name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] },
+  { name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] },
+];
+const tasted = bottle({
+  id: "tasted",
+  wheelFamilies: ["peaty"],
+  wheelSubgroups: ["Medicinal"],
+  wheelDescriptors: ["IODINE", "raisins"],
+});
+
+describe("Flavor Wheel terms", () => {
+  it("lists Families, Subgroups, and Descriptors in their Family's color, as the Wheel Glossary writes them", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[tasted]} wheel={wheel} groupedFlavors owner={false} />);
+    expect(html).toContain(">Families<");
+    expect(html).toContain('class="tag wheel-term term-family wheel-green">Peaty<');
+    expect(html).toContain('<span class="flavor-cluster-label">Medicinal</span>');
+    expect(html).toContain('class="tag wheel-term term-descriptor wheel-green">iodine<');
+  });
+
+  it("shows Subgroups and Descriptors only in the characteristics, not again in their own lanes", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[tasted]} wheel={wheel} groupedFlavors owner={false} />);
+    expect(html).not.toContain(">Subgroups<");
+    expect(html).not.toContain(">Descriptors<");
+    expect(html.match(/>iodine</g)).toHaveLength(1);
+    expect(html.indexOf(">Families<")).toBeLessThan(html.indexOf(">Characteristics<"));
+  });
+
+  it("gathers the terms of every bottle of the expression", () => {
+    const backup = { ...closedBottle, wheelFamilies: ["Fruity"], wheelDescriptors: ["orange"] };
+    const html = renderToStaticMarkup(
+      <ExpressionDetail bottles={[backup, tasted]} wheel={wheel} groupedFlavors owner={false} />,
+    );
+    expect(html).toContain('wheel-orange">Fruity<');
+    expect(html).toContain('wheel-orange">orange<');
+    expect(html).toContain('wheel-green">iodine<');
+  });
+
+  it("puts an opened list row's details between its title and its characteristics, shown once", () => {
+    const html = renderToStaticMarkup(
+      <Library bottles={[tasted]} wheel={wheel} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={tasted} onPick={() => {}} owner={false} />,
+    );
+    const title = html.indexOf("<strong><em>Spectacular</em></strong>");
+    expect(title).toBeGreaterThan(-1);
+    expect(html.indexOf("bottle-fields")).toBeGreaterThan(title);
+    expect(html.indexOf(">Families<")).toBeGreaterThan(html.indexOf("bottle-fields"));
+    expect(html.indexOf(">Characteristics<")).toBeGreaterThan(html.indexOf(">Families<"));
+    expect(html.match(/>Characteristics</g)).toHaveLength(1);
+  });
+
+  it("shows nothing for a bottle not tasted for the wheel yet", () => {
+    const html = renderToStaticMarkup(<ExpressionDetail bottles={[openBottle]} wheel={wheel} owner={false} />);
+    expect(html).not.toContain("wheel-term");
+  });
+
+  it("shows each list row's Subgroups with their Descriptors in the Family's color, strays last and neutral", () => {
+    const html = renderToStaticMarkup(
+      <Library bottles={[tasted]} wheel={wheel} filters={emptyFilters()} onFilters={() => {}} onUndo={() => {}} canUndo={false} exact={false} onExact={() => {}} favorLastThird={false} onFavorLastThird={() => {}} pick={null} onPick={() => {}} owner={false} />,
+    );
+    const clusters = [...html.matchAll(/class="flavor-cluster ([^"]+)"[^>]*><span class="flavor-cluster-label">([^<]+)</g)];
+    expect(clusters.map((m) => [m[1], m[2]])).toEqual([
+      ["wheel-green", "Medicinal"],
+      ["wheel-neutral", "Other"],
+    ]);
+    expect(html).toContain('class="tag wheel-term term-descriptor wheel-neutral">raisins<');
+  });
+
+  it("shows a Graveyard bottle's three levels when it is opened", async () => {
+    render(<Graveyard bottles={[{ ...tasted, status: "Killed" }]} wheel={wheel} />);
+    await userEvent.click(screen.getByRole("button", { name: /Ardbeg/ }));
+    expect(screen.getByText("Peaty").className).toBe("tag wheel-term term-family wheel-green");
+    expect(screen.getByText("Medicinal").className).toBe("flavor-cluster-label");
+    expect(screen.getByText("iodine").className).toBe("tag wheel-term term-descriptor wheel-green");
+    expect(screen.queryByText("Subgroups")).toBeNull();
+    expect(screen.queryByText("Flavor families")).toBeNull();
+    expect(screen.queryByText("Smoke")).toBeNull();
+  });
+});
+
 describe("library card", () => {
   it("keeps the full name on the card", () => {
     const [row] = groupLibrary([openBottle, closedBottle]);
     const html = renderToStaticMarkup(<LibraryCard row={row} expanded={false} onToggle={() => {}} />);
     expect(html).toContain('aria-label="Ardbeg Spectacular"');
     expect(html).toContain('title="Ardbeg Spectacular"');
-    expect(html).toContain("family-dot");
     expect(html).toContain(">×2<");
     expect(html).toContain("Age: NAS | ABV: 46%");
+  });
+
+  it("shows a swatch for each of the expression's Families in its color", () => {
+    const [row] = groupLibrary([tasted, { ...closedBottle, wheelFamilies: ["Fruity", "Peaty"] }]);
+    const html = renderToStaticMarkup(<LibraryCard row={row} wheel={wheel} expanded={false} onToggle={() => {}} />);
+    expect([...html.matchAll(/class="family-dot ([^"]+)" title="([^"]+)"/g)].map((m) => [m[1], m[2]])).toEqual([
+      ["wheel-green", "Peaty"],
+      ["wheel-orange", "Fruity"],
+    ]);
   });
 });
