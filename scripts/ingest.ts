@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as XLSX from "xlsx";
-import { catalogFromWorkbook } from "../src/lib/ingest.ts";
+import { importWorkbook } from "../src/lib/ingest.ts";
+import { describeWheelReport } from "../src/lib/wheelReport.ts";
 
 const DEFAULT_XLSX =
   "/Users/max.krueger/Library/CloudStorage/OneDrive-WarnerBros.Discovery/Desktop/Whisky Inventory- Oct 7 .xlsx";
@@ -23,7 +24,7 @@ if (fs.existsSync(dest)) {
 }
 
 const workbook = XLSX.read(fs.readFileSync(source), { type: "buffer" });
-const catalog = catalogFromWorkbook(workbook);
+const { catalog, report } = importWorkbook(workbook);
 fs.writeFileSync(dest, `${JSON.stringify(catalog, null, 2)}\n`);
 
 const subgroups = catalog.wheel.flatMap((f) => f.subgroups);
@@ -51,3 +52,4 @@ console.log(
     2,
   ),
 );
+console.log(`\n${describeWheelReport(report).join("\n")}`);

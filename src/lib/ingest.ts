@@ -1,6 +1,7 @@
 import type { Age, Bottle, BottleStatus, Catalog, SmwsExtras, WheelFamily } from "../types";
 import { countryFromRegion, normalizeTheme } from "./normalize";
 import * as XLSX from "xlsx";
+import { wheelReport, type SheetBottle, type WheelFinding } from "./wheelReport";
 
 const SKIP_SHEETS = new Set(["draft participants"]);
 const WHEEL_SHEET = "wheel glossary";
@@ -205,9 +206,10 @@ function wheelFromSheet(sheet: XLSX.WorkSheet): WheelFamily[] {
   return families;
 }
 
-export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): Catalog {
+export function importWorkbook(workbook: XLSX.WorkBook, now = new Date()): { catalog: Catalog; report: WheelFinding[] } {
   const bottles: Bottle[] = [];
   const graveyard: Bottle[] = [];
+  const read: SheetBottle[] = [];
   const wheelSheet = workbook.SheetNames.find((name) => name.trim().toLowerCase() === WHEEL_SHEET);
 
   for (const name of workbook.SheetNames) {
@@ -217,24 +219,37 @@ export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): 
 
     for (const row of rows) {
       const id = globalThis.crypto.randomUUID();
+      let bottle: Bottle | null = null;
       if (lower === "smws") {
-        bottles.push(fromSmws(row, id));
+        bottle = fromSmws(row, id);
+        bottles.push(bottle);
       } else if (lower.includes("fallen")) {
-        graveyard.push(fromOpenClosed(row, name, id));
+        bottle = fromOpenClosed(row, name, id);
+        graveyard.push(bottle);
       } else if (lower === "open bottles" || lower === "closed bottles" || lower === "apartment") {
-        bottles.push(fromOpenClosed(row, name, id));
+        bottle = fromOpenClosed(row, name, id);
+        bottles.push(bottle);
       }
+      if (bottle) read.push({ sheet: name, bottle });
     }
   }
 
+  const wheel = wheelSheet ? wheelFromSheet(workbook.Sheets[wheelSheet]) : null;
   return {
-    schemaVersion: 1,
-    importedAt: now.toISOString(),
-    bottles,
-    graveyard,
-    recentlyPoured: [],
-    wheel: wheelSheet ? wheelFromSheet(workbook.Sheets[wheelSheet]) : [],
+    catalog: {
+      schemaVersion: 1,
+      importedAt: now.toISOString(),
+      bottles,
+      graveyard,
+      recentlyPoured: [],
+      wheel: wheel ?? [],
+    },
+    report: wheelReport(wheel, read),
   };
+}
+
+export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): Catalog {
+  return importWorkbook(workbook, now).catalog;
 }
 
 export function catalogFromArrayBuffer(buffer: ArrayBuffer): Catalog {

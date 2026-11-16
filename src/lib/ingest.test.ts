@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { catalogFromWorkbook } from "./ingest";
+import { catalogFromWorkbook, importWorkbook } from "./ingest";
 
 function sheet(name: string, rows: Record<string, string>[]): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
@@ -61,6 +61,28 @@ describe("Flavor Wheel import", () => {
 
   it("gives a workbook without the tab no wheel", () => {
     expect(catalogFromWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] })).wheel).toEqual([]);
+  });
+
+  it("reports what does not fit the wheel, naming each bottle's sheet", () => {
+    const book = workbook({
+      "Fallen soldiers": [{ Distillery: "Ardbeg", Bottling: "Wee Beastie", "Wheel Descriptors": "orange" }],
+    });
+    XLSX.utils.book_append_sheet(
+      book,
+      XLSX.utils.aoa_to_sheet([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange"],
+      ]),
+      "Wheel Glossary",
+    );
+    expect(importWorkbook(book).report.map((finding) => finding.text)).toEqual([
+      'Missing parent on Fallen soldiers, Ardbeg Wee Beastie: Descriptor "orange" has no Citric Subgroup on the bottle.',
+    ]);
+  });
+
+  it("reports a workbook without the tab as missing it", () => {
+    const { report } = importWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] }));
+    expect(report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
   });
 });
 
