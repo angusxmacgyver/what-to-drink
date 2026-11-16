@@ -64,6 +64,43 @@ describe("Flavor Wheel import", () => {
   });
 });
 
+describe("bottle wheel terms", () => {
+  const terms = {
+    "Wheel Families": "Fruity | Peaty",
+    "Wheel Subgroups": "citric |Medicinal",
+    "Wheel Descriptors": " orange | iodine ",
+  };
+
+  it("reads Families, Subgroups, and Descriptors on every bottle sheet, as typed in the workbook", () => {
+    const catalog = catalogFromWorkbook(
+      workbook({
+        "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "Drum", ...terms }],
+        "Closed Bottles": [{ Distillery: "Ardbeg", Bottling: "10", ...terms }],
+        SMWS: [{ Distillery: "Ardbeg", "Full Code": "33.1", ...terms }],
+        Apartment: [{ Distillery: "Ardbeg", Bottling: "An Oa", ...terms }],
+        "Fallen soldiers": [{ Distillery: "Ardbeg", Bottling: "Wee Beastie", ...terms }],
+      }),
+    );
+    const all = [...catalog.bottles, ...catalog.graveyard];
+    expect(all).toHaveLength(5);
+    for (const bottle of all) {
+      expect(bottle.wheelFamilies).toEqual(["Fruity", "Peaty"]);
+      expect(bottle.wheelSubgroups).toEqual(["citric", "Medicinal"]);
+      expect(bottle.wheelDescriptors).toEqual(["orange", "iodine"]);
+    }
+  });
+
+  it("gives blank columns no terms and never fills in a parent", () => {
+    const catalog = catalogFromWorkbook(
+      workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10", "Wheel Descriptors": "orange" }] }),
+    );
+    const [bottle] = catalog.bottles;
+    expect(bottle.wheelFamilies).toEqual([]);
+    expect(bottle.wheelSubgroups).toEqual([]);
+    expect(bottle.wheelDescriptors).toEqual(["orange"]);
+  });
+});
+
 describe("cask import", () => {
   const casks = { "Primary Cask": "Ex-bourbon | Oloroso sherry", "Secondary Cask": "Rum" };
 

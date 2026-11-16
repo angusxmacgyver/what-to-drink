@@ -35,6 +35,9 @@ export function saveTheme(theme: Theme): void {
 
 const readBottle = (bottle: Bottle): Bottle => ({
   ...bottle,
+  wheelFamilies: stringList(bottle.wheelFamilies),
+  wheelSubgroups: stringList(bottle.wheelSubgroups),
+  wheelDescriptors: stringList(bottle.wheelDescriptors),
   primaryCask: stringList(bottle.primaryCask),
   secondaryCask: stringList(bottle.secondaryCask),
   drams: stringList(bottle.drams),
@@ -44,7 +47,8 @@ const readBottle = (bottle: Bottle): Bottle => ({
 
 /**
  * A catalog from D1, this device, the bundled file, or a downloaded bottles.json. Facts a catalog
- * saved before them omits read as none: no casks, no drams, no last third, no kill shots, nothing Recently poured, no wheel.
+ * saved before them omits read as none: no Families, Subgroups, or Descriptors on a bottle, no casks, no drams, no last third,
+ * no kill shots, nothing Recently poured, no Flavor Wheel.
  */
 export function readCatalog(raw: unknown): Catalog {
   const catalog = raw as Catalog;

@@ -87,6 +87,14 @@ function sheetRows(workbook: XLSX.WorkBook, name: string): Record<string, unknow
   });
 }
 
+function wheelTerms(row: Record<string, unknown>): Pick<Bottle, "wheelFamilies" | "wheelSubgroups" | "wheelDescriptors"> {
+  return {
+    wheelFamilies: splitPipes(cell(row, "Wheel Families")),
+    wheelSubgroups: splitPipes(cell(row, "Wheel Subgroups")),
+    wheelDescriptors: splitPipes(cell(row, "Wheel Descriptors")),
+  };
+}
+
 function fromOpenClosed(
   row: Record<string, unknown>,
   sheetName: string,
@@ -111,6 +119,7 @@ function fromOpenClosed(
     theme: normalizeTheme(cell(row, "SMWS Theme", "Theme")),
     flavorFamilies: splitPipes(cell(row, "Flavor Families")),
     subCharacteristics: splitPipes(cell(row, "Sub-Characteristics")),
+    ...wheelTerms(row),
     primaryCask: splitPipes(cell(row, "Primary Cask")),
     secondaryCask: splitPipes(cell(row, "Secondary Cask")),
     atApartment: atApartment(sheetName, location),
@@ -161,6 +170,7 @@ function fromSmws(row: Record<string, unknown>, id: string): Bottle {
     theme: normalizeTheme(cell(row, "SMWS Theme", "Theme", "Theme ")),
     flavorFamilies: splitPipes(cell(row, "Flavor Families")),
     subCharacteristics: splitPipes(cell(row, "Sub-Characteristics")),
+    ...wheelTerms(row),
     primaryCask: splitPipes(cell(row, "Primary Cask")),
     secondaryCask: splitPipes(cell(row, "Secondary Cask")),
     atApartment: atApartment("SMWS", location),

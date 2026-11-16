@@ -29,6 +29,10 @@ export type Bottle = {
   theme: string;
   flavorFamilies: string[];
   subCharacteristics: string[];
+  /** Flavor Wheel terms as written in the workbook, which may not match the wheel. */
+  wheelFamilies: string[];
+  wheelSubgroups: string[];
+  wheelDescriptors: string[];
   primaryCask: string[];
   secondaryCask: string[];
   atApartment: boolean;

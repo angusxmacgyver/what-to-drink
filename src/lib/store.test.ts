@@ -32,6 +32,9 @@ const bottle = (id: string): Bottle => ({
   theme: "",
   flavorFamilies: [],
   subCharacteristics: [],
+  wheelFamilies: [],
+  wheelSubgroups: [],
+  wheelDescriptors: [],
   primaryCask: [],
   secondaryCask: [],
   atApartment: false,
@@ -238,6 +241,16 @@ describe("the catalog document", () => {
     const document = JSON.stringify(older);
     expect(catalogFromDocument(document).wheel).toEqual([]);
     expect(carriesDramHistory(document)).toBe(true);
+  });
+
+  it("restores each bottle's wheel terms, and reads a document from before them as none", () => {
+    const tasted = { ...bottle("tasted"), wheelFamilies: ["Fruity"], wheelSubgroups: ["Citric"], wheelDescriptors: ["orangey"] };
+    const { wheelFamilies: _f, wheelSubgroups: _s, wheelDescriptors: _d, ...older } = bottle("old");
+    const read = catalogFromDocument(JSON.stringify({ ...history, bottles: [tasted, older], graveyard: [] }));
+    expect(read.bottles.map((b) => [b.wheelFamilies, b.wheelSubgroups, b.wheelDescriptors])).toEqual([
+      [["Fruity"], ["Citric"], ["orangey"]],
+      [[], [], []],
+    ]);
   });
 
   it("refuses a file that is not a catalog", () => {
