@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WheelFamily } from "../types";
-import { familyOptions, keptUnder, placeTerm, placeTerms, scopedOptions, subgroupClusters } from "./wheel";
+import { dropUnder, familyOptions, keptUnder, placeTerm, placeTerms, scopedOptions, subgroupClusters } from "./wheel";
 
 const wheel: WheelFamily[] = [
   {
@@ -77,6 +77,19 @@ describe("keptUnder", () => {
     expect(keptUnder(wheel, "subgroup", ["Peaty"], ["Citric", "Medicinal", "Citrus"])).toEqual(["Medicinal", "Citrus"]);
     expect(keptUnder(wheel, "subgroup", [], ["Citric", "Citrus"])).toEqual(["Citrus"]);
     expect(keptUnder(wheel, "descriptor", ["Citric"], ["orange", "TCP", "raisins"])).toEqual(["orange", "raisins"]);
+  });
+});
+
+describe("dropUnder", () => {
+  const shared: WheelFamily[] = [
+    { name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] },
+    { name: "Peaty", color: "Green", subgroups: [{ name: "Citric", descriptors: ["orange"] }] },
+  ];
+
+  it("drops a pick only when every parent it sits under was removed, and keeps a stray pick", () => {
+    expect(dropUnder(wheel, "subgroup", ["Peaty"], ["Citric", "Medicinal", "Citrus"])).toEqual(["Citric", "Citrus"]);
+    expect(dropUnder(shared, "subgroup", ["Fruity"], ["Citric"])).toEqual(["Citric"]);
+    expect(dropUnder(shared, "subgroup", ["Fruity", "Peaty"], ["Citric"])).toEqual([]);
   });
 });
 

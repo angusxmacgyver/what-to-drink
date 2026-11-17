@@ -290,6 +290,7 @@ export default function App() {
           {editing ? (
             <OwnerForm
               initial={editing === "new" ? undefined : editing}
+              wheel={catalog.wheel}
               caskTags={caskTags}
               onSave={(bottle) => {
                 const save = () => {
