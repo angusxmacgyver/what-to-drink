@@ -33,13 +33,7 @@ function pertinentFields(bottle: Bottle) {
   );
 }
 
-export function BottleFields({
-  bottle,
-  flavorText = true,
-}: {
-  bottle: Bottle;
-  flavorText?: boolean;
-}) {
+export function BottleFields({ bottle }: { bottle: Bottle }) {
   const hasNotes = Boolean(bottle.notes);
   const hasTasting = Boolean(bottle.tastingNotes);
   const notes =
@@ -51,12 +45,6 @@ export function BottleFields({
     ) : null;
   const extra = (
     <>
-      {flavorText ? (
-        <>
-          <Field label="Flavor families" value={bottle.flavorFamilies.join(" · ")} />
-          <Field label="Sub-characteristics" value={bottle.subCharacteristics.join(" · ")} />
-        </>
-      ) : null}
       <Field label="Primary cask" value={bottle.primaryCask.join(" · ")} />
       <Field label="Secondary cask" value={bottle.secondaryCask.join(" · ")} />
       {bottle.smws ? (

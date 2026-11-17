@@ -1,4 +1,11 @@
-import { RECENTLY_POURED_LIMIT, isRecentPour, isWheelFamily, type Bottle, type Catalog } from "../types";
+import {
+  RECENTLY_POURED_LIMIT,
+  isRecentPour,
+  isWheelFamily,
+  type Bottle,
+  type Catalog,
+  type WheelFamily,
+} from "../types";
 
 const STORAGE_KEY = "what-to-drink-catalog";
 const OWNER_KEY = "what-to-drink-owner";
@@ -167,7 +174,9 @@ async function send(method: string, path: string, body: unknown): Promise<boolea
 
 export const saveBottle = (bottle: Bottle) => send("PUT", `/api/bottles/${encodeURIComponent(bottle.id)}`, bottle);
 
-export const addBottles = (bottles: Bottle[]) => send("POST", "/api/bottles", bottles);
+/** Without a wheel, the shared cellar keeps its Flavor Wheel. */
+export const addBottles = (bottles: Bottle[], wheel: WheelFamily[] | null = null) =>
+  send("POST", "/api/bottles", wheel ? { bottles, wheel } : { bottles });
 
 export const replaceCatalog = (catalog: Catalog) => send("PUT", "/api/catalog", catalog);
 

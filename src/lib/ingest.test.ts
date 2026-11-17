@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { catalogFromWorkbook } from "./ingest";
+import { catalogFromWorkbook, importWorkbook } from "./ingest";
 
 function sheet(name: string, rows: Record<string, string>[]): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
@@ -61,6 +61,59 @@ describe("Flavor Wheel import", () => {
 
   it("gives a workbook without the tab no wheel", () => {
     expect(catalogFromWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] })).wheel).toEqual([]);
+  });
+
+  it("reports what does not fit the wheel, naming each bottle's sheet", () => {
+    const book = workbook({
+      "Fallen soldiers": [{ Distillery: "Ardbeg", Bottling: "Wee Beastie", "Wheel Descriptors": "orange" }],
+    });
+    XLSX.utils.book_append_sheet(
+      book,
+      XLSX.utils.aoa_to_sheet([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange"],
+      ]),
+      "Wheel Glossary",
+    );
+    expect(importWorkbook(book).report.map((finding) => finding.text)).toEqual([
+      'Missing parent on Fallen soldiers, Ardbeg Wee Beastie: Descriptor "orange" has no Citric Subgroup on the bottle.',
+    ]);
+  });
+
+  it("reports a workbook without the tab, or with a tab that has no Family header row, as missing it", () => {
+    const { report, wheel } = importWorkbook(workbook({ "Open Bottles": [{ Distillery: "Ardbeg", Bottling: "10" }] }));
+    expect(report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+    expect(wheel).toBeNull();
+    const headless = importWorkbook(glossary([["Fruity", "Orange", "Citric", "orange"]]));
+    expect(headless.catalog.wheel).toEqual([]);
+    expect(headless.wheel).toBeNull();
+    expect(headless.report.map((finding) => finding.kind)).toEqual(["missing-tab"]);
+  });
+
+  it("hands a merge the wheel it read from the tab", () => {
+    const imported = importWorkbook(
+      glossary([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "Orange", "Citric", "orange"],
+      ]),
+    );
+    expect(imported.wheel).toEqual(imported.catalog.wheel);
+    expect(imported.wheel).toHaveLength(1);
+  });
+
+  it("gives a Family the color from its first row that has one, and reports a second color", () => {
+    const { catalog, report } = importWorkbook(
+      glossary([
+        ["Family", "Color", "Wheel Subgroups", "Descriptors"],
+        ["Fruity", "", "Citric", "orange"],
+        ["Fruity", "Orange", "Dried Fruit", "raisin"],
+        ["Fruity", "Red", "Tropical", "mango"],
+      ]),
+    );
+    expect(catalog.wheel.map((family) => family.color)).toEqual(["Orange"]);
+    expect(report.map((finding) => finding.text)).toEqual([
+      'Conflicting colors in the Wheel Glossary: Family "Fruity" is given Orange and Red.',
+    ]);
   });
 });
 

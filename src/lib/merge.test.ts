@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Bottle, Catalog } from "../types";
+import type { Bottle, Catalog, WheelFamily } from "../types";
 import { applyMerge, planMerge } from "./merge";
 
 let nextId = 0;
@@ -114,5 +114,24 @@ describe("applyMerge", () => {
   it("adds nothing when no bottles are selected", () => {
     const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [], wheel: [] };
     expect(applyMerge(catalog, []).bottles).toEqual([]);
+  });
+});
+
+describe("the Flavor Wheel after a merge", () => {
+  const current: WheelFamily[] = [{ name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] }];
+  const catalog: Catalog = { schemaVersion: 1, importedAt: "", bottles: [], graveyard: [], recentlyPoured: [], wheel: current };
+
+  it("is the workbook's wheel when the workbook has a Wheel Glossary", () => {
+    const workbook: WheelFamily[] = [{ name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] }];
+    expect(applyMerge(catalog, [bottle()], workbook).wheel).toBe(workbook);
+  });
+
+  it("is the workbook's wheel even when its Wheel Glossary lists no Families", () => {
+    expect(applyMerge(catalog, [bottle()], []).wheel).toEqual([]);
+  });
+
+  it("stays the current wheel when no Wheel Glossary was found", () => {
+    expect(applyMerge(catalog, [bottle()], null).wheel).toBe(current);
+    expect(applyMerge(catalog, [bottle()]).wheel).toBe(current);
   });
 });

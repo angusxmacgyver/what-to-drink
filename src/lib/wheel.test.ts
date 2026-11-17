@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WheelFamily } from "../types";
-import { placeTerm } from "./wheel";
+import { placeTerm, placeTerms, subgroupClusters } from "./wheel";
 
 const wheel: WheelFamily[] = [
   {
@@ -30,7 +30,63 @@ describe("placeTerm", () => {
     expect(placeTerm(wheel, "subgroup", "orange").family).toBeNull();
   });
 
+  it("places a list of terms once per Glossary spelling, in the order first written", () => {
+    expect(placeTerms(wheel, "family", ["peaty", "Fruity", "PEATY", "Smoky", "smoky "]).map((t) => t.label)).toEqual([
+      "Peaty",
+      "Fruity",
+      "Smoky",
+    ]);
+  });
+
   it("finds nothing in a wheel that has not been imported", () => {
     expect(placeTerm([], "family", "Fruity")).toEqual({ label: "Fruity", family: null, color: "" });
+  });
+});
+
+describe("subgroupClusters", () => {
+  const terms = (subgroups: string[], descriptors: string[]) => ({
+    wheelFamilies: [],
+    wheelSubgroups: subgroups,
+    wheelDescriptors: descriptors,
+  });
+
+  it("gathers each Subgroup's Descriptors under it in its Family's color, Subgroups in wheel order", () => {
+    expect(subgroupClusters(wheel, [terms(["medicinal", "Citric"], ["iodine", "LEMON ZEST", "orange"])])).toEqual([
+      { subgroup: "Citric", color: "Orange", descriptors: ["lemon zest", "orange"] },
+      { subgroup: "Medicinal", color: "Green", descriptors: ["iodine"] },
+    ]);
+  });
+
+  it("shows a Subgroup with no Descriptors, and a Descriptor under its wheel Subgroup when the bottle lacks it", () => {
+    expect(subgroupClusters(wheel, [terms(["Dried Fruit"], ["TCP"])])).toEqual([
+      { subgroup: "Dried Fruit", color: "Orange", descriptors: [] },
+      { subgroup: "Medicinal", color: "Green", descriptors: ["TCP"] },
+    ]);
+  });
+
+  it("gathers the terms of every bottle given, once each", () => {
+    expect(subgroupClusters(wheel, [terms(["Citric"], ["orange"]), terms([], ["Orange", "raisin"])])).toEqual([
+      { subgroup: "Citric", color: "Orange", descriptors: ["orange"] },
+      { subgroup: "Dried Fruit", color: "Orange", descriptors: ["raisin"] },
+    ]);
+  });
+
+  it("keeps stray Subgroups as typed, and stray Descriptors in a neutral Other cluster, last", () => {
+    expect(subgroupClusters(wheel, [terms(["Citrus", "Citric"], ["orange", "raisins", "Raisins"])])).toEqual([
+      { subgroup: "Citric", color: "Orange", descriptors: ["orange"] },
+      { subgroup: "Citrus", color: "", descriptors: [] },
+      { subgroup: "Other", color: "", descriptors: ["raisins"] },
+    ]);
+  });
+
+  it("folds a stray Subgroup typed as Other into the Other cluster", () => {
+    expect(subgroupClusters(wheel, [terms(["other"], [])])).toEqual([{ subgroup: "Other", color: "", descriptors: [] }]);
+    expect(subgroupClusters(wheel, [terms(["Other"], ["raisins"])])).toEqual([
+      { subgroup: "Other", color: "", descriptors: ["raisins"] },
+    ]);
+  });
+
+  it("gives a bottle with only Families, or no terms, no clusters", () => {
+    expect(subgroupClusters(wheel, [{ ...terms([], []), wheelFamilies: ["Fruity"] }])).toEqual([]);
   });
 });

@@ -185,6 +185,7 @@ export default function App() {
       {view === "library" ? (
         <Library
           bottles={catalog.bottles}
+          wheel={catalog.wheel}
           filters={libraryVisit.filters}
           onFilters={libraryVisit.change}
           onUndo={libraryVisit.undo}
@@ -222,7 +223,7 @@ export default function App() {
         />
       ) : null}
 
-      {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} /> : null}
+      {view === "graveyard" ? <Graveyard bottles={catalog.graveyard} wheel={catalog.wheel} /> : null}
 
       {view === "analytics" ? <Analytics catalog={catalog} /> : null}
 
@@ -263,14 +264,16 @@ export default function App() {
           />
           <MergeImportPanel
             catalog={catalog}
-            onConfirm={(bottles) => {
+            onConfirm={(bottles, wheel) => {
               const count = bottles.length;
               return ask(
-                `Add ${count} bottle${count === 1 ? "" : "s"}? Existing bottles stay as they are.`,
+                `Add ${count} bottle${count === 1 ? "" : "s"}? Existing bottles stay as they are.${
+                  wheel ? " The Flavor Wheel is replaced with the workbook's Wheel Glossary." : ""
+                }`,
                 "Add",
               ).then((ok) => {
                 if (!ok) return false;
-                void persist(applyMerge(catalog, bottles), addBottles(bottles));
+                void persist(applyMerge(catalog, bottles, wheel), addBottles(bottles, wheel));
                 setNotice(`Added ${count} bottle${count === 1 ? "" : "s"} from the workbook.`);
                 return true;
               });

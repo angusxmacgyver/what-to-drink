@@ -1,13 +1,14 @@
 import { useState } from "react";
-import type { Bottle } from "../types";
+import type { Bottle, WheelFamily } from "../types";
 import { BottleFields } from "./BottleFields";
+import { WheelClusters, WheelFamilies } from "./WheelTerms";
 
 function formatFinished(value: string): string {
   if (!value || /unknown/i.test(value)) return "Unknown";
   return value;
 }
 
-export function Graveyard({ bottles }: { bottles: Bottle[] }) {
+export function Graveyard({ bottles, wheel }: { bottles: Bottle[]; wheel: WheelFamily[] }) {
   const [open, setOpen] = useState<string | null>(null);
   const sorted = [...bottles].sort((a, b) => a.distillery.localeCompare(b.distillery));
 
@@ -47,6 +48,8 @@ export function Graveyard({ bottles }: { bottles: Bottle[] }) {
               {expanded ? (
                 <div className="detail">
                   <BottleFields bottle={bottle} />
+                  <WheelFamilies wheel={wheel} bottles={[bottle]} />
+                  <WheelClusters wheel={wheel} bottles={[bottle]} />
                 </div>
               ) : null}
             </article>

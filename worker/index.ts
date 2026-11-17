@@ -1,4 +1,4 @@
-import { isRecentPour, isWheelFamily, type Bottle } from "../src/types";
+import { isRecentPour, isWheelFamily, type Bottle, type WheelFamily } from "../src/types";
 import { catalogJson, chunk, toRow, type BottleRow } from "../src/lib/rows";
 
 type Statement = {
@@ -44,6 +44,9 @@ const isBottle = (value: unknown): value is Bottle => {
   return typeof b === "object" && b !== null && [b.id, b.bottleKey, b.status].every((v) => typeof v === "string");
 };
 const isBottleList = (value: unknown): value is Bottle[] => Array.isArray(value) && value.every(isBottle);
+const isWheel = (value: unknown): value is WheelFamily[] => Array.isArray(value) && value.every(isWheelFamily);
+const BAD_WHEEL = "expected a Flavor Wheel of Families, each with a color and Subgroups of Descriptors";
+const setWheel = (db: Db, wheel: WheelFamily[]) => db.prepare(SET_META).bind("wheel", JSON.stringify(wheel));
 
 async function readBody(request: Request): Promise<unknown> {
   try {
@@ -77,24 +80,29 @@ async function replaceCatalog(db: Db, request: Request): Promise<Response> {
     return fail(400, "expected Recently poured lines with a bottle id, a time, and a kill-shot fact");
   }
   const wheel = body.wheel ?? [];
-  if (!Array.isArray(wheel) || !wheel.every(isWheelFamily)) {
-    return fail(400, "expected a Flavor Wheel of Families, each with a color and Subgroups of Descriptors");
-  }
+  if (!isWheel(wheel)) return fail(400, BAD_WHEEL);
   const now = new Date().toISOString();
   await db.batch([
     db.prepare("DELETE FROM bottles"),
     ...insertMany(db, [...body.bottles, ...body.graveyard], now),
     db.prepare(SET_META).bind("importedAt", body.importedAt),
     db.prepare(SET_META).bind("recentlyPoured", JSON.stringify(recentlyPoured)),
-    db.prepare(SET_META).bind("wheel", JSON.stringify(wheel)),
+    setWheel(db, wheel),
   ]);
   return respond(null, 204);
 }
 
+// A bare list is the body from before the merge carried the Flavor Wheel.
 async function addBottles(db: Db, request: Request): Promise<Response> {
-  const body = await readBody(request);
-  if (!isBottleList(body)) return fail(400, "expected a list of bottles");
-  await db.batch(insertMany(db, body, new Date().toISOString()));
+  const raw = await readBody(request);
+  const body = (Array.isArray(raw) ? { bottles: raw } : raw) as { bottles?: unknown; wheel?: unknown } | undefined;
+  if (!body || !isBottleList(body.bottles)) return fail(400, "expected a list of bottles");
+  const { wheel } = body;
+  if (wheel !== undefined && !isWheel(wheel)) return fail(400, BAD_WHEEL);
+  await db.batch([
+    ...insertMany(db, body.bottles, new Date().toISOString()),
+    ...(wheel === undefined ? [] : [setWheel(db, wheel)]),
+  ]);
   return respond(null, 204);
 }
 

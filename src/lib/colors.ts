@@ -43,6 +43,17 @@ export function familyClass(family: string): string {
   return FAMILY_CLASSES[family] ?? FALLBACK_CLASS;
 }
 
+const WHEEL_COLORS = new Set(["yellow", "orange", "violet", "green", "blue", "grey", "brown", "red"]);
+
+export function wheelColorClass(colorName: string): string {
+  const name = colorName.trim().toLowerCase();
+  return WHEEL_COLORS.has(name) ? `wheel-${name}` : "wheel-neutral";
+}
+
+export function isWheelColor(colorName: string): boolean {
+  return wheelColorClass(colorName) !== "wheel-neutral";
+}
+
 export function subFamilyClass(sub: string, selectedFamily?: string): string {
   return familyClass(selectedFamily || subOwnerFamily(sub) || "");
 }

@@ -1,4 +1,4 @@
-import type { Bottle, Catalog } from "../types";
+import type { Bottle, Catalog, WheelFamily } from "../types";
 
 export type MergeRow = {
   bottle: Bottle;
@@ -16,6 +16,7 @@ export function planMerge(existing: Bottle[], incoming: Bottle[]): MergeRow[] {
   }));
 }
 
-export function applyMerge(catalog: Catalog, selected: Bottle[]): Catalog {
-  return { ...catalog, bottles: [...catalog.bottles, ...selected] };
+/** A workbook's Wheel Glossary replaces the wheel; `null` (no Wheel Glossary found) keeps it. */
+export function applyMerge(catalog: Catalog, selected: Bottle[], wheel: WheelFamily[] | null = null): Catalog {
+  return { ...catalog, bottles: [...catalog.bottles, ...selected], wheel: wheel ?? catalog.wheel };
 }

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, splitBalancedRow, subFamilyClass } from "./colors";
+import {
+  compareFamilies,
+  compareSmwsThemes,
+  familyClass,
+  smwsThemeClass,
+  splitBalancedRow,
+  subFamilyClass,
+  wheelColorClass,
+} from "./colors";
 
 describe("familyClass", () => {
   it("maps every known flavor family to its own class", () => {
@@ -37,6 +45,29 @@ describe("subFamilyClass", () => {
   it("falls back to a neutral class for an uncurated sub-characteristic", () => {
     expect(subFamilyClass("Not Yet Catalogued")).toBe("family-other");
     expect(subFamilyClass("")).toBe("family-other");
+  });
+});
+
+describe("wheelColorClass", () => {
+  it("maps each of the 8 Wheel Glossary color names to its own class, ignoring case and spaces", () => {
+    const names = ["Yellow", "Orange", "Violet", "Green", "Blue", "Grey", "Brown", "Red"];
+    expect(names.map(wheelColorClass)).toEqual([
+      "wheel-yellow",
+      "wheel-orange",
+      "wheel-violet",
+      "wheel-green",
+      "wheel-blue",
+      "wheel-grey",
+      "wheel-brown",
+      "wheel-red",
+    ]);
+    expect(wheelColorClass(" green ")).toBe("wheel-green");
+  });
+
+  it("shows a blank or unknown color name neutral", () => {
+    expect(wheelColorClass("")).toBe("wheel-neutral");
+    expect(wheelColorClass("Teal")).toBe("wheel-neutral");
+    expect(wheelColorClass("Gray")).toBe("wheel-neutral");
   });
 });
 

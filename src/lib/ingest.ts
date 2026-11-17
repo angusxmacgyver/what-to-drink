@@ -1,6 +1,7 @@
 import type { Age, Bottle, BottleStatus, Catalog, SmwsExtras, WheelFamily } from "../types";
 import { countryFromRegion, normalizeTheme } from "./normalize";
 import * as XLSX from "xlsx";
+import { wheelReport, type SheetBottle, type WheelFinding, type WheelGlossary } from "./wheelReport";
 
 const SKIP_SHEETS = new Set(["draft participants"]);
 const WHEEL_SHEET = "wheel glossary";
@@ -184,30 +185,38 @@ function fromSmws(row: Record<string, unknown>, id: string): Bottle {
 }
 
 // The owner keeps a title and notes above the header, so the table starts at the row whose first cell is Family.
-function wheelFromSheet(sheet: XLSX.WorkSheet): WheelFamily[] {
+function glossaryFromSheet(sheet: XLSX.WorkSheet): WheelGlossary | null {
   const grid = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: "", raw: false });
   const start = grid.findIndex((line) => String(line[0] ?? "").trim().toLowerCase() === "family");
-  if (start < 0) return [];
+  if (start < 0) return null;
   const header = grid[start].map(String);
-  const families: WheelFamily[] = [];
+  const wheel: WheelFamily[] = [];
+  const familyRows: WheelGlossary["familyRows"] = [];
   for (const line of grid.slice(start + 1)) {
     const row = Object.fromEntries(header.map((key, i) => [key, line[i]]));
     const name = cell(row, "Family");
+    const color = cell(row, "Color");
     const subgroup = cell(row, "Wheel Subgroups");
+    if (name) familyRows.push({ name, color });
     if (!name || !subgroup) continue;
-    let family = families.find((f) => f.name === name);
+    let family = wheel.find((f) => f.name === name);
     if (!family) {
-      family = { name, color: cell(row, "Color"), subgroups: [] };
-      families.push(family);
+      family = { name, color, subgroups: [] };
+      wheel.push(family);
     }
+    family.color ||= color;
     family.subgroups.push({ name: subgroup, descriptors: splitPipes(cell(row, "Descriptors")) });
   }
-  return families;
+  return { wheel, familyRows };
 }
 
-export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): Catalog {
+/** `wheel` is null when no Wheel Glossary was found, so a merge keeps the current wheel. */
+export type WorkbookImport = { catalog: Catalog; report: WheelFinding[]; wheel: WheelFamily[] | null };
+
+export function importWorkbook(workbook: XLSX.WorkBook, now = new Date()): WorkbookImport {
   const bottles: Bottle[] = [];
   const graveyard: Bottle[] = [];
+  const sheetBottles: SheetBottle[] = [];
   const wheelSheet = workbook.SheetNames.find((name) => name.trim().toLowerCase() === WHEEL_SHEET);
 
   for (const name of workbook.SheetNames) {
@@ -217,27 +226,44 @@ export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): 
 
     for (const row of rows) {
       const id = globalThis.crypto.randomUUID();
+      let bottle: Bottle | null = null;
       if (lower === "smws") {
-        bottles.push(fromSmws(row, id));
+        bottle = fromSmws(row, id);
+        bottles.push(bottle);
       } else if (lower.includes("fallen")) {
-        graveyard.push(fromOpenClosed(row, name, id));
+        bottle = fromOpenClosed(row, name, id);
+        graveyard.push(bottle);
       } else if (lower === "open bottles" || lower === "closed bottles" || lower === "apartment") {
-        bottles.push(fromOpenClosed(row, name, id));
+        bottle = fromOpenClosed(row, name, id);
+        bottles.push(bottle);
       }
+      if (bottle) sheetBottles.push({ sheet: name, bottle });
     }
   }
 
+  const glossary = wheelSheet ? glossaryFromSheet(workbook.Sheets[wheelSheet]) : null;
   return {
-    schemaVersion: 1,
-    importedAt: now.toISOString(),
-    bottles,
-    graveyard,
-    recentlyPoured: [],
-    wheel: wheelSheet ? wheelFromSheet(workbook.Sheets[wheelSheet]) : [],
+    catalog: {
+      schemaVersion: 1,
+      importedAt: now.toISOString(),
+      bottles,
+      graveyard,
+      recentlyPoured: [],
+      wheel: glossary?.wheel ?? [],
+    },
+    report: wheelReport(glossary, sheetBottles),
+    wheel: glossary?.wheel ?? null,
   };
 }
 
+export function catalogFromWorkbook(workbook: XLSX.WorkBook, now = new Date()): Catalog {
+  return importWorkbook(workbook, now).catalog;
+}
+
+export function importArrayBuffer(buffer: ArrayBuffer): WorkbookImport {
+  return importWorkbook(XLSX.read(buffer, { type: "array" }));
+}
+
 export function catalogFromArrayBuffer(buffer: ArrayBuffer): Catalog {
-  const workbook = XLSX.read(buffer, { type: "array" });
-  return catalogFromWorkbook(workbook);
+  return importArrayBuffer(buffer).catalog;
 }
