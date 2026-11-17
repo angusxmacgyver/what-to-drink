@@ -1,5 +1,6 @@
 import type { Bottle, FilterState } from "../types";
 import { matchesAbvRange, matchesAgeRange } from "./histogram";
+import { matchesWheelTerms, optionSpelling } from "./wheel";
 
 export type LibraryRow = {
   bottleKey: string;
@@ -199,8 +200,9 @@ export function matchesFilters(bottle: Bottle, filters: FilterState, exact = fal
     if (!matchesAbvRange(bottle.abv, from, to)) return false;
   }
 
-  if (!matchesTags(filters.families, bottle.flavorFamilies, exact)) return false;
-  if (!matchesTags(filters.subs, bottle.subCharacteristics, exact)) return false;
+  if (!matchesWheelTerms(filters.families, bottle.wheelFamilies, exact)) return false;
+  if (!matchesWheelTerms(filters.subs, bottle.wheelSubgroups, exact)) return false;
+  if (!matchesWheelTerms(filters.descriptors ?? [], bottle.wheelDescriptors, exact)) return false;
 
   if (filters.search.trim()) {
     const q = filters.search.trim().toLowerCase();
@@ -211,6 +213,7 @@ export function matchesFilters(bottle: Bottle, filters: FilterState, exact = fal
       bottle.smws?.nameIntl ?? "",
       ...bottle.primaryCask,
       ...bottle.secondaryCask,
+      ...bottle.wheelDescriptors,
     ]
       .join(" ")
       .toLowerCase();
@@ -234,6 +237,7 @@ export type CountFacet =
   | "theme"
   | "family"
   | "sub"
+  | "descriptor"
   | "country"
   | "region";
 
@@ -247,6 +251,7 @@ function withoutFacet(filters: FilterState, facet: CountFacet): FilterState {
   if (facet === "theme") return { ...filters, themes: [] };
   if (facet === "family") return { ...filters, families: [] };
   if (facet === "sub") return { ...filters, subs: [] };
+  if (facet === "descriptor") return { ...filters, descriptors: [] };
   if (facet === "country") return { ...filters, countries: [] };
   return { ...filters, regions: [] };
 }
@@ -257,8 +262,9 @@ function valuesForFacet(bottle: Bottle, facet: CountFacet): string[] {
   if (facet === "lastThird") return bottle.lastThird ? [LAST_THIRD] : [];
   if (facet === "distillery") return [bottle.distillery];
   if (facet === "theme") return [bottle.theme];
-  if (facet === "family") return bottle.flavorFamilies;
-  if (facet === "sub") return bottle.subCharacteristics;
+  if (facet === "family") return bottle.wheelFamilies;
+  if (facet === "sub") return bottle.wheelSubgroups;
+  if (facet === "descriptor") return bottle.wheelDescriptors;
   if (facet === "country") return [bottle.country];
   return [bottle.region];
 }
@@ -277,11 +283,13 @@ export function optionCounts(
   const counts: Record<string, number> = {};
   for (const option of options) counts[option] = 0;
   const wanted = new Set(options);
+  const wheelFacet = facet === "family" || facet === "sub" || facet === "descriptor";
   const narrowed = exact && facet !== "place" ? filters : withoutFacet(filters, facet);
   for (const bottle of candidates) {
     if (!matchesFilters(bottle, narrowed, exact)) continue;
     for (const value of valuesForFacet(bottle, facet)) {
-      if (wanted.has(value)) counts[value] += 1;
+      const option = wheelFacet ? optionSpelling(options, value) : wanted.has(value) ? value : undefined;
+      if (option !== undefined) counts[option] += 1;
     }
   }
   return counts;

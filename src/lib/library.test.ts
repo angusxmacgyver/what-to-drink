@@ -292,10 +292,10 @@ describe("matchesFilters last third", () => {
 });
 
 describe("matchesFilters exact", () => {
-  const smoky = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Smoke"] });
-  const fruity = bottle({ distillery: "Ardbeg", abv: 55, flavorFamilies: ["Fruit (Fresh)"] });
-  const both = bottle({ distillery: "Ardbeg", abv: 46, flavorFamilies: ["Smoke", "Fruit (Fresh)"] });
-  const other = bottle({ distillery: "Lagavulin", abv: 55, flavorFamilies: ["Smoke"] });
+  const smoky = bottle({ distillery: "Ardbeg", abv: 55, wheelFamilies: ["Smoke"] });
+  const fruity = bottle({ distillery: "Ardbeg", abv: 55, wheelFamilies: ["Fruit (Fresh)"] });
+  const both = bottle({ distillery: "Ardbeg", abv: 46, wheelFamilies: ["Smoke", "Fruit (Fresh)"] });
+  const other = bottle({ distillery: "Lagavulin", abv: 55, wheelFamilies: ["Smoke"] });
 
   it("treats choices within a category as alternatives when off", () => {
     const filters = { ...emptyFilters(), families: ["Smoke", "Fruit (Fresh)"], distilleries: ["Ardbeg", "Lagavulin"] };
@@ -353,10 +353,21 @@ describe("optionCounts", () => {
     ).toEqual({ Islay: 4, Speyside: 0 });
   });
 
+  it("counts Descriptors from the bottles, and under Match exactly counts what adding one would leave", () => {
+    const orange = bottle({ wheelDescriptors: ["orange"] });
+    const both = bottle({ wheelDescriptors: ["orange", "iodine"] });
+    const iodine = bottle({ wheelDescriptors: ["iodine"] });
+    const picked = { ...emptyFilters(), descriptors: ["orange"] };
+    const all = [orange, both, iodine];
+    expect(optionCounts(all, picked, "descriptor", ["orange", "iodine"], false)).toEqual({ orange: 2, iodine: 2 });
+    expect(optionCounts(all, picked, "descriptor", ["orange", "iodine"], true)).toEqual({ orange: 2, iodine: 1 });
+    expect(optionCounts([bottle({ wheelFamilies: ["peaty"] })], emptyFilters(), "family", ["Peaty"])).toEqual({ Peaty: 1 });
+  });
+
   it("counts what adding an option would leave under Match exactly", () => {
-    const smoky = bottle({ distillery: "Ardbeg", region: "Islay", flavorFamilies: ["Smoke"] });
-    const both = bottle({ distillery: "Ardbeg", region: "Islay", flavorFamilies: ["Smoke", "Sweet"] });
-    const sweet = bottle({ distillery: "Glenfiddich", region: "Speyside", flavorFamilies: ["Sweet"] });
+    const smoky = bottle({ distillery: "Ardbeg", region: "Islay", wheelFamilies: ["Smoke"] });
+    const both = bottle({ distillery: "Ardbeg", region: "Islay", wheelFamilies: ["Smoke", "Sweet"] });
+    const sweet = bottle({ distillery: "Glenfiddich", region: "Speyside", wheelFamilies: ["Sweet"] });
     const all = [smoky, both, sweet];
     const smoke = { ...emptyFilters(), families: ["Smoke"] };
     expect(optionCounts(all, smoke, "family", ["Smoke", "Sweet"], true)).toEqual({ Smoke: 2, Sweet: 1 });
@@ -403,10 +414,10 @@ describe("optionCounts", () => {
 });
 
 describe("withoutRange", () => {
-  const smoky12 = bottle({ age: 12, abv: 46, flavorFamilies: ["Smoke"] });
-  const smoky25 = bottle({ age: 25, abv: 58, flavorFamilies: ["Smoke"] });
-  const smokyNas = bottle({ age: "NAS", abv: 50, flavorFamilies: ["Smoke"] });
-  const sweet18 = bottle({ age: 18, abv: 43, flavorFamilies: ["Sweet"] });
+  const smoky12 = bottle({ age: 12, abv: 46, wheelFamilies: ["Smoke"] });
+  const smoky25 = bottle({ age: 25, abv: 58, wheelFamilies: ["Smoke"] });
+  const smokyNas = bottle({ age: "NAS", abv: 50, wheelFamilies: ["Smoke"] });
+  const sweet18 = bottle({ age: 18, abv: 43, wheelFamilies: ["Sweet"] });
   const all = [smoky12, smoky25, smokyNas, sweet18];
   const filters = {
     ...emptyFilters(),
@@ -430,6 +441,32 @@ describe("withoutRange", () => {
     expect(pool).toEqual([smoky12]);
     const anyAge = { ...filters, ageMin: "", ageMax: "", includeNas: true };
     expect(all.filter((b) => matchesFilters(b, withoutRange(anyAge, "abv")))).toEqual([smoky12, smoky25, smokyNas]);
+  });
+});
+
+describe("matchesFilters wheel", () => {
+  const fruity = bottle({ wheelFamilies: ["Fruity"], wheelSubgroups: ["Citric"], wheelDescriptors: ["orange"] });
+  const peaty = bottle({ wheelFamilies: ["Peaty"], wheelSubgroups: ["Medicinal"], wheelDescriptors: ["iodine"] });
+  const both = bottle({
+    wheelFamilies: ["Fruity", "Peaty"],
+    wheelSubgroups: ["Citric", "Medicinal"],
+    wheelDescriptors: ["orange", "iodine"],
+  });
+  const all = [fruity, peaty, both];
+
+  it("matches a Family, Subgroup, or Descriptor as alternatives, and every one of them when Match exactly is on", () => {
+    const families = { ...emptyFilters(), families: ["Fruity", "Peaty"] };
+    expect(all.filter((b) => matchesFilters(b, families))).toEqual(all);
+    expect(all.filter((b) => matchesFilters(b, families, true))).toEqual([both]);
+    expect(all.filter((b) => matchesFilters(b, { ...emptyFilters(), subs: ["Citric"] }))).toEqual([fruity, both]);
+    expect(all.filter((b) => matchesFilters(b, { ...emptyFilters(), descriptors: ["iodine"] }))).toEqual([peaty, both]);
+    expect(all.filter((b) => matchesFilters(b, { ...emptyFilters(), descriptors: ["orange", "iodine"] }, true))).toEqual([both]);
+    expect(matchesFilters(bottle({ wheelFamilies: ["peaty"] }), { ...emptyFilters(), families: ["Peaty"] })).toBe(true);
+  });
+
+  it("finds a bottle by one of its Descriptors, and not by that word in notes", () => {
+    expect(matchesFilters(bottle({ wheelDescriptors: ["orange"] }), { ...emptyFilters(), search: "orange" })).toBe(true);
+    expect(matchesFilters(bottle({ notes: "orange peel" }), { ...emptyFilters(), search: "orange" })).toBe(false);
   });
 });
 

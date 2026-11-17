@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { emptyFilters } from "../types";
+import { emptyFilters, type WheelFamily } from "../types";
 import { appliedChips, removeChip } from "./applied";
+
+const wheel: WheelFamily[] = [
+  { name: "Fruity", color: "Orange", subgroups: [{ name: "Citric", descriptors: ["orange"] }] },
+  { name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] },
+];
 
 describe("appliedChips", () => {
   it("returns nothing when every filter is idle", () => {
@@ -32,8 +37,8 @@ describe("appliedChips", () => {
       "ABV from 46%",
     ]);
     expect(chips.find((chip) => chip.label === "Sweet & Zesty")?.swatch).toBe("smws-theme-sweet-zesty");
-    expect(chips.find((chip) => chip.label === "Smoke")?.swatch).toBe("family-smoke");
-    expect(chips.find((chip) => chip.label === "Honey")?.swatch).toBe("family-smoke");
+    expect(chips.find((chip) => chip.label === "Smoke")?.swatch).toBe("wheel-neutral");
+    expect(chips.find((chip) => chip.label === "Honey")?.swatch).toBe("wheel-neutral");
   });
 
   it("names a one-sided age range from its open end", () => {
@@ -65,6 +70,40 @@ describe("appliedChips", () => {
     const chips = appliedChips(filters);
     expect(chips.map((chip) => chip.label)).toEqual(["Open", "Last third"]);
     expect(removeChip(filters, chips[1].id)).toMatchObject({ statuses: ["Open"], lastThird: false });
+  });
+
+  it("swatches Family, Subgroup, and Descriptor in the Family's color, and lists a stray Descriptor neutral", () => {
+    const chips = appliedChips(
+      { ...emptyFilters(), families: ["Fruity"], subs: ["Citric"], descriptors: ["orange", "raisins"] },
+      wheel,
+    );
+    expect(chips.map((chip) => [chip.label, chip.swatch])).toEqual([
+      ["Fruity", "wheel-orange"],
+      ["Citric", "wheel-orange"],
+      ["orange", "wheel-orange"],
+      ["raisins", "wheel-neutral"],
+    ]);
+  });
+
+  it("drops the Subgroups and Descriptors scoped under a removed Family, and keeps a stray", () => {
+    const filters = {
+      ...emptyFilters(),
+      families: ["Fruity", "Peaty"],
+      subs: ["Citric", "Medicinal", "Citrus"],
+      descriptors: ["orange", "iodine", "raisins"],
+    };
+    const fruity = appliedChips(filters, wheel).find((chip) => chip.label === "Fruity")!;
+    expect(removeChip(filters, fruity.id, wheel)).toMatchObject({
+      families: ["Peaty"],
+      subs: ["Medicinal", "Citrus"],
+      descriptors: ["iodine", "raisins"],
+    });
+  });
+
+  it("drops the Descriptors scoped under a removed Subgroup", () => {
+    const filters = { ...emptyFilters(), subs: ["Citric", "Medicinal"], descriptors: ["orange", "iodine"] };
+    const citric = appliedChips(filters, wheel).find((chip) => chip.label === "Citric")!;
+    expect(removeChip(filters, citric.id, wheel)).toMatchObject({ subs: ["Medicinal"], descriptors: ["iodine"] });
   });
 
   it("removes a sub-characteristic and its selected family context together", () => {

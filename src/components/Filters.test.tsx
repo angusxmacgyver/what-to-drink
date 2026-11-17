@@ -44,7 +44,7 @@ const bottles = [
 
 function statusChips(filters: FilterState): string[] {
   const html = renderToStaticMarkup(
-    <Filters bottles={bottles} filters={filters} onChange={() => {}} exact={false} showStatus showGeo />,
+    <Filters bottles={bottles} wheel={[]} filters={filters} onChange={() => {}} exact={false} showStatus showGeo />,
   );
   const section = html.slice(html.indexOf(">Status<"), html.indexOf(">SMWS Theme<"));
   return [...section.matchAll(/aria-pressed="(true|false)">([^<]+)<span class="option-count">(\d+)</g)].map(

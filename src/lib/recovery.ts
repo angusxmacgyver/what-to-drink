@@ -1,4 +1,4 @@
-import type { FilterState } from "../types";
+import type { FilterState, WheelFamily } from "../types";
 import { appliedChips, removeChip } from "./applied";
 
 export function pushHistory(stack: FilterState[], current: FilterState): FilterState[] {
@@ -11,11 +11,15 @@ export function popHistory(stack: FilterState[]): { stack: FilterState[]; previo
 }
 
 /** Chip whose removal brings back the most bottles by the caller's count. The earlier chip wins a tie. */
-export function mostConstrainingChip(filters: FilterState, countShowing: (filters: FilterState) => number): string | null {
+export function mostConstrainingChip(
+  filters: FilterState,
+  countShowing: (filters: FilterState) => number,
+  wheel: WheelFamily[] = [],
+): string | null {
   let bestId: string | null = null;
   let best = -1;
-  for (const chip of appliedChips(filters)) {
-    const count = countShowing(removeChip(filters, chip.id));
+  for (const chip of appliedChips(filters, wheel)) {
+    const count = countShowing(removeChip(filters, chip.id, wheel));
     if (count > best) {
       best = count;
       bestId = chip.id;

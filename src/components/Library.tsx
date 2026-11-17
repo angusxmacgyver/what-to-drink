@@ -328,7 +328,7 @@ export function Library({
   const actions = { owner, onEdit, onKill, onOpen };
   const filterCount = activeFilterCount(filters);
   const nothingMatches = filtered.length === 0 && filterCount > 0;
-  const flagId = nothingMatches ? mostConstrainingChip(filters, (next) => showing(next).length) : null;
+  const flagId = nothingMatches ? mostConstrainingChip(filters, (next) => showing(next).length, wheel) : null;
   const pool = filtered.filter((b) => b.atApartment === (filters.place === "apartment"));
   const [announce, setAnnounce] = useState("");
   const settled = settlePick(pick, pool);
@@ -461,7 +461,7 @@ export function Library({
       </header>
       {activeFilterCount({ ...filters, place: null }) > 0 ? (
         <div className="library-applied">
-          <AppliedTray filters={filters} onChange={onFilters} flagId={flagId} hidePlace />
+          <AppliedTray filters={filters} wheel={wheel} onChange={onFilters} flagId={flagId} hidePlace />
         </div>
       ) : null}
       {nothingMatches ? (
@@ -492,6 +492,7 @@ export function Library({
       {filtersOpen ? (
         <FilterDrawer
           filters={filters}
+          wheel={wheel}
           onChange={onFilters}
           available={filtered.length}
           onUndo={onUndo}
@@ -533,7 +534,7 @@ export function Library({
             <input type="checkbox" checked={exact} onChange={(event) => onExact(event.currentTarget.checked)} />
             <span>Match exactly</span>
           </label>
-          <Filters bottles={bottles} filters={filters} onChange={onFilters} exact={exact} showStatus showGeo />
+          <Filters bottles={bottles} wheel={wheel} filters={filters} onChange={onFilters} exact={exact} showStatus showGeo />
         </FilterDrawer>
       ) : null}
     </section>
