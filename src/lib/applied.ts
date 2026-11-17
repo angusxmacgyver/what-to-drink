@@ -1,6 +1,7 @@
-import { type FilterState } from "../types";
-import { familyClass, smwsThemeClass, subFamilyClass } from "./colors";
+import { type FilterState, type WheelFamily } from "../types";
+import { smwsThemeClass, wheelTermClass } from "./colors";
 import { LAST_THIRD } from "./library";
+import { keptUnder, type WheelLevel } from "./wheel";
 
 export type AppliedChip = {
   id: string;
@@ -23,7 +24,31 @@ function listed(kind: string, values: string[], swatchFor?: (value: string) => s
   return values.map((value) => ({ id: chipId(kind, value), label: value, swatch: swatchFor?.(value) }));
 }
 
-export function appliedChips(filters: FilterState): AppliedChip[] {
+function wheelSwatch(wheel: WheelFamily[], level: WheelLevel): (term: string) => string {
+  return (term) => wheelTermClass(wheel, level, term);
+}
+
+/** Keeps Subgroups under the Families still picked, then Descriptors under the Subgroups still picked. A stray pick stays. */
+export function scopeWheelFilters(
+  wheel: WheelFamily[],
+  filters: FilterState,
+  picked: Partial<Pick<FilterState, "families" | "subs" | "descriptors">>,
+): FilterState {
+  const families = picked.families ?? filters.families;
+  const subs =
+    picked.subs !== undefined
+      ? picked.subs
+      : picked.families !== undefined
+        ? keptUnder(wheel, "subgroup", families, filters.subs)
+        : filters.subs;
+  const descriptors =
+    picked.descriptors !== undefined
+      ? picked.descriptors
+      : keptUnder(wheel, "descriptor", subs, filters.descriptors ?? []);
+  return { ...filters, families, subs, descriptors };
+}
+
+export function appliedChips(filters: FilterState, wheel: WheelFamily[] = []): AppliedChip[] {
   const chips: AppliedChip[] = [];
   const search = filters.search.trim();
   if (search) chips.push({ id: chipId("search"), label: `Search: ${search}` });
@@ -31,8 +56,9 @@ export function appliedChips(filters: FilterState): AppliedChip[] {
   chips.push(
     ...listed("distillery", filters.distilleries),
     ...listed("theme", filters.themes, smwsThemeClass),
-    ...listed("family", filters.families, familyClass),
-    ...listed("sub", filters.subs, (sub) => subFamilyClass(sub, filters.subFamilies[sub])),
+    ...listed("family", filters.families, wheelSwatch(wheel, "family")),
+    ...listed("sub", filters.subs, wheelSwatch(wheel, "subgroup")),
+    ...listed("descriptor", filters.descriptors ?? [], wheelSwatch(wheel, "descriptor")),
     ...listed("country", filters.countries),
     ...listed("region", filters.regions),
   );
@@ -50,7 +76,7 @@ function without(values: string[], value: string): string[] {
   return values.filter((item) => item !== value);
 }
 
-export function removeChip(filters: FilterState, id: string): FilterState {
+export function removeChip(filters: FilterState, id: string, wheel: WheelFamily[] = []): FilterState {
   const split = id.indexOf("\n");
   const kind = split < 0 ? id : id.slice(0, split);
   const value = split < 0 ? "" : id.slice(split + 1);
@@ -59,16 +85,14 @@ export function removeChip(filters: FilterState, id: string): FilterState {
   if (kind === "distillery") return { ...filters, distilleries: without(filters.distilleries, value) };
   if (kind === "theme") return { ...filters, themes: without(filters.themes, value) };
   if (kind === "family") {
-    return {
-      ...filters,
-      families: without(filters.families, value),
-      subFamilies: Object.fromEntries(Object.entries(filters.subFamilies).filter(([, family]) => family !== value)),
-    };
+    const subFamilies = Object.fromEntries(Object.entries(filters.subFamilies).filter(([, family]) => family !== value));
+    return scopeWheelFilters(wheel, { ...filters, subFamilies }, { families: without(filters.families, value) });
   }
   if (kind === "sub") {
     const { [value]: _removed, ...subFamilies } = filters.subFamilies;
-    return { ...filters, subs: without(filters.subs, value), subFamilies };
+    return scopeWheelFilters(wheel, { ...filters, subFamilies }, { subs: without(filters.subs, value) });
   }
+  if (kind === "descriptor") return { ...filters, descriptors: without(filters.descriptors ?? [], value) };
   if (kind === "country") return { ...filters, countries: without(filters.countries, value) };
   if (kind === "region") return { ...filters, regions: without(filters.regions, value) };
   if (kind === "age") return { ...filters, ageMin: "", ageMax: "" };

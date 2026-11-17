@@ -41,6 +41,7 @@ export const visitCatalog: Catalog = {
       distillery: "Ardbeg",
       bottling: "10",
       flavorFamilies: ["Smoke"],
+      wheelFamilies: ["Smoke"],
       subCharacteristics: ["Woodsmoke & Campfire"],
     }),
     visitBottle({
@@ -49,6 +50,7 @@ export const visitCatalog: Catalog = {
       distillery: "Glendronach",
       bottling: "12",
       flavorFamilies: ["Sweet"],
+      wheelFamilies: ["Sweet"],
       primaryCask: ["Oloroso sherry"],
     }),
     visitBottle({
@@ -57,6 +59,7 @@ export const visitCatalog: Catalog = {
       distillery: "Highland Both",
       bottling: "Dual",
       flavorFamilies: ["Smoke", "Sweet"],
+      wheelFamilies: ["Smoke", "Sweet"],
     }),
     visitBottle({
       id: "apt-smoke",
@@ -66,6 +69,7 @@ export const visitCatalog: Catalog = {
       location: "Apartment",
       atApartment: true,
       flavorFamilies: ["Smoke"],
+      wheelFamilies: ["Smoke"],
     }),
     visitBottle({
       id: "house-closed",
@@ -74,6 +78,7 @@ export const visitCatalog: Catalog = {
       bottling: "Backup",
       status: "Closed",
       flavorFamilies: ["Smoke"],
+      wheelFamilies: ["Smoke"],
     }),
   ],
   graveyard: [],

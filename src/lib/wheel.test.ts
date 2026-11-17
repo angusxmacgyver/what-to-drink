@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WheelFamily } from "../types";
-import { placeTerm, placeTerms, subgroupClusters } from "./wheel";
+import { familyOptions, keptUnder, placeTerm, placeTerms, scopedOptions, subgroupClusters } from "./wheel";
 
 const wheel: WheelFamily[] = [
   {
@@ -40,6 +40,43 @@ describe("placeTerm", () => {
 
   it("finds nothing in a wheel that has not been imported", () => {
     expect(placeTerm([], "family", "Fruity")).toEqual({ label: "Fruity", family: null, color: "" });
+  });
+});
+
+describe("familyOptions", () => {
+  it("lists Families the bottles carry in wheel order, then a stray Family as written", () => {
+    expect(familyOptions(wheel, ["peaty", "Smoky", "Fruity", "smoky"])).toEqual(["Fruity", "Peaty", "Smoky"]);
+  });
+});
+
+describe("scopedOptions", () => {
+  it("lists Subgroups under the picked Families that the bottles carry, in wheel order, and none of those when no Family is picked", () => {
+    expect(scopedOptions(wheel, "subgroup", ["Fruity"], ["Medicinal", "dried fruit", "Citric"])).toEqual([
+      "Citric",
+      "Dried Fruit",
+    ]);
+    expect(scopedOptions(wheel, "subgroup", [], ["Citric"])).toEqual([]);
+  });
+
+  it("keeps a stray Subgroup listed, unscoped, whether or not a Family is picked", () => {
+    expect(scopedOptions(wheel, "subgroup", ["Fruity"], ["Citric", "Citrus", "citrus"])).toEqual(["Citric", "Citrus"]);
+    expect(scopedOptions(wheel, "subgroup", [], ["Citric", "Citrus"])).toEqual(["Citrus"]);
+  });
+
+  it("lists Descriptors under the picked Subgroups that the bottles carry, in wheel order", () => {
+    expect(scopedOptions(wheel, "descriptor", ["Citric", "Medicinal"], ["TCP", "lemon zest", "raisin"])).toEqual([
+      "lemon zest",
+      "TCP",
+    ]);
+    expect(scopedOptions(wheel, "descriptor", [], ["orange", "raisins"])).toEqual(["raisins"]);
+  });
+});
+
+describe("keptUnder", () => {
+  it("drops a Subgroup or Descriptor whose parent was unpicked, and keeps a stray pick", () => {
+    expect(keptUnder(wheel, "subgroup", ["Peaty"], ["Citric", "Medicinal", "Citrus"])).toEqual(["Medicinal", "Citrus"]);
+    expect(keptUnder(wheel, "subgroup", [], ["Citric", "Citrus"])).toEqual(["Citrus"]);
+    expect(keptUnder(wheel, "descriptor", ["Citric"], ["orange", "TCP", "raisins"])).toEqual(["orange", "raisins"]);
   });
 });
 

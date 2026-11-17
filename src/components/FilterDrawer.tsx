@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import type { FilterState } from "../types";
+import type { FilterState, WheelFamily } from "../types";
 import { appliedChips } from "../lib/applied";
 import { prefersReducedMotion } from "../lib/pour";
 import { AppliedTray } from "./AppliedTray";
@@ -44,6 +44,7 @@ type DrawerProps = {
   available: number;
   onUndo: () => void;
   canUndo: boolean;
+  wheel?: WheelFamily[];
   flagId?: string | null;
   trayTitle?: string;
   onClose: () => void;
@@ -57,6 +58,7 @@ export function FilterDrawer({
   available,
   onUndo,
   canUndo,
+  wheel = [],
   flagId = null,
   trayTitle = "In your glass",
   onClose,
@@ -117,7 +119,7 @@ export function FilterDrawer({
             </svg>
           </button>
         </header>
-        <AppliedTray title={trayTitle} filters={filters} onChange={onChange} flagId={flagId} />
+        <AppliedTray title={trayTitle} filters={filters} wheel={wheel} onChange={onChange} flagId={flagId} />
         <div className="drawer-body">{children}</div>
         {foot}
         <footer className="drawer-footer">

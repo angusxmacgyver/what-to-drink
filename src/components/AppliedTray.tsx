@@ -1,8 +1,9 @@
-import { emptyFilters, type FilterState } from "../types";
+import { emptyFilters, type FilterState, type WheelFamily } from "../types";
 import { appliedChips, removeChip } from "../lib/applied";
 
 type Props = {
   filters: FilterState;
+  wheel?: WheelFamily[];
   onChange: (next: FilterState) => void;
   title?: string;
   flagId?: string | null;
@@ -10,8 +11,9 @@ type Props = {
   hidePlace?: boolean;
 };
 
-export function AppliedTray({ filters, onChange, title, flagId = null, hidePlace = false }: Props) {
-  const chips = appliedChips(hidePlace ? { ...filters, place: null } : filters);
+export function AppliedTray({ filters, wheel = [], onChange, title, flagId = null, hidePlace = false }: Props) {
+  const shown = hidePlace ? { ...filters, place: null } : filters;
+  const chips = appliedChips(shown, wheel);
   const cleared = hidePlace ? { ...emptyFilters(), place: filters.place } : emptyFilters();
   return (
     <div className="applied-tray">
@@ -27,7 +29,7 @@ export function AppliedTray({ filters, onChange, title, flagId = null, hidePlace
                 type="button"
                 className="chip applied-chip"
                 aria-label={`Remove ${chip.label}`}
-                onClick={() => onChange(removeChip(filters, chip.id))}
+                onClick={() => onChange(removeChip(filters, chip.id, wheel))}
               >
                 {chip.swatch ? <span className={`family-dot ${chip.swatch}`} aria-hidden="true" /> : null}
                 <span>{chip.label}</span>

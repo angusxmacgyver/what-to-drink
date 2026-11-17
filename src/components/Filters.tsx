@@ -1,20 +1,15 @@
-import type { Bottle, FilterState } from "../types";
+import type { Bottle, FilterState, WheelFamily } from "../types";
 import { ChipSelect } from "./ChipSelect";
 import { RangeHistogram } from "./RangeHistogram";
-import {
-  LAST_THIRD,
-  matchesFilters,
-  optionCounts,
-  subOwnerFamily,
-  subsForFamilies,
-  withoutRange,
-  type CountFacet,
-} from "../lib/library";
+import { LAST_THIRD, matchesFilters, optionCounts, withoutRange, type CountFacet } from "../lib/library";
 import { abvHistogramValues, buildHistogram, nasCount } from "../lib/histogram";
-import { compareFamilies, compareSmwsThemes, familyClass, smwsThemeClass, subFamilyClass } from "../lib/colors";
+import { scopeWheelFilters } from "../lib/applied";
+import { compareSmwsThemes, smwsThemeClass, wheelTermClass } from "../lib/colors";
+import { familyOptions, scopedOptions, type WheelLevel } from "../lib/wheel";
 
 type Props = {
   bottles: Bottle[];
+  wheel: WheelFamily[];
   filters: FilterState;
   onChange: (next: FilterState) => void;
   exact: boolean;
@@ -29,6 +24,7 @@ function uniq(values: string[]): string[] {
 
 export function Filters({
   bottles,
+  wheel,
   filters,
   onChange,
   exact,
@@ -38,20 +34,19 @@ export function Filters({
 }: Props) {
   const statuses = uniq(bottles.map((b) => b.status));
   const themes = uniq(bottles.map((b) => b.theme)).sort(compareSmwsThemes);
-  const families = uniq(bottles.flatMap((b) => b.flavorFamilies)).sort(compareFamilies);
-  const subs = subsForFamilies(bottles, filters.families);
+  const families = familyOptions(wheel, bottles.flatMap((b) => b.wheelFamilies));
+  const subs = scopedOptions(wheel, "subgroup", filters.families, bottles.flatMap((b) => b.wheelSubgroups));
+  const descriptors = scopedOptions(
+    wheel,
+    "descriptor",
+    filters.subs,
+    bottles.flatMap((b) => b.wheelDescriptors),
+  );
   const countries = uniq(bottles.map((b) => b.country));
   const regions = uniq(bottles.map((b) => b.region));
 
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
-  const subFamiliesFor = (nextSubs: string[]) => {
-    const next: Record<string, string> = {};
-    for (const sub of nextSubs) {
-      const family = filters.subFamilies[sub] || subOwnerFamily(sub);
-      if (family) next[sub] = family;
-    }
-    return next;
-  };
+  const colorFor = (level: WheelLevel) => (term: string) => wheelTermClass(wheel, level, term);
 
   const counts = (facet: CountFacet, options: string[]) => optionCounts(bottles, filters, facet, options, exact);
   const placeCounts = counts("place", ["house", "apartment"]);
@@ -158,25 +153,30 @@ export function Filters({
         </>
       ) : null}
       <ChipSelect
-        label="Flavor families"
+        label="Family"
         options={families}
         value={filters.families}
-        onChange={(nextFamilies) => {
-          const keptSubs = filters.subs.filter((s) => subsForFamilies(bottles, nextFamilies).includes(s));
-          set({ families: nextFamilies, subs: keptSubs, subFamilies: subFamiliesFor(keptSubs) });
-        }}
-        colorFor={familyClass}
-        minSecondRow={3}
+        onChange={(nextFamilies) => onChange(scopeWheelFilters(wheel, filters, { families: nextFamilies }))}
+        colorFor={colorFor("family")}
         counts={counts("family", families)}
       />
       <ChipSelect
-        label="Sub-characteristics"
+        label="Subgroup"
         options={subs}
         value={filters.subs}
-        onChange={(nextSubs) => set({ subs: nextSubs, subFamilies: subFamiliesFor(nextSubs) })}
-        emptyHint="Pick a flavor family to narrow by sub-characteristic."
-        colorFor={(sub) => subFamilyClass(sub, filters.subFamilies[sub])}
+        onChange={(nextSubs) => onChange(scopeWheelFilters(wheel, filters, { subs: nextSubs }))}
+        emptyHint="Pick a Family to narrow by Subgroup."
+        colorFor={colorFor("subgroup")}
         counts={counts("sub", subs)}
+      />
+      <ChipSelect
+        label="Descriptor"
+        options={descriptors}
+        value={filters.descriptors}
+        onChange={(nextDescriptors) => onChange(scopeWheelFilters(wheel, filters, { descriptors: nextDescriptors }))}
+        emptyHint="Pick a Subgroup to narrow by Descriptor."
+        colorFor={colorFor("descriptor")}
+        counts={counts("descriptor", descriptors)}
       />
     </div>
   );

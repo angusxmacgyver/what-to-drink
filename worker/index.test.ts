@@ -111,10 +111,14 @@ describe("PUT /api/catalog", () => {
     expect(await getCatalog()).toEqual(next);
   });
 
-  it("round-trips the real cellar unchanged, with nothing Recently poured and no wheel", async () => {
+  it("round-trips the real cellar unchanged", async () => {
     const real = JSON.parse(fs.readFileSync("data/bottles.json", "utf8")) as Catalog;
     await call("PUT", "/api/catalog", real);
-    expect(await getCatalog()).toEqual({ ...real, recentlyPoured: [], wheel: [] });
+    expect(await getCatalog()).toEqual({
+      ...real,
+      recentlyPoured: real.recentlyPoured ?? [],
+      wheel: real.wheel ?? [],
+    });
   });
 
   it("stores drams, last third, kill shot, and Recently poured so another device reads them", async () => {

@@ -1,4 +1,4 @@
-import type { Bottle, FilterState } from "../types";
+import { emptyFilters, type Bottle, type FilterState } from "../types";
 
 export const FANCY_POOL_KEY = "what-to-drink-fancy-pool";
 const FANCY_VISIT_KEY = "what-to-drink-fancy-visit";
@@ -40,7 +40,15 @@ export function consumeFancyReturn(): { visit: FancyVisit; bottleId: string | nu
     const result = rawResult ? JSON.parse(rawResult) : null;
     const bottleId = result?.version === 1 && typeof result.bottleId === "string" ? result.bottleId : null;
     return {
-      visit: { filters: visit.filters, exact: visit.exact, favorLastThird: visit.favorLastThird === true },
+      visit: {
+        filters: {
+          ...emptyFilters(),
+          ...visit.filters,
+          descriptors: Array.isArray(visit.filters.descriptors) ? visit.filters.descriptors : [],
+        },
+        exact: visit.exact,
+        favorLastThird: visit.favorLastThird === true,
+      },
       bottleId,
     };
   } catch {

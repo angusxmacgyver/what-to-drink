@@ -42,10 +42,10 @@ describe("mostConstrainingChip", () => {
   it("flags the removal that brings back the most bottles", () => {
     const filters = { ...emptyFilters(), distilleries: ["Ardbeg"], families: ["Smoke"] };
     const bottles = [
-      bottle({ id: "smoke", flavorFamilies: ["Smoke"] }),
-      bottle({ id: "sweet", flavorFamilies: ["Sweet"] }),
+      bottle({ id: "smoke", wheelFamilies: ["Smoke"] }),
+      bottle({ id: "sweet", wheelFamilies: ["Sweet"] }),
       ...Array.from({ length: 5 }, (_, index) =>
-        bottle({ id: `lag-${index}`, distillery: "Lagavulin", flavorFamilies: ["Smoke"] }),
+        bottle({ id: `lag-${index}`, distillery: "Lagavulin", wheelFamilies: ["Smoke"] }),
       ),
     ];
     expect(mostConstrainingChip(filters, count(bottles))).toBe("distillery\nArdbeg");
@@ -53,13 +53,13 @@ describe("mostConstrainingChip", () => {
 
   it("keeps the earlier chip when two removals tie", () => {
     const filters = { ...emptyFilters(), distilleries: ["Ardbeg"], families: ["Smoke"] };
-    expect(mostConstrainingChip(filters, count([bottle({ flavorFamilies: ["Smoke"] })]))).toBe("distillery\nArdbeg");
+    expect(mostConstrainingChip(filters, count([bottle({ wheelFamilies: ["Smoke"] })]))).toBe("distillery\nArdbeg");
   });
 
   it("flags the chip whose removal brings back the most of what the caller counts", () => {
     const bottles = [
-      ...Array.from({ length: 3 }, (_, index) => bottle({ id: `house-${index}`, flavorFamilies: ["Smoke"] })),
-      bottle({ id: "apartment-smoke", atApartment: true, flavorFamilies: ["Smoke"] }),
+      ...Array.from({ length: 3 }, (_, index) => bottle({ id: `house-${index}`, wheelFamilies: ["Smoke"] })),
+      bottle({ id: "apartment-smoke", atApartment: true, wheelFamilies: ["Smoke"] }),
     ];
     const showing = (filters: FilterState) => bottles.filter((b) => matchesFilters(b, filters, true)).length;
     const filters = { ...emptyFilters(), place: "apartment" as const, families: ["Smoke", "Sweet"] };

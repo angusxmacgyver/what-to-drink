@@ -1,4 +1,6 @@
+import type { WheelFamily } from "../types";
 import { subOwnerFamily } from "./library";
+import { placeTerm, type WheelLevel } from "./wheel";
 
 const FAMILY_CLASSES: Record<string, string> = {
   Coastal: "family-coastal",
@@ -44,6 +46,10 @@ export function familyClass(family: string): string {
 }
 
 const WHEEL_COLORS = new Set(["yellow", "orange", "violet", "green", "blue", "grey", "brown", "red"]);
+
+export function wheelTermClass(wheel: WheelFamily[], level: WheelLevel, term: string): string {
+  return wheelColorClass(placeTerm(wheel, level, term).color);
+}
 
 export function wheelColorClass(colorName: string): string {
   const name = colorName.trim().toLowerCase();

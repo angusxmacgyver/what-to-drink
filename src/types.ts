@@ -117,6 +117,7 @@ export type FilterState = {
   abvMax: string;
   families: string[];
   subs: string[];
+  descriptors: string[];
   subFamilies: Record<string, string>;
   countries: string[];
   regions: string[];
@@ -136,6 +137,7 @@ export const emptyFilters = (): FilterState => ({
   abvMax: "",
   families: [],
   subs: [],
+  descriptors: [],
   subFamilies: {},
   countries: [],
   regions: [],

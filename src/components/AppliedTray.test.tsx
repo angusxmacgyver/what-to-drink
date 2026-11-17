@@ -22,7 +22,7 @@ describe("AppliedTray", () => {
       />,
     );
     expect(html).toContain('aria-label="Remove Smoke"');
-    expect(html).toContain("family-dot family-smoke");
+    expect(html).toContain("family-dot wheel-neutral");
     expect(html).toContain("Clear all");
     expect(html).not.toContain("In your glass");
   });

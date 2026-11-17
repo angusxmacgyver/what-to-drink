@@ -875,15 +875,28 @@ nav button.on,
 .smws-theme-smoky-fruity { --family-color: #78bb43; }
 .smws-theme-other { --family-color: var(--line-strong); }
 
-.chip[class*="family-"] {
+.chip[class*="family-"],
+.chip[class*="wheel-"]:not(.wheel-neutral) {
   background: color-mix(in srgb, var(--family-color) 22%, var(--bg-2));
   border-color: var(--family-color);
 }
 
-.chip[class*="family-"].on {
+.chip[class*="family-"].on,
+.chip[class*="wheel-"]:not(.wheel-neutral).on {
   background: var(--family-color);
   border-color: var(--family-color);
   color: var(--on-gold);
+}
+
+.chip.wheel-neutral {
+  border-style: dashed;
+}
+
+.chip.wheel-neutral.on {
+  background: var(--bg-2);
+  color: var(--ink);
+  border-style: dashed;
+  border-color: var(--ink);
 }
 
 .chip[class*="smws-theme-"] {
