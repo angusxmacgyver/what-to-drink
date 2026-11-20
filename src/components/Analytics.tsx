@@ -64,7 +64,7 @@ export function Analytics({ catalog }: Props) {
 
       <div className="chart-grid flavor">
         <SmokeDonut {...s.smoke} takeaway={s.takeaways.smoke} />
-        <FlavorRadar {...s.fingerprint} takeaway={s.takeaways.fingerprint} />
+        <FlavorRadar spokes={s.fingerprint} takeaway={s.takeaways.fingerprint} />
       </div>
 
       <PalateCloud groups={s.palate} />

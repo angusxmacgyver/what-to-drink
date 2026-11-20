@@ -1,15 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Bottle, Catalog } from "../types";
-import {
-  abvBucket,
-  ageBucket,
-  cellarSummary,
-  familyShares,
-  parentRegion,
-  subFamily,
-  tally,
-  topN,
-} from "./analytics";
+import type { Bottle, Catalog, WheelFamily } from "../types";
+import { abvBucket, ageBucket, cellarSummary, flavorRadar, palateCloud, parentRegion, tally, topN } from "./analytics";
 
 let nextId = 0;
 
@@ -46,9 +37,22 @@ function bottle(overrides: Partial<Bottle> = {}): Bottle {
   };
 }
 
-function catalog(bottles: Bottle[], graveyard: Bottle[] = []): Catalog {
-  return { schemaVersion: 1, importedAt: "", bottles, graveyard, recentlyPoured: [], wheel: [] };
+function catalog(bottles: Bottle[], graveyard: Bottle[] = [], wheel: WheelFamily[] = []): Catalog {
+  return { schemaVersion: 1, importedAt: "", bottles, graveyard, recentlyPoured: [], wheel };
 }
+
+const wheel: WheelFamily[] = [
+  {
+    name: "Fruity",
+    color: "Orange",
+    subgroups: [
+      { name: "Citric", descriptors: ["orange", "pear"] },
+      { name: "Dried Fruit", descriptors: ["apple"] },
+    ],
+  },
+  { name: "Peaty", color: "Green", subgroups: [{ name: "Medicinal", descriptors: ["iodine"] }] },
+  { name: "Sweet", color: "Yellow", subgroups: [{ name: "Honeyed", descriptors: ["honey"] }] },
+];
 
 describe("tally", () => {
   it("counts values, most common first, ties by name", () => {
@@ -120,36 +124,56 @@ describe("abvBucket", () => {
   });
 });
 
-describe("familyShares", () => {
+describe("flavorRadar", () => {
   const bottles = [
-    bottle({ flavorFamilies: ["Smoke", "Sweet"] }),
-    bottle({ flavorFamilies: ["Smoke"] }),
-    bottle({ flavorFamilies: [] }),
+    bottle({ status: "Open", wheelFamilies: ["fruity"] }),
+    bottle({ status: "Closed", wheelFamilies: ["Fruity", "peaty"] }),
+    bottle({ status: "Open", wheelFamilies: [] }),
+    bottle({ status: "Open", wheelFamilies: ["Smoky"], flavorFamilies: ["Smoke"] }),
   ];
 
-  it("gives each family's share of tagged bottles, largest first", () => {
-    expect(familyShares(bottles)).toEqual([
-      { label: "Smoke", share: 1 },
-      { label: "Sweet", share: 0.5 },
+  it("uses each Family on the wheel as an axis, in wheel order and in its color", () => {
+    expect(flavorRadar(wheel, bottles).map(({ label, color }) => ({ label, color }))).toEqual([
+      { label: "Fruity", color: "Orange" },
+      { label: "Peaty", color: "Green" },
+      { label: "Sweet", color: "Yellow" },
     ]);
   });
 
-  it("follows a given family order, including families it lacks", () => {
-    expect(familyShares(bottles, ["Sweet", "Wood"])).toEqual([
-      { label: "Sweet", share: 0.5 },
-      { label: "Wood", share: 0 },
+  it("shares are among bottles that carry a Family, so an untasted bottle or a stray Family does not shrink them", () => {
+    expect(flavorRadar(wheel, bottles).map(({ cellar, open }) => ({ cellar, open }))).toEqual([
+      { cellar: 1, open: 1 },
+      { cellar: 0.5, open: 0 },
+      { cellar: 0, open: 0 },
     ]);
+  });
+
+  it("draws no axes from Flavor Families when the wheel has not been imported", () => {
+    expect(flavorRadar([], [bottle({ flavorFamilies: ["Smoke"], wheelFamilies: ["Smoke"] })])).toEqual([]);
   });
 });
 
-describe("subFamily", () => {
-  it("maps each sub to the family it appears with most, ties alphabetical", () => {
-    const bottles = [
-      bottle({ flavorFamilies: ["Smoke", "Coastal"], subCharacteristics: ["Brine"] }),
-      bottle({ flavorFamilies: ["Coastal"], subCharacteristics: ["Brine"] }),
-      bottle({ flavorFamilies: ["Sweet", "Fruit"], subCharacteristics: ["Honey"] }),
-    ];
-    expect(subFamily(bottles)).toEqual({ Brine: "Coastal", Honey: "Fruit" });
+describe("palateCloud", () => {
+  const bottles = [
+    bottle({ wheelDescriptors: ["orange", "pear", "orange"] }),
+    bottle({ wheelDescriptors: ["ORANGE", "apple", "iodine"] }),
+    bottle({ wheelDescriptors: [] }),
+    bottle({ wheelDescriptors: ["raisins"], subCharacteristics: ["Honey"] }),
+  ];
+
+  it("counts Descriptors under their Family, in the Wheel Glossary's spelling, and ignores a bottle with none", () => {
+    expect(palateCloud(wheel, bottles)).toEqual([
+      {
+        family: "Fruity",
+        color: "Orange",
+        descriptors: [
+          { label: "orange", count: 2 },
+          { label: "pear", count: 1 },
+          { label: "apple", count: 1 },
+        ],
+      },
+      { family: "Peaty", color: "Green", descriptors: [{ label: "iodine", count: 1 }] },
+    ]);
   });
 });
 
@@ -185,10 +209,41 @@ describe("cellarSummary", () => {
     expect(summary.takeaways.shelf).toBe("2 open, 2 closed. 1 finished in the Graveyard.");
   });
 
-  it("compares the open bottles to the whole cellar", () => {
-    expect(summary.fingerprint.families).toEqual(["Smoke", "Sweet"]);
-    expect(summary.fingerprint.cellar).toEqual([2 / 3, 2 / 3]);
-    expect(summary.fingerprint.open).toEqual([1, 0]);
-    expect(summary.takeaways.fingerprint).toBe("Open bottles lean Smoke: 100% vs 67% across the cellar.");
+  it("leaves the radar and the palate empty when no bottle carries a wheel term", () => {
+    expect(summary.fingerprint).toEqual([]);
+    expect(summary.palate).toEqual([]);
+    expect(summary.takeaways.fingerprint).toBe("No open bottles carry a Family yet.");
+  });
+
+  it("compares open bottles to the cellar by Family, and builds the palate from Descriptors", () => {
+    const tasted = cellarSummary(
+      catalog(
+        [
+          bottle({ status: "Open", wheelFamilies: ["Fruity"], wheelDescriptors: ["orange"] }),
+          bottle({ status: "Closed", wheelFamilies: ["Fruity", "Peaty"], wheelDescriptors: ["pear", "iodine"] }),
+          bottle({ status: "Closed", wheelFamilies: ["Peaty"], wheelDescriptors: [] }),
+          bottle({ status: "Open", wheelFamilies: [], wheelDescriptors: [], flavorFamilies: ["Smoke"] }),
+        ],
+        [],
+        wheel,
+      ),
+    );
+    expect(tasted.fingerprint).toEqual([
+      { label: "Fruity", color: "Orange", cellar: 2 / 3, open: 1 },
+      { label: "Peaty", color: "Green", cellar: 2 / 3, open: 0 },
+      { label: "Sweet", color: "Yellow", cellar: 0, open: 0 },
+    ]);
+    expect(tasted.takeaways.fingerprint).toBe("Open bottles lean Fruity: 100% vs 67% across the cellar.");
+    expect(tasted.palate).toEqual([
+      {
+        family: "Fruity",
+        color: "Orange",
+        descriptors: [
+          { label: "orange", count: 1 },
+          { label: "pear", count: 1 },
+        ],
+      },
+      { family: "Peaty", color: "Green", descriptors: [{ label: "iodine", count: 1 }] },
+    ]);
   });
 });

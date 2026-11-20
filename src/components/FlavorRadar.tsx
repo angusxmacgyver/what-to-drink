@@ -1,7 +1,8 @@
+import type { RadarSpoke } from "../lib/analytics";
+import { wheelColorClass } from "../lib/colors";
+
 type Props = {
-  families: string[];
-  cellar: number[];
-  open: number[];
+  spokes: RadarSpoke[];
   takeaway: string;
 };
 
@@ -21,35 +22,36 @@ function polygon(values: number[]): string {
   return values.map((v, i) => point(i, values.length, v).join(",")).join(" ");
 }
 
-export function FlavorRadar({ families, cellar, open, takeaway }: Props) {
-  const n = families.length;
+export function FlavorRadar({ spokes, takeaway }: Props) {
+  const n = spokes.length;
 
   return (
     <article className="chart-card">
       <h2>Flavor fingerprint</h2>
       {n < 3 ? (
-        <p className="takeaway">Not enough flavor tags to draw a fingerprint.</p>
+        <p className="takeaway">Not enough Families to draw a fingerprint.</p>
       ) : (
         <>
           <svg viewBox={`0 0 ${W} ${H}`} className="radar" role="img" aria-label={takeaway}>
             {RINGS.map((ring) => (
-              <polygon key={ring} className="radar-ring" points={polygon(families.map(() => ring))} />
+              <polygon key={ring} className="radar-ring" points={polygon(spokes.map(() => ring))} />
             ))}
-            {families.map((family, i) => {
+            {spokes.map((spoke, i) => {
               const [x, y] = point(i, n, 1);
               const [lx, ly] = point(i, n, 1.12);
               const anchor = Math.abs(lx - CX) < 8 ? "middle" : lx > CX ? "start" : "end";
+              const color = wheelColorClass(spoke.color);
               return (
-                <g key={family}>
-                  <line className="radar-spoke" x1={CX} y1={CY} x2={x} y2={y} />
-                  <text className="radar-label" x={lx} y={ly} textAnchor={anchor} dominantBaseline="middle">
-                    {family}
+                <g key={spoke.label}>
+                  <line className={`radar-spoke ${color}`} x1={CX} y1={CY} x2={x} y2={y} />
+                  <text className={`radar-label ${color}`} x={lx} y={ly} textAnchor={anchor} dominantBaseline="middle">
+                    {spoke.label}
                   </text>
                 </g>
               );
             })}
-            <polygon className="radar-cellar" points={polygon(cellar)} />
-            <polygon className="radar-open" points={polygon(open)} />
+            <polygon className="radar-cellar" points={polygon(spokes.map((spoke) => spoke.cellar))} />
+            <polygon className="radar-open" points={polygon(spokes.map((spoke) => spoke.open))} />
           </svg>
           <ul className="legend inline">
             <li>
@@ -63,7 +65,7 @@ export function FlavorRadar({ families, cellar, open, takeaway }: Props) {
           </ul>
         </>
       )}
-      <p className="takeaway">{takeaway} Each spoke is the share of tagged bottles with that family.</p>
+      <p className="takeaway">{takeaway} Each spoke is the share of bottles that carry that Family, among bottles with a Family.</p>
     </article>
   );
 }

@@ -1,7 +1,9 @@
-import type { Age, Bottle, Catalog } from "../types";
+import type { Age, Bottle, Catalog, WheelFamily } from "../types";
+import { placeTerm, sameTerm } from "./wheel";
 
 export type Entry = { label: string; count: number };
-export type Share = { label: string; share: number };
+export type RadarSpoke = { label: string; color: string; cellar: number; open: number };
+export type PalateGroup = { family: string; color: string; descriptors: Entry[] };
 
 export const AGE_BUCKETS = ["NAS", "Under 10", "10-14", "15-19", "20-24", "25+", "Unknown"];
 export const ABV_BUCKETS = ["40-45", "45-50", "50-55", "55-60", "60+", "Unknown"];
@@ -57,31 +59,49 @@ function inOrder(labels: string[], order: string[]): Entry[] {
     .filter((e) => e.label !== "Unknown" || e.count > 0);
 }
 
-export function familyShares(bottles: Bottle[], families?: string[]): Share[] {
-  const tagged = bottles.filter((b) => b.flavorFamilies.length > 0);
-  const counts = tally(tagged.flatMap((b) => b.flavorFamilies));
-  const order = families ?? counts.map((e) => e.label);
-  return order.map((label) => ({
-    label,
-    share: tagged.length ? (counts.find((e) => e.label === label)?.count ?? 0) / tagged.length : 0,
+function carriesFamily(wheel: WheelFamily[], bottle: Bottle): boolean {
+  return bottle.wheelFamilies.some((term) => placeTerm(wheel, "family", term).family !== null);
+}
+
+/** One spoke per Family, in wheel order. Shares are among bottles that carry a Family. */
+export function flavorRadar(wheel: WheelFamily[], bottles: Bottle[]): RadarSpoke[] {
+  const tagged = bottles.filter((bottle) => carriesFamily(wheel, bottle));
+  const open = tagged.filter((bottle) => bottle.status === "Open");
+  const share = (list: Bottle[], family: string) => {
+    if (!list.length) return 0;
+    const count = list.filter((bottle) => bottle.wheelFamilies.some((term) => sameTerm(term, family))).length;
+    return count / list.length;
+  };
+  return wheel.map((family) => ({
+    label: family.name,
+    color: family.color,
+    cellar: share(tagged, family.name),
+    open: share(open, family.name),
   }));
 }
 
-export function subFamily(bottles: Bottle[]): Record<string, string> {
-  const pairs = new Map<string, Map<string, number>>();
-  for (const b of bottles) {
-    for (const sub of b.subCharacteristics) {
-      const byFamily = pairs.get(sub) ?? new Map<string, number>();
-      for (const family of b.flavorFamilies) byFamily.set(family, (byFamily.get(family) ?? 0) + 1);
-      pairs.set(sub, byFamily);
+/** Descriptors on the wheel, counted once per bottle, under their Family. A Family with none is left out. */
+export function palateCloud(wheel: WheelFamily[], bottles: Bottle[]): PalateGroup[] {
+  const counts = new Map<string, number>();
+  for (const bottle of bottles) {
+    const seen = new Set<string>();
+    for (const term of bottle.wheelDescriptors) {
+      const placed = placeTerm(wheel, "descriptor", term);
+      if (placed.family === null) continue;
+      const key = placed.label.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     }
   }
-  const result: Record<string, string> = {};
-  for (const [sub, byFamily] of pairs) {
-    const best = [...byFamily].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
-    if (best) result[sub] = best[0];
-  }
-  return result;
+  return wheel.flatMap((family) => {
+    const descriptors = family.subgroups
+      .flatMap((subgroup) => subgroup.descriptors)
+      .filter((label) => counts.has(label.toLowerCase()))
+      .map((label) => ({ label, count: counts.get(label.toLowerCase()) ?? 0 }))
+      .sort((a, b) => b.count - a.count);
+    return descriptors.length ? [{ family: family.name, color: family.color, descriptors }] : [];
+  });
 }
 
 function median(values: number[]): number | null {
@@ -92,14 +112,15 @@ function median(values: number[]): number | null {
   return Math.round(value * 10) / 10;
 }
 
-function fingerprintTakeaway(families: string[], cellar: number[], open: number[]): string {
-  if (!open.some((s) => s > 0)) return "No open bottles have flavor tags yet.";
+function fingerprintTakeaway(spokes: RadarSpoke[]): string {
+  if (!spokes.some((spoke) => spoke.open > 0)) return "No open bottles carry a Family yet.";
   let best = 0;
-  for (let i = 1; i < families.length; i += 1) {
-    if (open[i] - cellar[i] > open[best] - cellar[best]) best = i;
+  for (let i = 1; i < spokes.length; i += 1) {
+    if (spokes[i].open - spokes[i].cellar > spokes[best].open - spokes[best].cellar) best = i;
   }
-  if (open[best] - cellar[best] < 0.01) return "Open bottles match the cellar's flavor profile.";
-  return `Open bottles lean ${families[best]}: ${pct(open[best])} vs ${pct(cellar[best])} across the cellar.`;
+  const spoke = spokes[best];
+  if (spoke.open - spoke.cellar < 0.01) return "Open bottles match the cellar's Families.";
+  return `Open bottles lean ${spoke.label}: ${pct(spoke.open)} vs ${pct(spoke.cellar)} across the cellar.`;
 }
 
 export function cellarSummary(catalog: Catalog) {
@@ -116,16 +137,8 @@ export function cellarSummary(catalog: Catalog) {
   const ages = inOrder(bottles.map((b) => ageBucket(b.age)), AGE_BUCKETS);
   const abvBuckets = inOrder(bottles.map((b) => abvBucket(b.abv)), ABV_BUCKETS);
 
-  const cellarShares = familyShares(bottles);
-  const families = cellarShares.map((s) => s.label);
-  const cellar = cellarShares.map((s) => s.share);
-  const open = familyShares(bottles.filter((b) => b.status === "Open"), families).map((s) => s.share);
-
-  const subOwner = subFamily(bottles);
-  const subCounts = tally(bottles.flatMap((b) => b.subCharacteristics));
-  const palate = families
-    .map((family) => ({ family, subs: subCounts.filter((e) => subOwner[e.label] === family) }))
-    .filter((group) => group.subs.length > 0);
+  const spokes = flavorRadar(catalog.wheel, bottles);
+  const palate = palateCloud(catalog.wheel, bottles);
 
   const totals = {
     bottles: total,
@@ -154,7 +167,7 @@ export function cellarSummary(catalog: Catalog) {
     ages: commonAge ? `Most common: ${commonAge.label} (${commonAge.count} bottles).` : "",
     abv: abvs.length ? `Median ${totals.medianAbv}%. ${pct(strong / abvs.length)} of bottles are 50% or stronger.` : "",
     smoke: `${smoke} of ${total} bottles carry Smoke. ${untagged} have no flavor tags.`,
-    fingerprint: fingerprintTakeaway(families, cellar, open),
+    fingerprint: fingerprintTakeaway(spokes),
   };
 
   return {
@@ -165,7 +178,7 @@ export function cellarSummary(catalog: Catalog) {
     ages,
     abvs: abvBuckets,
     smoke: { smoke, noSmoke: total - smoke - untagged, untagged },
-    fingerprint: { families, cellar, open },
+    fingerprint: spokes,
     palate,
     takeaways,
   };

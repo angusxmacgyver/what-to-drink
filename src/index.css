@@ -1772,13 +1772,13 @@ nav button.on,
 }
 
 .radar-spoke {
-  stroke: var(--line);
+  stroke: var(--family-color, var(--line));
   stroke-width: 1;
 }
 
 .radar-label {
   font-size: 11px;
-  fill: var(--muted);
+  fill: var(--family-color, var(--muted));
 }
 
 .radar-cellar {
@@ -1824,7 +1824,7 @@ nav button.on,
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--family-color, var(--gold));
 }
 
 .palate-words {
@@ -1838,7 +1838,7 @@ nav button.on,
   font-family: Fraunces, Georgia, serif;
   font-weight: 700;
   line-height: 1.2;
-  color: var(--ink);
+  color: var(--family-color, var(--ink));
 }
 
 @media (max-width: 760px) {
