@@ -1,7 +1,16 @@
 import { useState } from "react";
-import type { Bottle } from "../types";
+import type { Bottle, WheelFamily } from "../types";
 import { countryFromRegion } from "../lib/normalize";
+import { optionSpelling, ownerOptions, dropUnder, sameTerm, type WheelLevel } from "../lib/wheel";
+import { wheelTermClass } from "../lib/colors";
 import { ChipSelect } from "./ChipSelect";
+
+/** The picked terms as the Wheel spells them where the option list has them. */
+const spelled = (options: string[], picked: string[]) => picked.map((term) => optionSpelling(options, term) ?? term);
+
+/** Picks in `before` that `after` no longer has. */
+const removedFrom = (before: string[], after: string[]) =>
+  before.filter((term) => !after.some((kept) => sameTerm(kept, term)));
 
 function slugKey(distillery: string, bottling: string): string {
   const slug = (v: string) =>
@@ -44,11 +53,14 @@ const blank = (): Bottle => ({
 
 export function OwnerForm({
   initial,
+  wheel,
   caskTags,
   onSave,
   onCancel,
 }: {
   initial?: Bottle;
+  /** The Flavor Wheel the cellar stores, which offers the Family, Subgroup, and Descriptor choices. */
+  wheel: WheelFamily[];
   /** Every cask tag already in the cellar, offered for both cask fields. */
   caskTags: string[];
   onSave: (bottle: Bottle) => void;
@@ -57,6 +69,11 @@ export function OwnerForm({
   const [form, setForm] = useState<Bottle>(initial ?? blank());
 
   const set = (patch: Partial<Bottle>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const families = ownerOptions(wheel, "family", [], form.wheelFamilies);
+  const subgroups = ownerOptions(wheel, "subgroup", form.wheelFamilies, form.wheelSubgroups);
+  const descriptors = ownerOptions(wheel, "descriptor", form.wheelSubgroups, form.wheelDescriptors);
+  const colorOf = (level: WheelLevel) => (term: string) => wheelTermClass(wheel, level, term);
 
   return (
     <form
@@ -137,6 +154,52 @@ export function OwnerForm({
         SMWS Theme
         <input value={form.theme} onChange={(e) => set({ theme: e.target.value })} />
       </label>
+      <ChipSelect
+        label="Family"
+        options={families}
+        value={spelled(families, form.wheelFamilies)}
+        onChange={(nextFamilies) => {
+          const removed = removedFrom(form.wheelFamilies, nextFamilies);
+          const kept = dropUnder(wheel, "subgroup", removed, form.wheelSubgroups);
+          set({
+            wheelFamilies: nextFamilies,
+            wheelSubgroups: kept,
+            wheelDescriptors: dropUnder(
+              wheel,
+              "descriptor",
+              removedFrom(form.wheelSubgroups, kept),
+              form.wheelDescriptors,
+            ),
+          });
+        }}
+        colorFor={colorOf("family")}
+      />
+      <ChipSelect
+        label="Subgroup"
+        options={subgroups}
+        value={spelled(subgroups, form.wheelSubgroups)}
+        onChange={(nextSubgroups) =>
+          set({
+            wheelSubgroups: nextSubgroups,
+            wheelDescriptors: dropUnder(
+              wheel,
+              "descriptor",
+              removedFrom(form.wheelSubgroups, nextSubgroups),
+              form.wheelDescriptors,
+            ),
+          })
+        }
+        emptyHint="Pick a Family to narrow by Subgroup."
+        colorFor={colorOf("subgroup")}
+      />
+      <ChipSelect
+        label="Descriptor"
+        options={descriptors}
+        value={spelled(descriptors, form.wheelDescriptors)}
+        onChange={(nextDescriptors) => set({ wheelDescriptors: nextDescriptors })}
+        emptyHint="Pick a Subgroup to narrow by Descriptor."
+        colorFor={colorOf("descriptor")}
+      />
       <ChipSelect
         label="Primary cask"
         options={caskTags}

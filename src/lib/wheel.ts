@@ -78,7 +78,7 @@ export function subgroupClusters(wheel: WheelFamily[], bottles: WheelTerms[]): S
   return clusters;
 }
 
-function childrenUnder(wheel: WheelFamily[], level: "subgroup" | "descriptor", parents: string[]): string[] {
+export function termsUnder(wheel: WheelFamily[], level: "subgroup" | "descriptor", parents: string[]): string[] {
   if (parents.length === 0) return [];
   const names: string[] = [];
   const seen = new Set<string>();
@@ -121,8 +121,37 @@ export function scopedOptions(
   const placed = placeTerms(wheel, level, bottleTerms);
   const stray = placed.filter((term) => term.family === null).map((term) => term.label);
   const present = new Set(placed.map((term) => term.label.toLowerCase()));
-  const under = childrenUnder(wheel, level, parents).filter((name) => present.has(name.toLowerCase()));
+  const under = termsUnder(wheel, level, parents).filter((name) => present.has(name.toLowerCase()));
   return [...under, ...stray];
+}
+
+/**
+ * The options an owner's wheel field offers: the wheel terms at this level under the picked parents,
+ * then any picked term the wheel does not offer there, so a stray or misplaced term stays until removed.
+ */
+export function ownerOptions(wheel: WheelFamily[], level: WheelLevel, parents: string[], picked: string[]): string[] {
+  const offered = level === "family" ? wheel.map((family) => family.name) : termsUnder(wheel, level, parents);
+  const listed = new Set(offered.map((term) => term.trim().toLowerCase()));
+  const extra = picked.filter((term) => {
+    const key = term.trim().toLowerCase();
+    if (listed.has(key)) return false;
+    listed.add(key);
+    return true;
+  });
+  return [...offered, ...extra];
+}
+
+/** Drops picks whose every wheel parent was removed. A pick under no wheel parent, or with a parent still standing, stays. */
+export function dropUnder(
+  wheel: WheelFamily[],
+  level: "subgroup" | "descriptor",
+  removed: string[],
+  picked: string[],
+): string[] {
+  return picked.filter((term) => {
+    const parents = parentsOf(wheel, level, term);
+    return parents.length === 0 || !parents.every((parent) => removed.some((r) => sameTerm(r, parent)));
+  });
 }
 
 /** Picks still under a remaining parent. A stray pick has no parent, so it stays. */
@@ -132,7 +161,7 @@ export function keptUnder(
   parents: string[],
   picked: string[],
 ): string[] {
-  const allowed = new Set(childrenUnder(wheel, level, parents).map((name) => name.toLowerCase()));
+  const allowed = new Set(termsUnder(wheel, level, parents).map((name) => name.toLowerCase()));
   return picked.filter((term) => {
     const placed = placeTerm(wheel, level, term);
     return placed.family === null || allowed.has(placed.label.toLowerCase());

@@ -769,3 +769,40 @@ describe("replacing the cellar", () => {
     expect(replaceWrites()).toHaveLength(1);
   });
 });
+
+describe("owner form offers the stored Flavor Wheel", () => {
+  const wheel = [
+    { name: "Smoky", color: "Red", subgroups: [{ name: "Ashy", descriptors: ["ash"] }] },
+  ];
+
+  beforeEach(() => {
+    mockDeviceStorage();
+    localStorage.setItem("what-to-drink-catalog", JSON.stringify({ ...visitCatalog, wheel }));
+    sessionStorage.setItem("what-to-drink-owner-pin", "cellar");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation(() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("offers the cellar's Families, then their Subgroups and Descriptors, in the owner form", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Owner tools" }));
+    await user.click(screen.getByRole("button", { name: "Bottle Management" }));
+    await user.click(screen.getByRole("button", { name: "Add bottle" }));
+
+    const chipset = (label: string) =>
+      screen.getByText(label, { selector: ".chipset-label" }).closest(".chipset") as HTMLElement;
+    await user.click(within(chipset("Family")).getByRole("button", { name: "Smoky" }));
+    await user.click(within(chipset("Subgroup")).getByRole("button", { name: "Ashy" }));
+
+    expect(within(chipset("Descriptor")).getByRole("button", { name: "ash" })).toBeTruthy();
+  });
+});
